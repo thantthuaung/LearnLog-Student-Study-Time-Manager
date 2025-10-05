@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardSession"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/textSessionSubject"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:text="Subject" />
+
+        <TextView
+            android:id="@+id/textSessionType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Type" />
+
+        <TextView
+            android:id="@+id/textSessionTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time" />
+
+        <TextView
+            android:id="@+id/textSessionStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <ImageButton
+                android:id="@+id/btnCompleteSession"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/checkbox_on_background"
+                android:contentDescription="Mark Complete"
+                android:background="@android:color/transparent" />
+
+            <ImageButton
+                android:id="@+id/btnSkipSession"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:contentDescription="Skip Session"
+                android:background="@android:color/transparent" />
+
+            <ImageButton
+                android:id="@+id/btnStartTimerSession"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/ic_media_play"
+                android:contentDescription="Start Timer"
+                android:background="@android:color/transparent" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="session_status_pending">#DDDDDD</color>
+    <color name="session_status_in_progress">#E3F2FD</color>
+    <color name="session_status_completed">#E8F5E9</color>
+    <color name="session_status_skipped">#FFEBEE</color>
+    <color name="primaryColor">#1976D2</color>
+    <color name="secondaryColor">#B0BEC5</color>
+    <color name="pomodoroFocus">#1976D2</color>
+    <color name="pomodoroShortBreak">#43A047</color>
+    <color name="pomodoroLongBreak">#8E24AA</color>
+</resources>

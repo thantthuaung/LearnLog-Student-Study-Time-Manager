@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/tasksFragment">
+
+    <fragment
+        android:id="@+id/tasksFragment"
+        android:name="com.example.learnlog.ui.tasks.TasksFragment"
+        android:label="@string/nav_tasks" />
+
+    <fragment
+        android:id="@+id/plannerFragment"
+        android:name="com.example.learnlog.ui.planner.PlannerFragment"
+        android:label="@string/nav_planner" />
+
+    <fragment
+        android:id="@+id/timerFragment"
+        android:name="com.example.learnlog.ui.timer.TimerFragment"
+        android:label="@string/nav_timer" />
+
+    <fragment
+        android:id="@+id/insightsFragment"
+        android:name="com.example.learnlog.ui.insights.InsightsFragment"
+        android:label="@string/nav_insights" />
+
+    <fragment
+        android:id="@+id/notesFragment"
+        android:name="com.example.learnlog.ui.notes.NotesFragment"
+        android:label="@string/nav_notes" />
+
+</navigation>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LearnLog</string>
+
+    <!-- Insights Page -->
+    <string name="insights_title">Insights</string>
+    <string name="time_range_today">Today</string>
+    <string name="time_range_week">This Week</string>
+    <string name="time_range_month">This Month</string>
+    <string name="total_focus_time">Total Focus Time: %1$dh %2$dm</string>
+    <string name="session_count">Sessions: %1$d</string>
+    <string name="current_streak">Current Streak: %1$d days</string>
+    <string name="daily_progress">Daily Progress</string>
+    <string name="subject_distribution">Subject Distribution</string>
+
+    <!-- Empty State -->
+    <string name="empty_insights_title">No Data Yet</string>
+    <string name="empty_insights_message">Complete some study sessions to see your progress and insights here!</string>
+    <string name="empty_insights_description">Empty insights illustration</string>
+
+    <!-- Insights Time Range -->
+    <string name="insights_today">Today</string>
+    <string name="insights_week">Week</string>
+    <string name="insights_month">Month</string>
+
+    <!-- Chart Labels -->
+    <string name="minutes_label">Minutes</string>
+    <string name="hours_label">Hours</string>
+    <string name="percentage_label">%</string>
+    <string name="total_focus_time_format">%1$d hours %2$d mins</string>
+    <string name="time_by_subject">Time by Subject</string>
+    <string name="streak_days_format">%d day streak</string>
+    <string name="planned_vs_actual">Planned vs Actual</string>
+
+    <!-- Navigation Labels -->
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_planner">Planner</string>
+    <string name="nav_timer">Timer</string>
+    <string name="nav_insights">Insights</string>
+    <string name="nav_notes">Notes</string>
+
+    <!-- Dialog Strings -->
+    <string name="dialog_add_session_title">Add Study Session</string>
+    <string name="dialog_reschedule_title">Reschedule Session</string>
+    <string name="action_add">Add</string>
+    <string name="action_update">Update</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Timer Notifications -->
+    <string name="timer_notification_channel">Timer Notifications</string>
+    <string name="timer_notification_title">Study Timer</string>
+    <string name="timer_notification_focus">Focus Session in Progress</string>
+    <string name="timer_notification_break">Break Time</string>
+    <string name="timer_session_complete">Focus Session Complete!</string>
+    <string name="timer_break_complete">Break Time Over!</string>
+
+    <!-- Session Display -->
+    <string name="session_duration_format">%1$d minutes</string>
+    <string name="session_time_format">%1$s - %2$s</string>
+
+    <!-- Planner Session Items -->
+    <string name="sessionTime">Session Time</string>
+    <string name="editButton">Edit</string>
+    <string name="deleteButton">Delete</string>
+    <string name="startTimerButton">Start Timer</string>
+    <string name="datePicker">Date</string>
+    <string name="timePicker">Time</string>
+</resources>

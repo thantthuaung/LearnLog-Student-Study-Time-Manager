@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Standard colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Theme colors -->
+    <color name="primary_light_blue">#2196F3</color>
+    <color name="status_bar_light_blue">#1976D2</color>
+    <color name="light_blue_accent">#03A9F4</color>
+    <color name="light_blue_background">#E3F2FD</color>
+
+    <!-- Session status colors -->
+    <color name="color_session_pending">#DDDDDD</color>
+    <color name="color_session_in_progress">#E3F2FD</color>
+    <color name="color_session_completed">#E8F5E9</color>
+    <color name="color_session_skipped">#FFEBEE</color>
+</resources>
