@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="light_gray">#EDEDED</color>
+    <color name="sky_blue">#4DBFFF</color>
+    <color name="nav_blue">#43B8FF</color>
+    <color name="ink">#0D2A3A</color>
+    <color name="white">#FFFFFF</color>
+    <color name="ripple_white">#80FFFFFF</color>
+    <color name="screen_bg">#F8F9FB</color>
+    <color name="low_priority">#66BB6A</color>
+    <color name="medium_priority">#FFA726</color>
+    <color name="high_priority">#FF5252</color>
+</resources>
+

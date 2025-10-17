@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.LearnLog" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.LearnLog" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/primary_light_blue</item>
-        <item name="colorPrimaryVariant">@color/status_bar_light_blue</item>
+        <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/sky_blue</item>
+        <item name="colorOnSecondary">@color/white</item>
 
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/light_blue_accent</item>
-        <item name="colorSecondaryVariant">@color/light_blue_accent</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <!-- System bar colors: transparent for edge-to-edge -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowBackground">@color/screen_bg</item>
 
-        <!-- Status bar & Navigation bar color. -->
-        <item name="android:statusBarColor">@color/status_bar_light_blue</item>
-        <item name="android:navigationBarColor">@color/primary_light_blue</item>
-        <item name="android:windowBackground">@color/light_blue_background</item>
+        <!-- Remove ActionBar -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
 
         <!-- Custom styles -->
         <item name="bottomNavigationStyle">@style/BottomNavigationStyle</item>

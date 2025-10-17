@@ -6,13 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SubjectDao {
-    @Query("SELECT * FROM subjects")
+    @Query("SELECT * FROM subjects ORDER BY name ASC")
     fun getAllSubjects(): Flow<List<Subject>>
 
-    @Query("SELECT * FROM subjects WHERE id = :id")
-    suspend fun getSubjectById(id: Long): Subject?
-
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubject(subject: Subject): Long
 
     @Update
@@ -21,6 +18,6 @@ interface SubjectDao {
     @Delete
     suspend fun deleteSubject(subject: Subject)
 
-    @Query("SELECT * FROM subjects ORDER BY name ASC")
-    fun getSubjectsOrderedByName(): Flow<List<Subject>>
+    @Query("SELECT * FROM subjects WHERE id = :subjectId")
+    suspend fun getSubjectById(subjectId: Long): Subject?
 }

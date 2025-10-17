@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -36,6 +37,7 @@ class InsightsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.root.findViewById<com.google.android.material.chip.Chip>(R.id.page_chip).text = "Insights"
         setupTimeRangeChips()
         observeData()
         setupCharts()
@@ -49,9 +51,9 @@ class InsightsFragment : Fragment() {
 
             timeRangeChips.setOnCheckedStateChangeListener { _, checkedIds ->
                 when (checkedIds.firstOrNull()) {
-                    todayChip.id -> viewModel.setTimeRange(TimeRange.TODAY)
-                    weekChip.id -> viewModel.setTimeRange(TimeRange.WEEK)
-                    monthChip.id -> viewModel.setTimeRange(TimeRange.MONTH)
+                    R.id.todayChip -> viewModel.setTimeRange(TimeRange.TODAY)
+                    R.id.weekChip -> viewModel.setTimeRange(TimeRange.WEEK)
+                    R.id.monthChip -> viewModel.setTimeRange(TimeRange.MONTH)
                 }
             }
             todayChip.isChecked = true
@@ -92,7 +94,7 @@ class InsightsFragment : Fragment() {
     private fun updateTotalFocusTime(minutes: Int) {
         val hours = minutes / 60
         val mins = minutes % 60
-        binding.totalFocusTimeText.text = getString(R.string.total_focus_time_format, hours, mins)
+        binding.totalFocusTimeText.text = getString(R.string.total_focus_time_format, "$hours h $mins m")
     }
 
     private fun updateSubjectsPieChart(subjectData: Map<String, Int>) {

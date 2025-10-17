@@ -1,12 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="session_status_pending">#DDDDDD</color>
-    <color name="session_status_in_progress">#E3F2FD</color>
-    <color name="session_status_completed">#E8F5E9</color>
-    <color name="session_status_skipped">#FFEBEE</color>
-    <color name="primaryColor">#1976D2</color>
-    <color name="secondaryColor">#B0BEC5</color>
+    <!-- Add your color definitions here -->
+    <color name="primaryColor">#87CEEB</color>
+    <color name="secondaryColor">#87CEEB</color>
+    <color name="sky_blue">#87CEEB</color>
+    <color name="white">#FFFFFF</color>
+    <color name="dark_slate">#2F4F4F</color>
+    <color name="light_gray">#D3D3D3</color>
+    <color name="screen_bg">#F5F5F5</color>
+    <color name="ripple_white">#E0E0E0</color>
+    <color name="ink">#212121</color>
+    <color name="low_priority">#A5D6A7</color>
+    <color name="medium_priority">#FFF59D</color>
+    <color name="high_priority">#EF9A9A</color>
+    <color name="nav_blue">#1976D2</color>
     <color name="pomodoroFocus">#1976D2</color>
     <color name="pomodoroShortBreak">#43A047</color>
-    <color name="pomodoroLongBreak">#8E24AA</color>
+    <color name="pomodoroLongBreak">#FBC02D</color>
 </resources>

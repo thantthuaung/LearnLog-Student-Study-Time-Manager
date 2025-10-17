@@ -10,8 +10,6 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.fragment.app.DialogFragment
 import com.example.learnlog.R
-import com.example.learnlog.data.model.SessionStatus
-import com.example.learnlog.data.model.SessionType
 import com.example.learnlog.data.model.StudySession
 import com.example.learnlog.data.model.StudyType
 import com.google.android.material.button.MaterialButton
@@ -20,6 +18,8 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputEditText
 import java.text.SimpleDateFormat
 import java.util.*
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.ZoneId
 
 class AddStudySessionDialog : DialogFragment() {
     private lateinit var titleInput: TextInputEditText
@@ -53,12 +53,12 @@ class AddStudySessionDialog : DialogFragment() {
 
         return MaterialAlertDialogBuilder(requireContext())
             .setView(dialogView)
-            .setTitle(R.string.dialog_add_session_title)
-            .setPositiveButton(R.string.action_add) { dialog: DialogInterface, _: Int ->
+            .setTitle(getString(R.string.dialog_add_session_title))
+            .setPositiveButton(getString(R.string.action_add)) { dialog: DialogInterface, _: Int ->
                 val session = createSession()
                 onSessionCreated?.invoke(session)
             }
-            .setNegativeButton(R.string.action_cancel) { dialog: DialogInterface, _: Int ->
+            .setNegativeButton(getString(R.string.action_cancel)) { dialog: DialogInterface, _: Int ->
                 dialog.dismiss()
             }
             .create()
@@ -78,8 +78,8 @@ class AddStudySessionDialog : DialogFragment() {
     }
 
     private fun setupInputs() {
-        // Setup session type dropdown using modern approach
-        val sessionTypes = SessionType.entries.map { it.name }
+        // Setup session type dropdown
+        val sessionTypes = StudyType.values().map { it.name }
         sessionTypeInput.setAdapter(ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
@@ -136,13 +136,20 @@ class AddStudySessionDialog : DialogFragment() {
     }
 
     private fun createSession(): StudySession {
+        val durationMinutes = durationInput.text.toString().toIntOrNull() ?: 60
+        // Convert Calendar to ThreeTen BP LocalDateTime in an API-compatible way
+        val instant = org.threeten.bp.Instant.ofEpochMilli(selectedDateTime.timeInMillis)
+        val startDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+        val endDateTime = startDateTime.plusMinutes(durationMinutes.toLong())
+
         return StudySession(
+            id = 0, // ID will be assigned by the repository/viewmodel
             title = titleInput.text.toString(),
             subject = subjectInput.text.toString(),
-            startTime = selectedDateTime.time,
-            duration = durationInput.text.toString().toIntOrNull() ?: 60,
-            type = StudyType.valueOf(sessionTypeInput.text.toString()),
-            status = SessionStatus.PENDING
+            startTime = startDateTime,
+            endTime = endDateTime,
+            durationMinutes = durationMinutes,
+            type = StudyType.valueOf(sessionTypeInput.text.toString())
         )
     }
 }

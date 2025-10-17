@@ -6,7 +6,6 @@ import android.app.TimePickerDialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.View
-import android.view.LayoutInflater
 import android.widget.DatePicker
 import android.widget.TimePicker
 import androidx.fragment.app.DialogFragment
@@ -35,11 +34,11 @@ class RescheduleSessionDialog : DialogFragment() {
 
         return MaterialAlertDialogBuilder(requireContext())
             .setView(dialogView)
-            .setTitle(R.string.dialog_reschedule_title)
-            .setPositiveButton(R.string.action_update) { _: DialogInterface, _: Int ->
+            .setTitle(getString(R.string.dialog_reschedule_title))
+            .setPositiveButton(getString(R.string.action_update)) { _: DialogInterface, _: Int ->
                 updateSession()
             }
-            .setNegativeButton(R.string.action_cancel) { dialog: DialogInterface, _: Int ->
+            .setNegativeButton(getString(R.string.action_cancel)) { dialog: DialogInterface, _: Int ->
                 dialog.dismiss()
             }
             .create()
@@ -62,7 +61,7 @@ class RescheduleSessionDialog : DialogFragment() {
 
     private fun setupInitialDateTime() {
         session?.let {
-            selectedDateTime.time = it.startTime
+            selectedDateTime.time = org.threeten.bp.DateTimeUtils.toDate(it.startTime.atZone(org.threeten.bp.ZoneId.systemDefault()).toInstant())
             updateDateTimeDisplay()
         }
     }
@@ -100,7 +99,11 @@ class RescheduleSessionDialog : DialogFragment() {
     }
 
     private fun updateSession() {
-        val updatedSession = session?.copy(startTime = selectedDateTime.time)
+        val startDateTime = org.threeten.bp.LocalDateTime.ofInstant(org.threeten.bp.DateTimeUtils.toInstant(selectedDateTime.time), org.threeten.bp.ZoneId.systemDefault())
+        val updatedSession = session?.copy(
+            startTime = startDateTime,
+            endTime = startDateTime.plusMinutes(session!!.durationMinutes.toLong())
+        )
         if (updatedSession != null) {
             onSessionRescheduled?.invoke(updatedSession)
         }

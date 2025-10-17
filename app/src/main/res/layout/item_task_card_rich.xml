@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:radius="12dp"
+    android:elevation="3dp"
+    android:backgroundTint="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/taskTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Task Title"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/ink" />
+
+        <!-- Subject chip/pill -->
+        <TextView
+            android:id="@+id/taskSubjectChip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_capsule_header"
+            android:text="Subject"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="3dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:textStyle="bold" />
+
+        <!-- Due date/time row with icon -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="4dp">
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_calendar"
+                android:tint="@color/nav_blue"
+                android:layout_gravity="center_vertical" />
+            <TextView
+                android:id="@+id/taskDue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Due: 2025-10-15 18:00"
+                android:textSize="12sp"
+                android:textColor="@color/ink"
+                android:layout_marginStart="6dp"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <!-- Status/priority line -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="4dp">
+            <View
+                android:id="@+id/taskPriorityDot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="@drawable/priority_dot"
+                android:layout_gravity="center_vertical" />
+            <TextView
+                android:id="@+id/taskStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status"
+                android:textSize="12sp"
+                android:textColor="@color/ink"
+                android:layout_marginStart="8dp"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <!-- Tiny progress bar -->
+        <ProgressBar
+            android:id="@+id/taskProgress"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:progress="50"
+            android:progressTint="@color/nav_blue"
+            android:backgroundTint="@color/light_gray"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Action buttons row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+            <Button
+                android:id="@+id/btnStartTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start Timer"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/nav_blue"
+                android:textSize="12sp"
+                android:layout_marginEnd="8dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="3dp"
+                android:elevation="2dp" />
+            <Button
+                android:id="@+id/btnEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit"
+                android:textColor="@color/nav_blue"
+                android:backgroundTint="@color/light_gray"
+                android:textSize="12sp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="3dp"
+                android:elevation="2dp" />
+        </LinearLayout>
+
+        <!-- Completion checkbox -->
+        <CheckBox
+            android:id="@+id/taskCompleteCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Completed"
+            android:textSize="12sp"
+            android:textColor="@color/ink"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="end" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

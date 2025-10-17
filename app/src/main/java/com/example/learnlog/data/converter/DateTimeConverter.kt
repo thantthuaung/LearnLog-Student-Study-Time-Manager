@@ -1,29 +1,24 @@
 package com.example.learnlog.data.converter
 
-import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
+import org.threeten.bp.Instant
 import org.threeten.bp.LocalDateTime
-import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.ZoneId
 
-@ProvidedTypeConverter
 class DateTimeConverter {
-    private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-
     @TypeConverter
-    fun toLocalDateTime(value: String?): LocalDateTime? {
-        return try {
-            value?.let { LocalDateTime.parse(it, formatter) }
-        } catch (e: Exception) {
-            null
+    fun fromTimestamp(value: Long?): LocalDateTime? {
+        return value?.let {
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
         }
     }
 
     @TypeConverter
-    fun fromLocalDateTime(dateTime: LocalDateTime?): String? {
-        return try {
-            dateTime?.format(formatter)
-        } catch (e: Exception) {
-            null
-        }
+    fun toTimestamp(dateTime: LocalDateTime?): Long? {
+        return dateTime?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+    }
+
+    companion object {
+        fun now(): LocalDateTime = LocalDateTime.now()
     }
 }

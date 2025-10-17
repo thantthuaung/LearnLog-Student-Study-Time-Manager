@@ -1,67 +1,72 @@
 package com.example.learnlog.ui.tasks
 
-import android.graphics.Color
+import android.graphics.Paint
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
-import androidx.cardview.widget.CardView
+import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.learnlog.R
-import java.time.format.DateTimeFormatter
+import com.example.learnlog.data.entity.TaskEntity
+import com.example.learnlog.databinding.ItemTaskCardBinding
+import org.threeten.bp.format.DateTimeFormatter
+import java.util.Locale
 
 class TasksAdapter(
-    private val items: List<TaskItem>,
-    private val onEdit: (TaskItem) -> Unit,
-    private val onDelete: (TaskItem) -> Unit,
-    private val onMarkComplete: (TaskItem) -> Unit,
-    private val onStartTimer: (TaskItem) -> Unit
-) : RecyclerView.Adapter<TasksAdapter.TaskViewHolder>() {
-    class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val card: CardView = itemView.findViewById(R.id.cardTask)
-        val title: TextView = itemView.findViewById(R.id.textTaskTitle)
-        val subject: TextView = itemView.findViewById(R.id.textTaskSubject)
-        val due: TextView = itemView.findViewById(R.id.textTaskDue)
-        val priority: TextView = itemView.findViewById(R.id.textTaskPriority)
-        val type: TextView = itemView.findViewById(R.id.textTaskType)
-        val status: TextView = itemView.findViewById(R.id.textTaskStatus)
-        val progress: ProgressBar = itemView.findViewById(R.id.progressTask)
-        val btnEdit: ImageButton = itemView.findViewById(R.id.btnEditTask)
-        val btnDelete: ImageButton = itemView.findViewById(R.id.btnDeleteTask)
-        val btnMarkComplete: ImageButton = itemView.findViewById(R.id.btnMarkCompleteTask)
-        val btnStartTimer: ImageButton = itemView.findViewById(R.id.btnStartTimerTask)
-    }
+    private val onToggleComplete: (TaskEntity, Boolean) -> Unit,
+    private val onStartTimer: (TaskEntity) -> Unit,
+    private val onEdit: (TaskEntity) -> Unit
+) : ListAdapter<TaskEntity, TasksAdapter.TaskViewHolder>(TaskDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)
-        return TaskViewHolder(view)
+        val binding = ItemTaskCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return TaskViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
-        val item = items[position]
-        holder.title.text = item.title
-        holder.subject.text = item.subject
-        holder.due.text = item.dueDateTime.format(DateTimeFormatter.ofPattern("MMM d, HH:mm"))
-        holder.priority.text = item.priority.name
-        holder.type.text = item.type.name
-        holder.status.text = item.status.name
-        holder.progress.progress = item.progress
-        // Color code by priority
-        holder.priority.setTextColor(
-            when (item.priority) {
-                TaskPriority.HIGH -> Color.RED
-                TaskPriority.MEDIUM -> Color.parseColor("#FFA500") // Orange
-                TaskPriority.LOW -> Color.GREEN
-            }
-        )
-        // Button actions
-        holder.btnEdit.setOnClickListener { onEdit(item) }
-        holder.btnDelete.setOnClickListener { onDelete(item) }
-        holder.btnMarkComplete.setOnClickListener { onMarkComplete(item) }
-        holder.btnStartTimer.setOnClickListener { onStartTimer(item) }
+        holder.bind(getItem(position))
     }
 
-    override fun getItemCount() = items.size
+    inner class TaskViewHolder(private val binding: ItemTaskCardBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(task: TaskEntity) {
+            binding.taskTitle.text = task.title
+            binding.taskSubject.text = task.subject
+            binding.taskSubject.isVisible = !task.subject.isNullOrBlank()
+
+            if (task.dueAt != null) {
+                binding.taskDueDate.text = task.dueAt.format(DateTimeFormatter.ofPattern("EEE, MMM d • HH:mm", Locale.getDefault()))
+                binding.taskDueDate.isVisible = true
+            } else {
+                binding.taskDueDate.isVisible = false
+            }
+
+            binding.taskCompleted.isChecked = task.completed
+            if (task.completed) {
+                binding.taskTitle.paintFlags = binding.taskTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                binding.root.alpha = 0.6f
+            } else {
+                binding.taskTitle.paintFlags = binding.taskTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                binding.root.alpha = 1.0f
+            }
+
+            // TODO: Set priority indicator color
+            // TODO: Set progress bar
+
+            binding.taskCompleted.setOnCheckedChangeListener { _, isChecked ->
+                onToggleComplete(task, isChecked)
+            }
+            binding.btnStartTimer.setOnClickListener { onStartTimer(task) }
+            binding.btnEdit.setOnClickListener { onEdit(task) }
+        }
+    }
+}
+
+class TaskDiffCallback : DiffUtil.ItemCallback<TaskEntity>() {
+    override fun areItemsTheSame(oldItem: TaskEntity, newItem: TaskEntity): Boolean {
+        return oldItem.id == newItem.id
+    }
+
+    override fun areContentsTheSame(oldItem: TaskEntity, newItem: TaskEntity): Boolean {
+        return oldItem == newItem
+    }
 }

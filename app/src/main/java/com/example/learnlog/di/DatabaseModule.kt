@@ -1,9 +1,10 @@
 package com.example.learnlog.di
 
 import android.content.Context
-import com.example.learnlog.data.dao.SessionLogDao
-import com.example.learnlog.data.dao.SubjectDao
 import com.example.learnlog.data.db.AppDatabase
+import com.example.learnlog.data.dao.*
+import com.example.learnlog.data.repository.NoteRepository
+import com.example.learnlog.data.repository.TaskRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,17 +18,42 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+    fun provideAppDatabase(
+        @ApplicationContext context: Context
+    ): AppDatabase {
         return AppDatabase.getInstance(context)
     }
 
     @Provides
-    fun provideSessionLogDao(database: AppDatabase): SessionLogDao {
-        return database.sessionLogDao()
+    fun provideSessionLogDao(appDatabase: AppDatabase): SessionLogDao {
+        return appDatabase.sessionLogDao()
     }
 
     @Provides
-    fun provideSubjectDao(database: AppDatabase): SubjectDao {
-        return database.subjectDao()
+    fun provideSubjectDao(appDatabase: AppDatabase): SubjectDao {
+        return appDatabase.subjectDao()
+    }
+
+    @Provides
+    fun provideNoteDao(appDatabase: AppDatabase): NoteDao {
+        return appDatabase.noteDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTaskDao(appDatabase: AppDatabase): TaskDao {
+        return appDatabase.taskDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNoteRepository(noteDao: NoteDao): NoteRepository {
+        return NoteRepository(noteDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTaskRepository(taskDao: TaskDao): TaskRepository {
+        return TaskRepository(taskDao)
     }
 }

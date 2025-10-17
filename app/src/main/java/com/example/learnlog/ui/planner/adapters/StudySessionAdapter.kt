@@ -7,11 +7,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.learnlog.R
 import com.example.learnlog.data.model.StudySession
-import com.example.learnlog.data.model.SessionStatus
-import com.google.android.material.button.MaterialButton
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
+import org.threeten.bp.ZoneId
+import org.threeten.bp.DateTimeUtils
 
 class StudySessionAdapter(
     private val onTimerClick: (StudySession) -> Unit,
@@ -51,11 +50,20 @@ class StudySessionAdapter(
         fun bind(session: StudySession) {
             subjectText.text = session.subject
             typeText.text = session.type.name
-            // Format time as "HH:mm - HH:mm"
+            // Format time using LocalDateTime
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            val start = session.startTime
-            val end = Date(start.time + session.duration * 60 * 1000)
-            timeText.text = itemView.context.getString(R.string.session_time_format, timeFormat.format(start), timeFormat.format(end))
+            val startTime = DateTimeUtils.toDate(
+                session.startTime.atZone(ZoneId.systemDefault()).toInstant()
+            )
+            val endTime = DateTimeUtils.toDate(
+                session.startTime.plusMinutes(session.durationMinutes.toLong())
+                    .atZone(ZoneId.systemDefault()).toInstant()
+            )
+            timeText.text = itemView.context.getString(
+                R.string.session_time_format,
+                timeFormat.format(startTime),
+                timeFormat.format(endTime)
+            )
             statusText.text = session.status.name
             startTimerButton.setOnClickListener { onTimerClick(session) }
             // Optionally, set completeButton and skipButton click listeners if needed

@@ -48,7 +48,7 @@ class TaskAdapter(
         private val dueDateText: TextView = itemView.findViewById(R.id.textTaskDue)
         private val statusText: TextView = itemView.findViewById(R.id.textTaskStatus)
         private val progressBar: ProgressBar = itemView.findViewById(R.id.progressTask)
-        private val priorityIndicator: View = itemView.findViewById(R.id.textTaskPriority)
+        private val priorityIndicator: View = itemView.findViewById(R.id.priorityDot)
         private val startTimerButton: MaterialButton = itemView.findViewById(R.id.btnStartTimerTask)
         private val viewDetailsButton: MaterialButton = itemView.findViewById(R.id.btnEditTask)
 
@@ -57,9 +57,9 @@ class TaskAdapter(
         fun bind(task: Task) {
             titleText.text = task.title
             subjectText.text = task.subject
-            dueDateText.text = "Due: ${dateFormat.format(task.dueDate)}"
+            dueDateText.text = "Due: ${task.dueDate?.let { dateFormat.format(it) } ?: "Not set"}"
             statusText.text = task.status.name
-            progressBar.progress = task.progress
+            progressBar.progress = 0 // task.progress is not a field in Task model
 
             // Set priority indicator color
             priorityIndicator.setBackgroundColor(getPriorityColor(task.priority))

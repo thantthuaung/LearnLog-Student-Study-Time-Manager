@@ -1,14 +1,23 @@
 package com.example.learnlog.data.repository
 
 import com.example.learnlog.data.model.*
+import com.example.learnlog.util.DateTimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.ZoneId
 import java.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.math.min
 
-class PlannerRepository(private val tasksRepository: TasksRepository) {
+@Singleton
+class PlannerRepository @Inject constructor(
+    private val tasksRepository: TasksRepository,
+    private val dateTimeProvider: DateTimeProvider
+) {
     private val sessionsFlow = MutableStateFlow<List<StudySession>>(emptyList())
 
     init {
@@ -17,59 +26,63 @@ class PlannerRepository(private val tasksRepository: TasksRepository) {
     }
 
     private fun addSampleSessions() {
-        val calendar = Calendar.getInstance().apply {
-            set(2025, Calendar.OCTOBER, 4) // Current date context
-            set(Calendar.HOUR_OF_DAY, 9)
-            set(Calendar.MINUTE, 0)
-        }
+        val baseDateTime = dateTimeProvider.now()
+            .withHour(9)
+            .withMinute(0)
+            .withSecond(0)
 
         // Morning study session
         addSession(StudySession(
             id = 1,
             title = "Math Review",
             subject = "Mathematics",
-            startTime = calendar.time,
-            duration = 90,
+            startTime = baseDateTime,
+            endTime = baseDateTime.plusMinutes(90),
+            durationMinutes = 90,
             type = StudyType.ASSIGNMENT_WORK,
             relatedTaskId = 1
         ))
 
-        // Afternoon session
-        calendar.add(Calendar.HOUR_OF_DAY, 3)
+        // Afternoon session (2 PM)
+        val afternoonDateTime = baseDateTime.withHour(14)
         addSession(StudySession(
             id = 2,
             title = "Physics Lab Prep",
             subject = "Physics",
-            startTime = calendar.time,
-            duration = 60,
+            startTime = afternoonDateTime,
+            endTime = afternoonDateTime.plusMinutes(60),
+            durationMinutes = 60,
             type = StudyType.EXAM_PREP
         ))
 
-        // Evening session
-        calendar.add(Calendar.HOUR_OF_DAY, 4)
+        // Evening session (7 PM)
+        val eveningDateTime = baseDateTime.withHour(19)
         addSession(StudySession(
             id = 3,
             title = "Math Assignment",
             subject = "Mathematics",
-            startTime = calendar.time,
-            duration = 120,
+            startTime = eveningDateTime,
+            endTime = eveningDateTime.plusMinutes(120),
+            durationMinutes = 120,
             type = StudyType.ASSIGNMENT_WORK
         ))
     }
 
-    fun getSessionsForDay(date: Date): Flow<List<StudySession>> {
+    fun getSessionsForDay(date: LocalDateTime): Flow<List<StudySession>> {
         return sessionsFlow.map { sessions ->
             sessions.filter { session ->
-                isSameDay(session.startTime, date)
-            }.sortedBy { it.startTime }
+                session.startTime.toLocalDate() == date.toLocalDate()
+            }
         }
     }
 
-    fun getSessionsForWeek(startDate: Date): Flow<List<StudySession>> {
+    fun getSessionsForWeek(startDate: LocalDateTime): Flow<List<StudySession>> {
+        val endDate = startDate.plusWeeks(1)
         return sessionsFlow.map { sessions ->
             sessions.filter { session ->
-                isInSameWeek(session.startTime, startDate)
-            }.sortedBy { it.startTime }
+                val sessionDate = session.startTime
+                !sessionDate.isBefore(startDate) && sessionDate.isBefore(endDate)
+            }
         }
     }
 
@@ -95,14 +108,22 @@ class PlannerRepository(private val tasksRepository: TasksRepository) {
                 val sessionDuration = min(remainingTime, 90) // Max 90 minutes per session
 
                 // Find next available time slot
-                val availableSlot = findNextAvailableSlot(calendar.time, sessionDuration)
+                val availableSlot = findNextAvailableSlot(
+                    LocalDateTime.ofInstant(
+                        org.threeten.bp.DateTimeUtils.toInstant(calendar),
+                        ZoneId.systemDefault()
+                    ),
+                    sessionDuration
+                )
 
                 if (availableSlot != null) {
                     suggestions.add(StudySession(
+                        id = 0,
                         title = "Study for ${task.title}",
-                        subject = task.subject,
+                        subject = task.subject ?: "",
                         startTime = availableSlot.startTime,
-                        duration = sessionDuration,
+                        endTime = availableSlot.endTime,
+                        durationMinutes = sessionDuration,
                         type = when(task.type) {
                             TaskType.EXAM -> StudyType.EXAM_PREP
                             else -> StudyType.ASSIGNMENT_WORK
@@ -120,42 +141,41 @@ class PlannerRepository(private val tasksRepository: TasksRepository) {
         return suggestions
     }
 
-    private fun findNextAvailableSlot(after: Date, durationNeeded: Int): TimeSlot? {
-        val calendar = Calendar.getInstance().apply { time = after }
+    private fun findNextAvailableSlot(after: LocalDateTime, durationNeeded: Int): TimeSlot? {
+        var currentTime = after
         val existingSessions = sessionsFlow.value
 
         // Try to find a slot in the next 7 days
         repeat(8) {
             // Try morning slot (9 AM)
-            calendar.set(Calendar.HOUR_OF_DAY, 9)
-            calendar.set(Calendar.MINUTE, 0)
-            if (isTimeSlotAvailable(calendar.time, durationNeeded, existingSessions)) {
-                return TimeSlot(calendar.time, addMinutes(calendar.time, durationNeeded))
+            currentTime = currentTime.withHour(9).withMinute(0)
+            if (isTimeSlotAvailable(currentTime, durationNeeded, existingSessions)) {
+                return TimeSlot(currentTime, currentTime.plusMinutes(durationNeeded.toLong()))
             }
 
             // Try afternoon slot (2 PM)
-            calendar.set(Calendar.HOUR_OF_DAY, 14)
-            if (isTimeSlotAvailable(calendar.time, durationNeeded, existingSessions)) {
-                return TimeSlot(calendar.time, addMinutes(calendar.time, durationNeeded))
+            currentTime = currentTime.withHour(14)
+            if (isTimeSlotAvailable(currentTime, durationNeeded, existingSessions)) {
+                return TimeSlot(currentTime, currentTime.plusMinutes(durationNeeded.toLong()))
             }
 
             // Try evening slot (7 PM)
-            calendar.set(Calendar.HOUR_OF_DAY, 19)
-            if (isTimeSlotAvailable(calendar.time, durationNeeded, existingSessions)) {
-                return TimeSlot(calendar.time, addMinutes(calendar.time, durationNeeded))
+            currentTime = currentTime.withHour(19)
+            if (isTimeSlotAvailable(currentTime, durationNeeded, existingSessions)) {
+                return TimeSlot(currentTime, currentTime.plusMinutes(durationNeeded.toLong()))
             }
 
-            calendar.add(Calendar.DAY_OF_MONTH, 1)
+            currentTime = currentTime.plusDays(1)
         }
 
         return null
     }
 
-    private fun isTimeSlotAvailable(startTime: Date, duration: Int, existingSessions: List<StudySession>): Boolean {
-        val endTime = addMinutes(startTime, duration)
+    private fun isTimeSlotAvailable(startTime: LocalDateTime, duration: Int, existingSessions: List<StudySession>): Boolean {
+        val endTime = startTime.plusMinutes(duration.toLong())
         return existingSessions.none { session ->
-            val sessionEnd = addMinutes(session.startTime, session.duration)
-            !(endTime.before(session.startTime) || startTime.after(sessionEnd))
+            val sessionEnd = session.startTime.plusMinutes(session.durationMinutes.toLong())
+            !(endTime.isBefore(session.startTime) || startTime.isAfter(sessionEnd))
         }
     }
 
@@ -178,26 +198,5 @@ class PlannerRepository(private val tasksRepository: TasksRepository) {
         val currentSessions = sessionsFlow.value.toMutableList()
         currentSessions.removeAll { it.id == sessionId }
         sessionsFlow.value = currentSessions
-    }
-
-    private fun isSameDay(date1: Date, date2: Date): Boolean {
-        val cal1 = Calendar.getInstance().apply { time = date1 }
-        val cal2 = Calendar.getInstance().apply { time = date2 }
-        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-    }
-
-    private fun isInSameWeek(date1: Date, weekStart: Date): Boolean {
-        val cal1 = Calendar.getInstance().apply { time = date1 }
-        val cal2 = Calendar.getInstance().apply { time = weekStart }
-        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)
-    }
-
-    private fun addMinutes(date: Date, minutes: Int): Date {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        calendar.add(Calendar.MINUTE, minutes)
-        return calendar.time
     }
 }

@@ -4,6 +4,13 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        // Stable line (works great without Compose):
+        id("com.android.application") version "8.4.2"
+        id("org.jetbrains.kotlin.android") version "1.9.24"
+        id("com.google.dagger.hilt.android") version "2.51.1"
+        // If you later need KSP: id("com.google.devtools.ksp") version "1.9.24-1.0.20"
+    }
 }
 
 dependencyResolutionManagement {
@@ -12,26 +19,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
-    }
-}
-
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-    versionCatalogs {
-        create("libs") {
-            version("navigation", "2.7.3")
-            version("hilt", "2.47")
-
-            library("navigation-fragment", "androidx.navigation", "navigation-fragment-ktx")
-                .versionRef("navigation")
-            library("navigation-ui", "androidx.navigation", "navigation-ui-ktx")
-                .versionRef("navigation")
-
-            library("hilt-android", "com.google.dagger", "hilt-android")
-                .versionRef("hilt")
-            library("hilt-compiler", "com.google.dagger", "hilt-compiler")
-                .versionRef("hilt")
-        }
     }
 }
 

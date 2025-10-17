@@ -1,22 +1,16 @@
 package com.example.learnlog.data.converter
 
-import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
-import com.example.learnlog.data.model.SessionType
+import com.example.learnlog.data.model.StudyType
 
-@ProvidedTypeConverter
 class SessionTypeConverter {
     @TypeConverter
-    fun fromString(value: String?): SessionType {
-        return try {
-            value?.let { enumValueOf<SessionType>(it) } ?: SessionType.FOCUS
-        } catch (e: Exception) {
-            SessionType.FOCUS
-        }
+    fun fromString(value: String?): StudyType? {
+        return value?.let { StudyType.valueOf(it) }
     }
 
     @TypeConverter
-    fun toString(sessionType: SessionType?): String {
-        return sessionType?.name ?: SessionType.FOCUS.name
+    fun toString(type: StudyType?): String? {
+        return type?.name
     }
 }

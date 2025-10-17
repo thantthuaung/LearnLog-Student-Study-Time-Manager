@@ -15,8 +15,10 @@ import com.example.learnlog.data.model.TaskType
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.switchmaterial.SwitchMaterial
+import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
+import java.util.Locale
+import org.threeten.bp.LocalDateTime
 
 class AddTaskDialog : DialogFragment() {
     private lateinit var titleInput: TextInputEditText
@@ -63,12 +65,12 @@ class AddTaskDialog : DialogFragment() {
 
     private fun setupInputs() {
         // Setup priority dropdown
-        val priorities = TaskPriority.values().map { it.name }
+        val priorities = TaskPriority.entries.map { it.name }
         priorityInput.setAdapter(ArrayAdapter(requireContext(),
             android.R.layout.simple_dropdown_item_1line, priorities))
 
         // Setup type dropdown
-        val types = TaskType.values().map { it.name }
+        val types = TaskType.entries.map { it.name }
         typeInput.setAdapter(ArrayAdapter(requireContext(),
             android.R.layout.simple_dropdown_item_1line, types))
 
@@ -107,20 +109,36 @@ class AddTaskDialog : DialogFragment() {
     }
 
     private fun updateDateDisplay() {
-        dateInput.setText(android.text.format.DateFormat.format("MMM dd, yyyy", selectedDate))
+        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+        dateInput.setText(dateFormat.format(selectedDate.time))
     }
 
     private fun updateTimeDisplay() {
-        timeInput.setText(android.text.format.DateFormat.format("hh:mm a", selectedDate))
+        val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        timeInput.setText(timeFormat.format(selectedDate.time))
     }
 
     private fun createTask() {
+        val title = titleInput.text.toString()
+        if (title.isBlank()) {
+            titleInput.error = "Title is required"
+            return
+        }
+
+        val dueDateTime = LocalDateTime.of(
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH) + 1,  // Calendar months are 0-based
+            selectedDate.get(Calendar.DAY_OF_MONTH),
+            selectedDate.get(Calendar.HOUR_OF_DAY),
+            selectedDate.get(Calendar.MINUTE)
+        )
+
         val task = Task(
-            title = titleInput.text.toString(),
+            title = title,
             subject = subjectInput.text.toString(),
-            dueDate = selectedDate.time,
-            priority = TaskPriority.valueOf(priorityInput.text.toString()),
-            type = TaskType.valueOf(typeInput.text.toString()),
+            dueDate = dueDateTime,
+            priority = TaskPriority.valueOf(priorityInput.text.toString().ifEmpty { TaskPriority.MEDIUM.name }),
+            type = TaskType.valueOf(typeInput.text.toString().ifEmpty { TaskType.STUDY_SESSION.name }),
             status = TaskStatus.PENDING,
             description = descriptionInput.text.toString(),
             isNotificationEnabled = notificationSwitch.isChecked

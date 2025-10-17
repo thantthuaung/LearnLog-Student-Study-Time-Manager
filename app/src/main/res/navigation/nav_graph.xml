@@ -7,7 +7,11 @@
     <fragment
         android:id="@+id/tasksFragment"
         android:name="com.example.learnlog.ui.tasks.TasksFragment"
-        android:label="@string/nav_tasks" />
+        android:label="@string/nav_tasks">
+        <action
+            android:id="@+id/action_tasksFragment_to_timerFragment"
+            app:destination="@id/timerFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/plannerFragment"
@@ -17,7 +21,17 @@
     <fragment
         android:id="@+id/timerFragment"
         android:name="com.example.learnlog.ui.timer.TimerFragment"
-        android:label="@string/nav_timer" />
+        android:label="@string/nav_timer" >
+        <argument
+            android:name="taskId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+        <argument
+            android:name="taskTitle"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="null" />
+    </fragment>
 
     <fragment
         android:id="@+id/insightsFragment"
@@ -27,6 +41,18 @@
     <fragment
         android:id="@+id/notesFragment"
         android:name="com.example.learnlog.ui.notes.NotesFragment"
-        android:label="@string/nav_notes" />
-
+        android:label="@string/nav_notes" >
+        <action
+            android:id="@+id/action_notesFragment_to_addEditNoteFragment"
+            app:destination="@id/addEditNoteFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addEditNoteFragment"
+        android:name="com.example.learnlog.ui.notes.AddEditNoteFragment"
+        android:label="Add/Edit Note" >
+        <argument
+            android:name="noteId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </fragment>
 </navigation>

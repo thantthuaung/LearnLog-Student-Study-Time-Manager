@@ -5,10 +5,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import com.example.learnlog.data.repository.InsightsRepository
-import com.example.learnlog.data.repository.SubjectRepository
-import com.example.learnlog.data.dao.SessionLogDao
-import com.example.learnlog.data.dao.SubjectDao
+import com.example.learnlog.data.repository.*
+import com.example.learnlog.data.dao.*
+import com.example.learnlog.util.DateTimeProvider
 import javax.inject.Singleton
 
 @Module
@@ -25,5 +24,26 @@ object AppModule {
     @Singleton
     fun provideInsightsRepository(sessionLogDao: SessionLogDao): InsightsRepository {
         return InsightsRepository(sessionLogDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDateTimeProvider(): DateTimeProvider {
+        return DateTimeProvider()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTasksRepository(dateTimeProvider: DateTimeProvider): TasksRepository {
+        return TasksRepository(dateTimeProvider)
+    }
+
+    @Provides
+    @Singleton
+    fun providePlannerRepository(
+        tasksRepository: TasksRepository,
+        dateTimeProvider: DateTimeProvider
+    ): PlannerRepository {
+        return PlannerRepository(tasksRepository, dateTimeProvider)
     }
 }

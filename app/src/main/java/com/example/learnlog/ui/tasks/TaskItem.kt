@@ -1,6 +1,6 @@
 package com.example.learnlog.ui.tasks
 
-import java.time.LocalDateTime
+import org.threeten.bp.LocalDateTime
 
 enum class TaskPriority { HIGH, MEDIUM, LOW }
 enum class TaskType { ASSIGNMENT, EXAM, CLASS, REVISION, PERSONAL }
@@ -13,6 +13,6 @@ data class TaskItem(
     val dueDateTime: LocalDateTime,
     val priority: TaskPriority,
     val type: TaskType,
-    val status: TaskStatus = TaskStatus.PENDING,
-    val progress: Int = 0 // percent complete
+    var status: TaskStatus = TaskStatus.PENDING,
+    var progress: Int = 0 // percent complete
 )

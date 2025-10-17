@@ -9,10 +9,9 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.learnlog.R
+import com.example.learnlog.data.model.StudySession
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 import kotlin.math.absoluteValue
 
 class StudySessionAdapter(
@@ -39,16 +38,16 @@ class StudySessionAdapter(
         // Use SimpleDateFormat for API < 26 compatibility
         val startFormat = SimpleDateFormat("EEE, MMM d, HH:mm", Locale.getDefault())
         val endFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val startTime = Date(item.startTime.toEpochSecond(TimeZone.getDefault().toZoneId().rules.getOffset(item.startTime)) * 1000)
-        val endTime = Date(item.endTime.toEpochSecond(TimeZone.getDefault().toZoneId().rules.getOffset(item.endTime)) * 1000)
+        val startTime = org.threeten.bp.DateTimeUtils.toDate(item.startTime.atZone(org.threeten.bp.ZoneId.systemDefault()).toInstant())
+        val endTime = org.threeten.bp.DateTimeUtils.toDate(item.endTime.atZone(org.threeten.bp.ZoneId.systemDefault()).toInstant())
         holder.time.text = holder.itemView.context.getString(
             R.string.session_time_format,
             startFormat.format(startTime),
             endFormat.format(endTime)
         )
         holder.status.text = item.status.name
-        // Color-code by subject (simple hash for demo)
-        holder.card.setCardBackgroundColor(item.color ?: getColorForSubject(item.subject))
+        // Color-code by subject
+        holder.card.setCardBackgroundColor(getColorForSubject(item.subject))
         holder.btnComplete.setOnClickListener { onMarkComplete(item) }
         holder.btnSkip.setOnClickListener { onSkip(item) }
         holder.btnStartTimer.setOnClickListener { onStartTimer(item) }
