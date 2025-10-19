@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -14,9 +13,6 @@ import com.example.learnlog.databinding.FragmentInsightsBinding
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -37,10 +33,13 @@ class InsightsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.root.findViewById<com.google.android.material.chip.Chip>(R.id.page_chip).text = "Insights"
+
+        // Set page title in header
+        binding.topBar.pageTitle.text = getString(R.string.page_insights_title)
+
         setupTimeRangeChips()
-        observeData()
         setupCharts()
+        observeData()
     }
 
     private fun setupTimeRangeChips() {
@@ -70,9 +69,8 @@ class InsightsFragment : Fragment() {
             holeRadius = 40f
         }
 
-        with(binding.plannedVsActualChart) {
+        with(binding.dailyLineChart) {
             description.isEnabled = false
-            setFitBars(true)
             xAxis.setDrawGridLines(false)
             axisLeft.setDrawGridLines(false)
             axisRight.isEnabled = false
@@ -86,7 +84,6 @@ class InsightsFragment : Fragment() {
                 updateTotalFocusTime(data.totalFocusMinutes)
                 updateSubjectsPieChart(data.timeBySubject)
                 updateStreakText(data.currentStreak)
-                updatePlannedVsActualChart(data.plannedMinutes, data.actualMinutes)
             }
         }
     }
@@ -119,21 +116,6 @@ class InsightsFragment : Fragment() {
 
     private fun updateStreakText(streak: Int) {
         binding.streakText.text = getString(R.string.streak_days_format, streak)
-    }
-
-    private fun updatePlannedVsActualChart(planned: Int, actual: Int) {
-        val entries = listOf(
-            BarEntry(0f, planned.toFloat()),
-            BarEntry(1f, actual.toFloat())
-        )
-
-        val dataSet = BarDataSet(entries, getString(R.string.planned_vs_actual)).apply {
-            colors = listOf(Color.rgb(64, 89, 128), Color.rgb(149, 165, 124))
-            valueTextSize = 14f
-        }
-
-        binding.plannedVsActualChart.data = BarData(dataSet)
-        binding.plannedVsActualChart.invalidate()
     }
 
     override fun onDestroyView() {

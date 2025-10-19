@@ -61,7 +61,8 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.chipPage.text = "Timer"
+        // Set page title in header
+        binding.topBar.pageTitle.text = getString(R.string.page_timer_title)
 
         // Set task from navigation arguments
         if (args.taskId != -1L) {
@@ -78,13 +79,12 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
 
     private fun setupUI() {
         updateTimerDisplay()
-        updateStreakAndSessionCount()
 
         binding.btnStartPause.setOnClickListener {
             when (timerState) {
                 TimerState.IDLE, TimerState.PAUSED -> startTimer()
                 TimerState.RUNNING -> pauseTimer()
-                TimerState.BREAK -> startTimer() // Handle break state same as IDLE/PAUSED
+                TimerState.BREAK -> startTimer()
             }
         }
 
@@ -109,11 +109,6 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val minutes = remainingMillis / 1000 / 60
         val seconds = remainingMillis / 1000 % 60
         binding.textCountdown.text = String.format("%02d:%02d", minutes, seconds)
-    }
-
-    private fun updateStreakAndSessionCount() {
-        binding.textStreak.text = streak.toString()
-        binding.textSessionsCompleted.text = sessionsCompleted.toString()
     }
 
     private fun startTimer() {

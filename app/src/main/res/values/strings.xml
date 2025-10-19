@@ -1,6 +1,11 @@
 <resources>
     <string name="app_name">LearnLog</string>
     <string name="page_tasks">Tasks</string>
+    <string name="page_tasks_title">TASKS &amp; DEADLINES</string>
+    <string name="page_planner_title">PLANNER</string>
+    <string name="page_timer_title">TIMER</string>
+    <string name="page_insights_title">INSIGHTS</string>
+    <string name="page_notes_title">NOTES</string>
     <string name="page_timer">Timer</string>
     <string name="add_task">Add Task</string>
     <string name="edit_task">Edit Task</string>

@@ -47,6 +47,9 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Set page title in header
+        binding.topBar.pageTitle.text = getString(R.string.page_tasks_title)
+
         setupRecyclerView()
         setupFab()
         observeViewModel()

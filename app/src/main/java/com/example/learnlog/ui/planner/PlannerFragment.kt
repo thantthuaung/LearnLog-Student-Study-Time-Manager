@@ -43,14 +43,15 @@ class PlannerFragment : Fragment(R.layout.fragment_planner) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Set page title in header
+        binding.topBar.pageTitle.text = getString(R.string.page_planner_title)
+
         setupUI()
         setupObservers()
         loadSampleTasks()
     }
 
     private fun setupUI() {
-        binding.topBar.pageChip.text = getString(R.string.nav_planner)
-
         adapter = StudySessionAdapter(
             onMarkComplete = { session: StudySession ->
                 viewModel.markSessionCompleted(session.id)

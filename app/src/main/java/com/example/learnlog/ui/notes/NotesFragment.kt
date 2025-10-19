@@ -32,8 +32,8 @@ class NotesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.root.findViewById<com.google.android.material.chip.Chip>(R.id.page_chip).text =
-            getString(R.string.nav_notes)
+        // Set page title in header
+        binding.topBar.pageTitle.text = getString(R.string.page_notes_title)
 
         setupRecyclerView()
 
