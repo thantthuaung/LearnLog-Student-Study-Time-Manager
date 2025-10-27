@@ -78,4 +78,22 @@ class TasksViewModel @Inject constructor(
             taskRepository.insertTask(task)
         }
     }
+
+    fun markAsInProgress(task: TaskEntity) {
+        viewModelScope.launch {
+            taskRepository.updateTask(task.copy(status = "IN_PROGRESS"))
+        }
+    }
+
+    fun deleteTaskWithUndo(task: TaskEntity) {
+        viewModelScope.launch {
+            taskRepository.deleteTask(task.id)
+        }
+    }
+
+    fun restoreTask(task: TaskEntity) {
+        viewModelScope.launch {
+            taskRepository.insertTask(task)
+        }
+    }
 }

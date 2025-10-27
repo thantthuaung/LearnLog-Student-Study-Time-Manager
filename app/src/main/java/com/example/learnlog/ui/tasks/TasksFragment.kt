@@ -1,28 +1,22 @@
 package com.example.learnlog.ui.tasks
 
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.learnlog.R
 import com.example.learnlog.data.entity.TaskEntity
 import com.example.learnlog.databinding.FragmentTasksBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -33,7 +27,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
     private val binding get() = _binding!!
     private val viewModel: TasksViewModel by viewModels()
 
-    private lateinit var tasksAdapter: TasksAdapter
+    private lateinit var taskEntityAdapter: TaskEntityAdapter
     private lateinit var headerAdapter: HeaderAdapter
     private lateinit var filterAdapter: FilterAdapter
 
@@ -53,23 +47,31 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         setupRecyclerView()
         setupFab()
         observeViewModel()
-        setupSwipeToDelete()
     }
 
     private fun setupRecyclerView() {
-        tasksAdapter = TasksAdapter(
-            onToggleComplete = { task, isChecked ->
-                viewModel.toggleComplete(task, isChecked)
+        taskEntityAdapter = TaskEntityAdapter(
+            onTaskClick = { task ->
+                showAddEditSheet(task)
             },
             onStartTimer = { task ->
-                val action = TasksFragmentDirections.actionTasksFragmentToTimerFragment(
+                // Mark task as IN_PROGRESS when timer starts
+                viewModel.markAsInProgress(task)
+
+                // Open task timer bottom sheet (popup)
+                val timerSheet = com.example.learnlog.ui.timer.TaskTimerBottomSheet.newInstance(
                     taskId = task.id,
-                    taskTitle = task.title
+                    taskTitle = task.title,
+                    taskSubject = task.subject,
+                    durationMinutes = 25 // Default 25 minutes, can be adjusted
                 )
-                findNavController().navigate(action)
+                timerSheet.show(childFragmentManager, "TaskTimerSheet")
             },
-            onEdit = { task ->
-                showAddEditSheet(task)
+            onCheckChanged = { task, isChecked ->
+                viewModel.toggleComplete(task, isChecked)
+            },
+            onLongPress = { task ->
+                showTaskActionsMenu(task)
             }
         )
 
@@ -79,7 +81,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             onSortClicked = { sortButton -> showSortMenu(sortButton) }
         )
 
-        val concatAdapter = ConcatAdapter(headerAdapter, filterAdapter, tasksAdapter)
+        val concatAdapter = ConcatAdapter(headerAdapter, filterAdapter, taskEntityAdapter)
 
         binding.recyclerViewTasks.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -98,7 +100,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { tasks ->
-                    tasksAdapter.submitList(tasks)
+                    taskEntityAdapter.submitList(tasks)
                     binding.emptyState.isVisible = tasks.isEmpty()
                     binding.recyclerViewTasks.isVisible = tasks.isNotEmpty()
                 }
@@ -125,93 +127,62 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         bottomSheet.show(childFragmentManager, "AddEditTaskBottomSheet")
     }
 
-    private fun setupSwipeToDelete() {
-        val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(
-            0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-        ) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean = false
+    private fun showTaskActionsMenu(task: TaskEntity) {
+        val options = arrayOf(
+            "Mark Completed",
+            "Edit",
+            "Duplicate",
+            "Delete"
+        )
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                if (viewHolder is TasksAdapter.TaskViewHolder) {
-                    val position = viewHolder.bindingAdapterPosition
-                    val task = tasksAdapter.currentList[position]
-
-                    if (direction == ItemTouchHelper.LEFT) { // Delete
-                        viewModel.delete(task.id)
-                        Snackbar.make(binding.root, "Task deleted", Snackbar.LENGTH_LONG)
-                            .setAction("UNDO") {
-                                viewModel.insert(task)
-                            }
-                            .show()
-                    } else { // Complete
-                        viewModel.toggleComplete(task, !task.completed)
-                    }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(task.title)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> viewModel.toggleComplete(task, true)
+                    1 -> showAddEditSheet(task)
+                    2 -> duplicateTask(task)
+                    3 -> showDeleteConfirmation(task)
                 }
             }
+            .show()
+    }
 
-            override fun onChildDraw(
-                c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,
-                actionState: Int, isCurrentlyActive: Boolean
-            ) {
-                val itemView = viewHolder.itemView
-                val background = ColorDrawable()
-                val deleteIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_delete)
-                val checkIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_check)
+    private fun duplicateTask(task: TaskEntity) {
+        val duplicatedTask = task.copy(
+            id = 0, // Will get new ID on insert
+            title = "${task.title} (Copy)",
+            completed = false,
+            status = "PENDING"
+        )
+        viewModel.insert(duplicatedTask)
+        Snackbar.make(binding.root, "Task duplicated", Snackbar.LENGTH_SHORT).show()
+    }
 
-                if (dX > 0) { // Swiping to the right (Complete)
-                    background.color = Color.GREEN
-                    background.setBounds(
-                        itemView.left,
-                        itemView.top,
-                        itemView.left + (dX.toInt()),
-                        itemView.bottom
-                    )
-                    checkIcon?.let {
-                        val iconMargin = (itemView.height - it.intrinsicHeight) / 2
-                        val iconTop = itemView.top + iconMargin
-                        val iconBottom = itemView.bottom - iconMargin
-                        it.setBounds(
-                            itemView.left + iconMargin,
-                            iconTop,
-                            itemView.left + iconMargin + it.intrinsicWidth,
-                            iconBottom
-                        )
-                        it.draw(c)
-                    }
-                } else if (dX < 0) { // Swiping to the left (Delete)
-                    background.color = Color.RED
-                    background.setBounds(
-                        itemView.right + dX.toInt(),
-                        itemView.top,
-                        itemView.right,
-                        itemView.bottom
-                    )
-                    deleteIcon?.let {
-                        val iconMargin = (itemView.height - it.intrinsicHeight) / 2
-                        val iconTop = itemView.top + iconMargin
-                        val iconBottom = itemView.bottom - iconMargin
-                        it.setBounds(
-                            itemView.right - iconMargin - it.intrinsicWidth,
-                            iconTop,
-                            itemView.right - iconMargin,
-                            iconBottom
-                        )
-                        it.draw(c)
-                    }
-                } else {
-                    background.setBounds(0, 0, 0, 0)
-                }
+    private fun showDeleteConfirmation(task: TaskEntity) {
+        // Check if timer is running for this task (simplified for now)
+        // In a full implementation, check actual timer state
 
-                background.draw(c)
-
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Delete task \"${task.title}\"?")
+            .setMessage("This will remove the task from Tasks. Study sessions remain.")
+            .setPositiveButton("Delete") { _, _ ->
+                performDelete(task)
             }
-        }
-        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.recyclerViewTasks)
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performDelete(task: TaskEntity) {
+        // Optimistically remove from list - handled by ViewModel and Flow
+        viewModel.deleteTaskWithUndo(task)
+
+        // Show undo snackbar
+        Snackbar.make(binding.root, "Task deleted", Snackbar.LENGTH_LONG)
+            .setAction("UNDO") {
+                viewModel.restoreTask(task)
+            }
+            .show()
     }
 
     override fun onDestroyView() {

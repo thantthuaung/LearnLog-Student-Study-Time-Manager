@@ -2,18 +2,21 @@
     <!-- Add your color definitions here -->
     <color name="primaryColor">#87CEEB</color>
     <color name="secondaryColor">#87CEEB</color>
-    <color name="sky_blue">#87CEEB</color>
+    <color name="sky_blue">#4DBFFF</color>
     <color name="white">#FFFFFF</color>
     <color name="dark_slate">#2F4F4F</color>
-    <color name="light_gray">#D3D3D3</color>
-    <color name="screen_bg">#F5F5F5</color>
-    <color name="ripple_white">#E0E0E0</color>
-    <color name="ink">#212121</color>
-    <color name="low_priority">#A5D6A7</color>
-    <color name="medium_priority">#FFF59D</color>
-    <color name="high_priority">#EF9A9A</color>
-    <color name="nav_blue">#1976D2</color>
+    <color name="light_gray">#EDEDED</color>
+    <color name="light_blue_background">#E3F2FD</color>
+    <color name="screen_bg">#F8F9FB</color>
+    <color name="ripple_white">#80FFFFFF</color>
+    <color name="ink">#0D2A3A</color>
+    <color name="low_priority">#66BB6A</color>
+    <color name="medium_priority">#FFA726</color>
+    <color name="high_priority">#FF5252</color>
+    <color name="nav_blue">#43B8FF</color>
     <color name="pomodoroFocus">#1976D2</color>
     <color name="pomodoroShortBreak">#43A047</color>
     <color name="pomodoroLongBreak">#FBC02D</color>
+    <color name="text_primary">#0D2A3A</color>
+    <color name="text_secondary">#7A8A99</color>
 </resources>

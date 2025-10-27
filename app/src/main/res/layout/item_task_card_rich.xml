@@ -49,7 +49,7 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_calendar"
-                android:tint="@color/nav_blue"
+                app:tint="@color/nav_blue"
                 android:layout_gravity="center_vertical" />
             <TextView
                 android:id="@+id/taskDue"

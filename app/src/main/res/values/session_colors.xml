@@ -7,7 +7,6 @@
     <color name="primary_light_blue">#2196F3</color>
     <color name="status_bar_light_blue">#1976D2</color>
     <color name="light_blue_accent">#03A9F4</color>
-    <color name="light_blue_background">#E3F2FD</color>
 
     <!-- Session status colors -->
     <color name="color_session_pending">#DDDDDD</color>

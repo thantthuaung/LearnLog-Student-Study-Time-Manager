@@ -46,4 +46,34 @@
     <string name="chip_pomodoro">Pomodoro</string>
     <string name="chip_short_break">Short Break</string>
     <string name="chip_long_break">Long Break</string>
+    <string name="timer_prompt_standalone">Select your focus duration</string>
+    <string name="pause_timer">Pause</string>
+    <string name="resume_timer">Resume</string>
+    <string name="timer_label_focus">FOCUS</string>
+
+    <!-- Priority options -->
+    <string-array name="priority_options">
+        <item>Low</item>
+        <item>Medium</item>
+        <item>High</item>
+    </string-array>
+
+    <!-- Type options -->
+    <string-array name="type_options">
+        <item>Assignment</item>
+        <item>Exam</item>
+        <item>Project</item>
+        <item>Reading</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- Validation messages -->
+    <string name="error_past_date">Date and time cannot be in the past</string>
+    <string name="error_required_field">This field is required</string>
+
+    <!-- Status labels -->
+    <string name="status_pending">Pending</string>
+    <string name="status_in_progress">In Progress</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_overdue">Overdue</string>
 </resources>

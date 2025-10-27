@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="24dp"
+    android:background="@color/screen_bg">
+
+    <!-- Header: LEARNLOG label -->
+    <TextView
+        android:id="@+id/labelLearnlog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
+        android:textColor="@color/nav_blue"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Task Title + Subject Chip -->
+    <LinearLayout
+        android:id="@+id/taskInfoRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/labelLearnlog">
+
+        <TextView
+            android:id="@+id/textTaskTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAlignment="center"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold"
+            tools:text="Complete Math Assignment" />
+    </LinearLayout>
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipSubject"
+        style="@style/Widget.Material3.Chip.Assist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        app:chipIcon="@drawable/ic_calendar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/taskInfoRow"
+        tools:text="Mathematics" />
+
+    <!-- Circular Progress with Countdown -->
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/progressCircle"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_marginTop="24dp"
+        android:indeterminate="false"
+        android:progress="0"
+        app:indicatorColor="@color/nav_blue"
+        app:indicatorSize="220dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chipSubject"
+        app:trackColor="@color/light_gray"
+        app:trackThickness="8dp" />
+
+    <TextView
+        android:id="@+id/textCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-light"
+        android:text="25:00"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/progressCircle"
+        app:layout_constraintEnd_toEndOf="@id/progressCircle"
+        app:layout_constraintStart_toStartOf="@id/progressCircle"
+        app:layout_constraintTop_toTopOf="@id/progressCircle" />
+
+    <!-- Time Adjustment Controls -->
+    <LinearLayout
+        android:id="@+id/timeControlsRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressCircle">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDecrease"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="-1m"
+            android:textSize="12sp"
+            app:icon="@drawable/ic_close"
+            app:iconGravity="textStart"
+            app:iconPadding="2dp"
+            app:iconSize="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnIncrease"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="+5m"
+            android:textSize="12sp"
+            app:icon="@drawable/ic_add"
+            app:iconGravity="textStart"
+            app:iconPadding="2dp"
+            app:iconSize="16dp" />
+    </LinearLayout>
+
+    <!-- Main Control Button (Start/Pause/Resume) -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/btnStartPause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/start_timer"
+        app:icon="@drawable/ic_play"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/timeControlsRow" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStop"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:visibility="gone"
+        app:icon="@drawable/ic_stop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnStartPause"
+        tools:visibility="visible" />
+
+    <!-- Toggle Controls -->
+    <LinearLayout
+        android:id="@+id/toggleRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnStop">
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchSound"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:checked="true"
+            android:text="Sound"
+            android:textSize="12sp" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchKeepScreenOn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="Keep Screen On"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switchBackgroundMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:checked="false"
+        android:text="Keep running in background"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toggleRow" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

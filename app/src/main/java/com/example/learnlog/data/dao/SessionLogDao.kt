@@ -12,8 +12,11 @@ interface SessionLogDao {
     @Query("SELECT * FROM session_logs WHERE task_id = :taskId")
     fun getSessionsForTask(taskId: Long): Flow<List<SessionLogEntity>>
 
+    @Query("SELECT * FROM session_logs WHERE id = :sessionId LIMIT 1")
+    suspend fun getSessionById(sessionId: Long): SessionLogEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSession(session: SessionLogEntity)
+    suspend fun insertSession(session: SessionLogEntity): Long
 
     @Update
     suspend fun updateSession(session: SessionLogEntity)

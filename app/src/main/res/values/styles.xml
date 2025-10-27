@@ -21,8 +21,10 @@
 
     <style name="Widget.LearnLog.TasksHeader" parent="android:Widget.TextView">
         <item name="android:background">@drawable/rounded_capsule_header</item>
-        <item name="android:paddingHorizontal">24dp</item>
-        <item name="android:paddingVertical">8dp</item>
+        <item name="android:paddingLeft">24dp</item>
+        <item name="android:paddingRight">24dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
         <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
         <item name="android:textColor">?attr/colorOnPrimary</item>
     </style>

@@ -38,6 +38,25 @@ class MainActivity : AppCompatActivity() {
             setupWithNavController(navController)
             setOnItemReselectedListener { /* Prevent reselection reload */ }
         }
+
+        // Handle notification intent to open Timer tab
+        handleNotificationIntent()
+    }
+
+    private fun handleNotificationIntent() {
+        if (intent?.getBooleanExtra("open_timer_tab", false) == true) {
+            // Navigate to Timer tab
+            val navHostFragment = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+            val navController = navHostFragment.navController
+            navController.navigate(R.id.timerFragment)
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNotificationIntent()
     }
 
     override fun onSupportNavigateUp(): Boolean {
