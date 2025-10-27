@@ -19,4 +19,5 @@
     <color name="pomodoroLongBreak">#FBC02D</color>
     <color name="text_primary">#0D2A3A</color>
     <color name="text_secondary">#7A8A99</color>
+    <color name="text_hint">#B0BEC5</color>
 </resources>

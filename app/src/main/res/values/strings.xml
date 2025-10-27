@@ -29,6 +29,20 @@
     <string name="insights_month">Month</string>
     <string name="total_focus_time_format">Total Focus: %s</string>
     <string name="time_by_subject">Time by Subject</string>
+
+    <!-- Planner -->
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="today">Today</string>
+    <string name="all">All</string>
+    <string name="pending">Pending</string>
+    <string name="in_progress">In Progress</string>
+    <string name="completed">Completed</string>
+    <string name="overdue">Overdue</string>
+    <string name="no_tasks_for_date">No tasks for this date</string>
+    <string name="add_task_hint">Tap + to add a task</string>
+    <string name="add_task_desc">Add task</string>
+    <string name="tasks_for_date">Tasks for %1$s</string>
     <string name="streak_days_format">%d Day Streak</string>
     <string name="planned_vs_actual">Planned vs. Actual</string>
     <string name="session_time_format">%1$s - %2$s</string>

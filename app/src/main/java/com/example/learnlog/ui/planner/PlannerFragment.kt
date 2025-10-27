@@ -4,34 +4,38 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.learnlog.R
-import com.example.learnlog.data.model.CalendarMode
-import com.example.learnlog.data.model.StudySession
+import com.example.learnlog.data.entity.TaskEntity
 import com.example.learnlog.databinding.FragmentPlannerBinding
-import com.example.learnlog.ui.tasks.TaskItem
-import com.example.learnlog.ui.tasks.TaskPriority
-import com.example.learnlog.ui.tasks.TaskStatus
-import com.example.learnlog.ui.tasks.TaskType
-import com.example.learnlog.util.DateTimeProvider
+import com.example.learnlog.ui.tasks.AddEditTaskBottomSheet
+import com.example.learnlog.ui.tasks.TaskEntityAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import org.threeten.bp.LocalDate
+import org.threeten.bp.format.DateTimeFormatter
+import java.util.Locale
 
 @AndroidEntryPoint
 class PlannerFragment : Fragment(R.layout.fragment_planner) {
     private var _binding: FragmentPlannerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: PlannerViewModel by viewModels()
-    private lateinit var adapter: StudySessionAdapter
 
-    @Inject
-    lateinit var dateTimeProvider: DateTimeProvider
+    private lateinit var calendarAdapter: CalendarAdapter
+    private lateinit var dayTasksAdapter: TaskEntityAdapter
+
+    private val monthYearFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    private val dayDateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -46,81 +50,207 @@ class PlannerFragment : Fragment(R.layout.fragment_planner) {
         // Set page title in header
         binding.topBar.pageTitle.text = getString(R.string.page_planner_title)
 
-        setupUI()
-        setupObservers()
-        loadSampleTasks()
+        setupCalendar()
+        setupDayTasksList()
+        setupFilters()
+        setupButtons()
+        observeViewModel()
     }
 
-    private fun setupUI() {
-        adapter = StudySessionAdapter(
-            onMarkComplete = { session: StudySession ->
-                viewModel.markSessionCompleted(session.id)
-                Snackbar.make(binding.root, "Session marked as complete", Snackbar.LENGTH_SHORT).show()
+    private fun setupCalendar() {
+        calendarAdapter = CalendarAdapter { day ->
+            viewModel.selectDate(day.date)
+        }
+
+        binding.calendarRecyclerView.apply {
+            layoutManager = GridLayoutManager(requireContext(), 7)
+            adapter = calendarAdapter
+            setHasFixedSize(true)
+        }
+    }
+
+    private fun setupDayTasksList() {
+        dayTasksAdapter = TaskEntityAdapter(
+            onTaskClick = { task ->
+                showAddEditSheet(task)
             },
-            onSkip = { session: StudySession ->
-                viewModel.markSessionSkipped(session.id)
-                Snackbar.make(binding.root, "Session skipped", Snackbar.LENGTH_SHORT).show()
+            onStartTimer = { task ->
+                // Mark task as IN_PROGRESS when timer starts
+                viewModel.toggleTaskCompletion(task, false)
+
+                // Open task timer bottom sheet (popup)
+                val timerSheet = com.example.learnlog.ui.timer.TaskTimerBottomSheet.newInstance(
+                    taskId = task.id,
+                    taskTitle = task.title,
+                    taskSubject = task.subject,
+                    durationMinutes = 25 // Default 25 minutes
+                )
+                timerSheet.show(childFragmentManager, "TaskTimerSheet")
             },
-            onStartTimer = { session: StudySession ->
-                Toast.makeText(requireContext(), "Start timer for: ${session.subject}", Toast.LENGTH_SHORT).show()
-                // TODO: Integrate with Timer
+            onCheckChanged = { task, isChecked ->
+                viewModel.toggleTaskCompletion(task, isChecked)
+            },
+            onLongPress = { task ->
+                showTaskActionsMenu(task)
             }
         )
-        binding.recyclerViewPlanner.layoutManager = LinearLayoutManager(requireContext())
-        binding.recyclerViewPlanner.adapter = adapter
 
-        // Week/Day toggle
-        binding.toggleCalendarMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                when (checkedId) {
-                    R.id.btnWeekView -> viewModel.setCalendarMode(CalendarMode.WEEK)
-                    R.id.btnDayView -> viewModel.setCalendarMode(CalendarMode.DAY)
+        binding.dayTasksRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = dayTasksAdapter
+        }
+    }
+
+    private fun setupFilters() {
+        binding.filterChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+            val filter = when {
+                checkedIds.contains(R.id.chipPending) -> "PENDING"
+                checkedIds.contains(R.id.chipInProgress) -> "IN_PROGRESS"
+                checkedIds.contains(R.id.chipCompleted) -> "COMPLETED"
+                checkedIds.contains(R.id.chipOverdue) -> "OVERDUE"
+                else -> null // All
+            }
+            viewModel.setFilter(filter)
+        }
+    }
+
+    private fun setupButtons() {
+        // Month navigation
+        binding.btnPrevMonth.setOnClickListener {
+            viewModel.goToPreviousMonth()
+        }
+
+        binding.btnNextMonth.setOnClickListener {
+            viewModel.goToNextMonth()
+        }
+
+        binding.btnToday.setOnClickListener {
+            viewModel.goToToday()
+        }
+
+        // FAB for adding task
+        binding.fabAddTask.setOnClickListener {
+            val selectedDate = viewModel.selectedDate.value
+            showAddEditSheet(null, selectedDate)
+        }
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Observe current month
+                launch {
+                    viewModel.currentMonth.collect { month ->
+                        binding.textMonthYear.text = month.format(monthYearFormatter)
+                    }
+                }
+
+                // Observe calendar days
+                launch {
+                    viewModel.calendarDays.collect { days ->
+                        calendarAdapter.submitList(days)
+                    }
+                }
+
+                // Observe selected date
+                launch {
+                    viewModel.selectedDate.collect { date ->
+                        binding.textSelectedDate.text = getString(
+                            R.string.tasks_for_date,
+                            date.format(dayDateFormatter)
+                        )
+                    }
+                }
+
+                // Observe day tasks
+                launch {
+                    viewModel.dayTasks.collect { tasks ->
+                        dayTasksAdapter.submitList(tasks)
+                        binding.emptyState.isVisible = tasks.isEmpty()
+                        binding.dayTasksRecyclerView.isVisible = tasks.isNotEmpty()
+                    }
                 }
             }
         }
     }
 
-    private fun setupObservers() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.plannerItems.collect { items ->
-                adapter.submitList(items)
-            }
+    private fun showAddEditSheet(task: TaskEntity?, prefilledDate: LocalDate? = null) {
+        val bottomSheet = if (task != null) {
+            AddEditTaskBottomSheet.newInstance(task)
+        } else if (prefilledDate != null) {
+            // Create a new task with the selected date
+            val taskWithDate = TaskEntity(
+                title = "",
+                subject = null,
+                dueAt = prefilledDate.atTime(23, 59),
+                priority = 0,
+                status = "PENDING",
+                type = "ASSIGNMENT"
+            )
+            AddEditTaskBottomSheet.newInstance(taskWithDate)
+        } else {
+            AddEditTaskBottomSheet.newInstance(null)
         }
+        bottomSheet.show(childFragmentManager, "AddEditTaskBottomSheet")
     }
 
-    private fun loadSampleTasks() {
-        val tasks = listOf(
-            TaskItem(
-                id = 1L,
-                title = "Math Homework",
-                subject = "Mathematics",
-                dueDateTime = dateTimeProvider.now().plusDays(1),
-                priority = TaskPriority.HIGH,
-                type = TaskType.ASSIGNMENT,
-                status = TaskStatus.PENDING
-            ),
-            TaskItem(
-                id = 2L,
-                title = "Science Project",
-                subject = "Science",
-                dueDateTime = dateTimeProvider.now().plusDays(2),
-                priority = TaskPriority.MEDIUM,
-                type = TaskType.REVISION,
-                status = TaskStatus.IN_PROGRESS,
-                progress = 50
-            ),
-            TaskItem(
-                id = 3L,
-                title = "History Exam",
-                subject = "History",
-                dueDateTime = dateTimeProvider.now().plusHours(5),
-                priority = TaskPriority.HIGH,
-                type = TaskType.EXAM,
-                status = TaskStatus.PENDING
-            )
+    private fun showTaskActionsMenu(task: TaskEntity) {
+        val options = arrayOf(
+            "Reschedule",
+            "Mark Completed",
+            "Edit",
+            "Duplicate",
+            "Delete"
         )
-        viewModel.loadTasks(tasks)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(task.title)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showRescheduleOptions(task)
+                    1 -> viewModel.toggleTaskCompletion(task, true)
+                    2 -> showAddEditSheet(task)
+                    3 -> duplicateTask(task)
+                    4 -> showDeleteConfirmation(task)
+                }
+            }
+            .show()
     }
+
+    private fun showRescheduleOptions(task: TaskEntity) {
+        val rescheduleSheet = RescheduleTaskBottomSheet.newInstance(task) { date, time ->
+            val newDateTime = date.atTime(time)
+            viewModel.updateTaskDueDate(task.id, newDateTime)
+            Snackbar.make(binding.root, "Task rescheduled", Snackbar.LENGTH_SHORT).show()
+        }
+        rescheduleSheet.show(childFragmentManager, "RescheduleSheet")
+    }
+
+    private fun duplicateTask(task: TaskEntity) {
+        // Open AddEditTaskBottomSheet with duplicated task (no ID)
+        val duplicatedTask = task.copy(
+            id = 0,
+            title = "${task.title} (Copy)"
+        )
+        showAddEditSheet(duplicatedTask)
+    }
+
+    private fun showDeleteConfirmation(task: TaskEntity) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Delete Task")
+            .setMessage("Are you sure you want to delete \"${task.title}\"?")
+            .setPositiveButton("Delete") { _, _ ->
+                viewModel.deleteTask(task.id)
+                Snackbar.make(binding.root, "Task deleted", Snackbar.LENGTH_SHORT)
+                    .setAction("Undo") {
+                        // TODO: Implement undo
+                    }
+                    .show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
