@@ -46,6 +46,13 @@
     <string name="empty_top_tasks">No tasks with logged time yet</string>
     <string name="empty_streak">No streak yet — start a session to begin!</string>
 
+    <!-- Notes -->
+    <string name="pinned_only">Pinned Only</string>
+    <string name="clear_filters">Clear Filters</string>
+    <string name="no_notes_icon_desc">No notes</string>
+    <string name="no_notes_title">No notes yet</string>
+    <string name="no_notes_message">Tap + to create your first note</string>
+
     <!-- Planner -->
     <string name="previous_month">Previous month</string>
     <string name="next_month">Next month</string>

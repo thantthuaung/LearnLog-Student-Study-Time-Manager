@@ -20,7 +20,7 @@ import com.example.learnlog.data.model.Subject
         Subject::class,
         Note::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(
@@ -47,6 +47,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "learnlog_database"
                 )
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { INSTANCE = it }
@@ -89,6 +90,14 @@ abstract class AppDatabase : RoomDatabase() {
                         `notes` TEXT
                     )
                 """)
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add new columns to notes table
+                database.execSQL("ALTER TABLE notes ADD COLUMN taskId INTEGER DEFAULT NULL")
+                database.execSQL("ALTER TABLE notes ADD COLUMN isPinned INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

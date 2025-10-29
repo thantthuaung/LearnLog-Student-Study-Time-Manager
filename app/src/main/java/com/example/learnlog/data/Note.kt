@@ -17,8 +17,10 @@ data class Note(
     val id: Long = 0,
     val title: String,
     val content: String,
-    val subjectId: Long?,
-    val tags: List<String>,
+    val subjectId: Long? = null,
+    val taskId: Long? = null,
+    val tags: List<String> = emptyList(),
+    val isPinned: Boolean = false,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now()
 )
