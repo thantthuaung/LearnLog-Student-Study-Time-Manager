@@ -23,15 +23,35 @@ class AddEditNoteViewModel @Inject constructor(
     private val _note = MutableStateFlow<Note?>(null)
     val note: StateFlow<Note?> = _note
 
+    private val _tags = MutableStateFlow<List<String>>(emptyList())
+    val tags: StateFlow<List<String>> = _tags
+
+    private val _subjectId = MutableStateFlow<Long?>(null)
+    private val _taskId = MutableStateFlow<Long?>(null)
+
     init {
         if (noteId != -1L) {
             viewModelScope.launch {
-                _note.value = noteRepository.getNoteById(noteId)
+                val existingNote = noteRepository.getNoteById(noteId)
+                _note.value = existingNote
+                _tags.value = existingNote?.tags ?: emptyList()
+                _subjectId.value = existingNote?.subjectId
+                _taskId.value = existingNote?.taskId
             }
+        } else {
+            // Check if creating from task/subject context
+            _subjectId.value = savedStateHandle.get<Long>("subjectId")?.takeIf { it > 0 }
+            _taskId.value = savedStateHandle.get<Long>("taskId")?.takeIf { it > 0 }
         }
     }
 
-    fun saveNote(title: String, content: String) {
+    fun saveNote(
+        title: String,
+        content: String,
+        tags: List<String> = _tags.value,
+        subjectId: Long? = _subjectId.value,
+        taskId: Long? = _taskId.value
+    ) {
         if (title.isBlank()) return
 
         viewModelScope.launch {
@@ -40,14 +60,19 @@ class AddEditNoteViewModel @Inject constructor(
                 _note.value?.copy(
                     title = title,
                     content = content,
+                    tags = tags,
+                    subjectId = subjectId,
+                    taskId = taskId,
                     updatedAt = currentDateTime
                 )
             } else {
                 Note(
                     title = title,
                     content = content,
-                    subjectId = null,
-                    tags = emptyList(),
+                    subjectId = subjectId,
+                    taskId = taskId,
+                    tags = tags,
+                    isPinned = false,
                     createdAt = currentDateTime,
                     updatedAt = currentDateTime
                 )
@@ -61,5 +86,23 @@ class AddEditNoteViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun addTag(tag: String) {
+        if (tag.isNotBlank() && !_tags.value.contains(tag)) {
+            _tags.value = _tags.value + tag
+        }
+    }
+
+    fun removeTag(tag: String) {
+        _tags.value = _tags.value - tag
+    }
+
+    fun setSubject(subjectId: Long?) {
+        _subjectId.value = subjectId
+    }
+
+    fun setTask(taskId: Long?) {
+        _taskId.value = taskId
     }
 }
