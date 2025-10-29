@@ -1,6 +1,5 @@
 package com.example.learnlog.di
 
-import android.app.Application
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,8 +21,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideInsightsRepository(sessionLogDao: SessionLogDao): InsightsRepository {
-        return InsightsRepository(sessionLogDao)
+    fun provideInsightsRepository(
+        sessionLogDao: SessionLogDao,
+        tasksRepository: TasksRepository,
+        plannerRepository: PlannerRepository,
+        dateTimeProvider: DateTimeProvider
+    ): InsightsRepository {
+        return InsightsRepository(sessionLogDao, tasksRepository, plannerRepository, dateTimeProvider)
     }
 
     @Provides

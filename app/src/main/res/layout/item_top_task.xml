@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/taskTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Math Assignment" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/subjectChip"
+                    style="@style/Widget.MaterialComponents.Chip.Entry"
+                    android:layout_width="wrap_content"
+                    android:layout_height="24dp"
+                    android:textSize="10sp"
+                    app:chipMinHeight="24dp"
+                    tools:text="Mathematics" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/timeSpent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/nav_blue"
+            android:layout_marginStart="8dp"
+            tools:text="1h 45m" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/timeProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:progressTint="@color/nav_blue"
+        android:max="100"
+        tools:progress="75" />
+
+</LinearLayout>
+

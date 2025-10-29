@@ -27,8 +27,24 @@
     <string name="insights_today">Today</string>
     <string name="insights_week">Week</string>
     <string name="insights_month">Month</string>
+    <string name="insights_custom">Custom</string>
+    <string name="total_focus_time">Total Focus Time</string>
     <string name="total_focus_time_format">Total Focus: %s</string>
     <string name="time_by_subject">Time by Subject</string>
+    <string name="planned_vs_actual">Planned vs Actual</string>
+    <string name="planned">Planned</string>
+    <string name="actual">Actual</string>
+    <string name="adherence">Adherence</string>
+    <string name="task_completion_rate">Task Completion Rate</string>
+    <string name="current_streak">Current Streak</string>
+    <string name="top_tasks_by_time">Top Tasks by Time</string>
+    <string name="session_statistics">Session Statistics</string>
+    <string name="avg_session">Avg Session</string>
+    <string name="interruptions">Interruptions</string>
+    <string name="empty_focus_time">No focus time yet — start a 25m session</string>
+    <string name="empty_sessions">No sessions yet</string>
+    <string name="empty_top_tasks">No tasks with logged time yet</string>
+    <string name="empty_streak">No streak yet — start a session to begin!</string>
 
     <!-- Planner -->
     <string name="previous_month">Previous month</string>
@@ -44,7 +60,6 @@
     <string name="add_task_desc">Add task</string>
     <string name="tasks_for_date">Tasks for %1$s</string>
     <string name="streak_days_format">%d Day Streak</string>
-    <string name="planned_vs_actual">Planned vs. Actual</string>
     <string name="session_time_format">%1$s - %2$s</string>
     <string name="dialog_add_session_title">Add Study Session</string>
     <string name="action_add">Add</string>
