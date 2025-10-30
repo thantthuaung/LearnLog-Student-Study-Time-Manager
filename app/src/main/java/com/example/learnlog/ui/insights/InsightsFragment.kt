@@ -199,10 +199,12 @@ class InsightsFragment : Fragment() {
             } else {
                 "${mins}m"
             }
-            binding.emptyStateTotal.isVisible = false
+            binding.totalFocusTimeText.visibility = View.VISIBLE
+            binding.emptyStateTotal.visibility = View.GONE
         } else {
-            binding.totalFocusTimeText.text = "0m"
-            binding.emptyStateTotal.isVisible = true
+            binding.totalFocusTimeText.visibility = View.GONE
+            binding.emptyStateTotal.visibility = View.VISIBLE
+            binding.emptyStateTotal.text = getString(R.string.empty_focus_time)
         }
     }
 

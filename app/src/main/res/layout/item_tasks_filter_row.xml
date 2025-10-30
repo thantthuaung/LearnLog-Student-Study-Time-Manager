@@ -14,38 +14,30 @@
         app:singleSelection="true">
         <com.google.android.material.chip.Chip
             android:id="@+id/chipAll"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
+            style="@style/Widget.LearnLog.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="All"
-            android:checked="true"
-            android:backgroundTint="@color/sky_blue"
-            android:textColor="@color/white" />
+            android:checked="true" />
         <com.google.android.material.chip.Chip
             android:id="@+id/chipDue"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
+            style="@style/Widget.LearnLog.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Due"
-            android:backgroundTint="@color/light_gray"
-            android:textColor="@color/ink" />
+            android:text="Due" />
         <com.google.android.material.chip.Chip
             android:id="@+id/chipCompleted"
-            style="@style/Widget.MaterialComponents.Chip.Choice"
+            style="@style/Widget.LearnLog.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Completed"
-            android:backgroundTint="@color/light_gray"
-            android:textColor="@color/ink" />
+            android:text="Completed" />
     </com.google.android.material.chip.ChipGroup>
     <com.google.android.material.chip.Chip
         android:id="@+id/chipSort"
-        style="@style/Widget.MaterialComponents.Chip.Choice"
+        style="@style/Widget.LearnLog.Chip.Assist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sort ▾"
-        android:backgroundTint="@color/nav_blue"
-        android:textColor="@color/white"
         android:layout_marginStart="16dp"
         android:contentDescription="Sort tasks" />
 </LinearLayout>

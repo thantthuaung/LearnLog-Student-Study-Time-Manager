@@ -18,14 +18,28 @@ class TasksViewModel @Inject constructor(
 
     private val _filter = MutableStateFlow(TaskFilter.ALL)
     private val _sort = MutableStateFlow(TaskSort.DUE_DATE)
+    private val _searchQuery = MutableStateFlow("")
     private val _tasks = taskRepository.getTasks()
 
-    val uiState: StateFlow<List<TaskEntity>> = combine(_tasks, _filter, _sort) { tasks, filter, sort ->
-        val filteredTasks = when (filter) {
-            TaskFilter.ALL -> tasks
-            TaskFilter.DUE -> tasks.filter { !it.completed && it.dueAt != null }
-            TaskFilter.COMPLETED -> tasks.filter { it.completed }
+    val uiState: StateFlow<List<TaskEntity>> = combine(_tasks, _filter, _sort, _searchQuery) { tasks, filter, sort, query ->
+        // First apply search filter
+        val searchFiltered = if (query.isBlank()) {
+            tasks
+        } else {
+            tasks.filter { task ->
+                task.title.contains(query, ignoreCase = true) ||
+                task.subject?.contains(query, ignoreCase = true) == true
+            }
         }
+
+        // Then apply status filter
+        val filteredTasks = when (filter) {
+            TaskFilter.ALL -> searchFiltered
+            TaskFilter.DUE -> searchFiltered.filter { !it.completed && it.dueAt != null }
+            TaskFilter.COMPLETED -> searchFiltered.filter { it.completed }
+        }
+
+        // Finally apply sorting
         when (sort) {
             TaskSort.DUE_DATE -> filteredTasks.sortedBy { it.dueAt }
             TaskSort.PRIORITY -> filteredTasks.sortedByDescending { it.priority }
@@ -47,6 +61,10 @@ class TasksViewModel @Inject constructor(
 
     fun setSort(sort: TaskSort) {
         _sort.value = sort
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
     }
 
     fun toggleComplete(task: TaskEntity, completed: Boolean) {

@@ -113,7 +113,7 @@ class TimerFragment : Fragment() {
 
     private fun setupUI() {
         // Regular timer page title
-        binding.topBar.pageTitle.text = getString(R.string.nav_timer)
+        binding.topBar.pageTitle.text = getString(R.string.page_timer_title)
 
         // Hide task-specific UI (standalone timer mode)
         binding.taskInfoContainer.isVisible = false
@@ -198,6 +198,18 @@ class TimerFragment : Fragment() {
     }
 
     private fun startTimer() {
+        // Validate: prevent starting at 0:00
+        if (remainingMillis <= 0) {
+            Snackbar.make(binding.root, "Cannot start timer at 0:00", Snackbar.LENGTH_SHORT).show()
+            return
+        }
+
+        // Validate minimum duration
+        if (remainingMillis < 60 * 1000) {
+            Snackbar.make(binding.root, "Minimum duration is 1 minute", Snackbar.LENGTH_SHORT).show()
+            return
+        }
+
         // Start session on first start (standalone, no task)
         if (!sessionStarted && timerState == TimerState.IDLE) {
             val durationMinutes = (currentDurationMs / 1000 / 60).toInt()
@@ -210,6 +222,10 @@ class TimerFragment : Fragment() {
         binding.btnStartPause.setIconResource(R.drawable.ic_pause)
         binding.btnReset.visibility = View.VISIBLE
         binding.presetsRecyclerView.isEnabled = false
+
+        // Restore full opacity (in case resuming from pause)
+        binding.progressCircle.alpha = 1.0f
+        binding.textCountdown.alpha = 1.0f
 
         // Show notification
         notificationManager.showTimerNotification(remainingMillis)
@@ -310,6 +326,10 @@ class TimerFragment : Fragment() {
         binding.btnStartPause.text = getString(R.string.resume_timer)
         binding.btnStartPause.setIconResource(R.drawable.ic_play)
         countDownTimer?.cancel()
+
+        // Dim the progress ring to indicate paused state
+        binding.progressCircle.alpha = 0.5f
+        binding.textCountdown.alpha = 0.7f
 
         // Update notification to paused state
         notificationManager.updateTimerNotification(remainingMillis, isPaused = true)

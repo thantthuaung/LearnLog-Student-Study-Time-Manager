@@ -45,22 +45,31 @@
         <ImageView
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:src="@drawable/ic_empty_tasks" />
+            android:src="@drawable/ic_empty_tasks"
+            android:contentDescription="@string/no_notes_icon_desc" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="No tasks yet"
+            android:text="@string/no_notes_title"
             android:textAppearance="?attr/textAppearanceTitleMedium" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Tap + to add a new task"
+            android:text="@string/add_task_hint"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_empty_add_task"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/add_task"
+            app:icon="@drawable/ic_add" />
 
     </LinearLayout>
 

@@ -1,30 +1,58 @@
 <resources>
-    <!-- Add your color definitions here -->
+    <!-- Material 3 Light Theme Colors -->
     <color name="primaryColor">#87CEEB</color>
     <color name="secondaryColor">#87CEEB</color>
     <color name="sky_blue">#4DBFFF</color>
+    <color name="primary_light_blue">#43B8FF</color>
+    <color name="nav_blue">#43B8FF</color>
+
+    <!-- Surface & Background Colors -->
     <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="screen_bg">#F8F9FB</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_container">#FFFFFF</color>
+    <color name="surface_variant">#F2F2F2</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#0D2A3A</color>
+    <color name="on_surface">#263238</color>
+    <color name="text_secondary">#7A8A99</color>
+    <color name="on_surface_variant">#7A8A99</color>
+    <color name="text_hint">#B0BEC5</color>
+    <color name="outline">#DADADA</color>
+
+    <!-- Legacy Colors -->
     <color name="dark_slate">#2F4F4F</color>
     <color name="light_gray">#EDEDED</color>
     <color name="light_blue_background">#E3F2FD</color>
-    <color name="screen_bg">#F8F9FB</color>
     <color name="ripple_white">#80FFFFFF</color>
     <color name="ink">#0D2A3A</color>
+
+    <!-- Priority Colors -->
     <color name="low_priority">#66BB6A</color>
     <color name="medium_priority">#FFA726</color>
     <color name="high_priority">#FF5252</color>
-    <color name="nav_blue">#43B8FF</color>
+
+    <!-- Timer Colors -->
     <color name="pomodoroFocus">#1976D2</color>
     <color name="pomodoroShortBreak">#43A047</color>
     <color name="pomodoroLongBreak">#FBC02D</color>
-    <color name="text_primary">#0D2A3A</color>
-    <color name="text_secondary">#7A8A99</color>
-    <color name="text_hint">#B0BEC5</color>
 
-    <!-- Insights page colors -->
+    <!-- Status Colors -->
     <color name="amber">#FFC107</color>
     <color name="green">#4CAF50</color>
     <color name="rose">#B33050</color>
+    <color name="red">#F44336</color>
+    <color name="blue">#2196F3</color>
+    <color name="gray">#9E9E9E</color>
+
+    <!-- Chip Colors -->
+    <color name="chip_background_light">#F0F0F0</color>
+    <color name="chip_background_selected">#43B8FF</color>
+    <color name="chip_text_light">#263238</color>
+    <color name="chip_text_selected">#FFFFFF</color>
+    <color name="chip_stroke">#E0E0E0</color>
 </resources>
 
 

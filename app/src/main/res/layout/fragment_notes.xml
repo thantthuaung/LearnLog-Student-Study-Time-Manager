@@ -53,7 +53,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPinnedOnly"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
+                style="@style/Widget.LearnLog.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/pinned_only"
@@ -61,7 +61,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipClearFilters"
-                style="@style/Widget.MaterialComponents.Chip.Action"
+                style="@style/Widget.LearnLog.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/clear_filters"

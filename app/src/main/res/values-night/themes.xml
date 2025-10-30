@@ -1,7 +1,59 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.LearnLog" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <!-- Force light theme even in night mode -->
+    <style name="Theme.LearnLog" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Disable dynamic color -->
+        <item name="dynamicColorThemeOverlay">@null</item>
+
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/nav_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/light_blue_background</item>
+        <item name="colorOnPrimaryContainer">@color/text_primary</item>
+
+        <!-- Secondary color -->
+        <item name="colorSecondary">@color/sky_blue</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/light_blue_background</item>
+        <item name="colorOnSecondaryContainer">@color/text_primary</item>
+
+        <!-- Surface colors -->
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorSurfaceContainer">@color/white</item>
+        <item name="colorSurfaceContainerLow">@color/white</item>
+        <item name="colorSurfaceContainerHigh">@color/white</item>
+
+        <!-- Outline -->
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/chip_stroke</item>
+
+        <!-- Background -->
+        <item name="android:colorBackground">@color/screen_bg</item>
+
+        <!-- Disable elevation overlays -->
+        <item name="elevationOverlayEnabled">false</item>
+
+        <!-- System bars -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/screen_bg</item>
+
+        <!-- Prevent auto-darkening -->
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+
+        <!-- Remove ActionBar -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <!-- Custom styles -->
+        <item name="bottomNavigationStyle">@style/BottomNavigationStyle</item>
+        <item name="materialCardViewStyle">@style/Widget.LearnLog.Card</item>
+        <item name="chipStyle">@style/Widget.LearnLog.Chip</item>
+        <item name="chipStandaloneStyle">@style/Widget.LearnLog.Chip.Subject</item>
     </style>
+
+    <style name="Base.Theme.LearnLog" parent="Theme.Material3.Light.NoActionBar" />
 </resources>

@@ -133,6 +133,12 @@ class PlannerFragment : Fragment(R.layout.fragment_planner) {
             val selectedDate = viewModel.selectedDate.value
             showAddEditSheet(null, selectedDate)
         }
+
+        // Empty state CTA button
+        binding.btnEmptyAddTask.setOnClickListener {
+            val selectedDate = viewModel.selectedDate.value
+            showAddEditSheet(null, selectedDate)
+        }
     }
 
     private fun observeViewModel() {

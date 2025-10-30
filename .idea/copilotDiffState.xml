@@ -92,15 +92,6 @@
             </PendingDiffInfo>
           </value>
         </entry>
-        <entry key="$PROJECT_DIR$/app/src/main/res/layout/item_timer_preset.xml">
-          <value>
-            <PendingDiffInfo>
-              <option name="filePath" value="$PROJECT_DIR$/app/src/main/res/layout/item_timer_preset.xml" />
-              <option name="originalContent" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;&#10;&lt;com.google.android.material.card.MaterialCardView xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&#10;    xmlns:app=&quot;http://schemas.android.com/apk/res-auto&quot;&#10;    android:layout_width=&quot;0dp&quot;&#10;    android:layout_height=&quot;wrap_content&quot;&#10;    android:layout_margin=&quot;4dp&quot;&#10;    android:clickable=&quot;true&quot;&#10;    android:focusable=&quot;true&quot;&#10;    app:cardCornerRadius=&quot;12dp&quot;&#10;    app:cardElevation=&quot;2dp&quot;&#10;    app:strokeWidth=&quot;1dp&quot;&#10;    app:strokeColor=&quot;@color/nav_blue&quot;&gt;&#10;&#10;    &lt;TextView&#10;        android:id=&quot;@+id/presetLabel&quot;&#10;        android:layout_width=&quot;match_parent&quot;&#10;        android:layout_height=&quot;wrap_content&quot;&#10;        android:gravity=&quot;center&quot;&#10;        android:padding=&quot;16dp&quot;&#10;        android:text=&quot;25 min&quot;&#10;        android:textAppearance=&quot;?attr/textAppearanceBodyLarge&quot;&#10;        android:textStyle=&quot;bold&quot; /&gt;&#10;&#10;&lt;/com.google.android.material.card.MaterialCardView&gt;&#10;&#10;" />
-              <option name="updatedContent" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;&#10;&lt;com.google.android.material.card.MaterialCardView xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&#10;    xmlns:app=&quot;http://schemas.android.com/apk/res-auto&quot;&#10;    android:id=&quot;@+id/presetCard&quot;&#10;    android:layout_width=&quot;match_parent&quot;&#10;    android:layout_height=&quot;wrap_content&quot;&#10;    android:layout_margin=&quot;6dp&quot;&#10;    android:clickable=&quot;true&quot;&#10;    android:focusable=&quot;true&quot;&#10;    app:cardCornerRadius=&quot;16dp&quot;&#10;    app:cardElevation=&quot;3dp&quot;&#10;    app:strokeWidth=&quot;2dp&quot;&#10;    app:strokeColor=&quot;@color/light_gray&quot;&#10;    app:cardBackgroundColor=&quot;@color/white&quot;&gt;&#10;&#10;    &lt;TextView&#10;        android:id=&quot;@+id/presetLabel&quot;&#10;        android:layout_width=&quot;match_parent&quot;&#10;        android:layout_height=&quot;wrap_content&quot;&#10;        android:gravity=&quot;center&quot;&#10;        android:padding=&quot;20dp&quot;&#10;        android:text=&quot;25 min&quot;&#10;        android:textAppearance=&quot;?attr/textAppearanceBodyLarge&quot;&#10;        android:textColor=&quot;@color/black&quot;&#10;        android:textStyle=&quot;bold&quot; /&gt;&#10;&#10;&lt;/com.google.android.material.card.MaterialCardView&gt;&#10;&#10;" />
-            </PendingDiffInfo>
-          </value>
-        </entry>
       </map>
     </option>
   </component>

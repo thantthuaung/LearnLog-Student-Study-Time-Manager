@@ -263,8 +263,15 @@ class AddEditTaskBottomSheet : BottomSheetDialogFragment() {
 
         if (existingTask == null) {
             viewModel.saveNew(newTask)
+            // Show success message
+            view?.let {
+                com.google.android.material.snackbar.Snackbar.make(it, "Task created successfully", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+            }
         } else {
             viewModel.updateExisting(newTask)
+            view?.let {
+                com.google.android.material.snackbar.Snackbar.make(it, "Task updated successfully", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+            }
         }
         dismiss()
     }

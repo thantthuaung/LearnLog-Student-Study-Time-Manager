@@ -41,7 +41,7 @@
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/subjectChip"
-                    style="@style/Widget.MaterialComponents.Chip.Entry"
+                    style="@style/Widget.LearnLog.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="24dp"
                     android:textSize="10sp"

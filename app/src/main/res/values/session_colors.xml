@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Standard colors -->
-    <color name="black">#000000</color>
-
-    <!-- Theme colors -->
-    <color name="primary_light_blue">#2196F3</color>
+    <!-- Theme colors (specific to session features) -->
     <color name="status_bar_light_blue">#1976D2</color>
     <color name="light_blue_accent">#03A9F4</color>
 

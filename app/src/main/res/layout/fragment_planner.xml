@@ -112,7 +112,7 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipAll"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.LearnLog.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/all"
@@ -120,28 +120,28 @@
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipPending"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.LearnLog.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/pending" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipInProgress"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.LearnLog.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/in_progress" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipCompleted"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.LearnLog.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/completed" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipOverdue"
-                        style="@style/Widget.Material3.Chip.Filter"
+                        style="@style/Widget.LearnLog.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/overdue" />
@@ -209,6 +209,14 @@
                     android:textColor="@color/text_hint"
                     android:layout_marginTop="8dp"
                     android:gravity="center" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_empty_add_task"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/add_task"
+                    app:icon="@drawable/ic_add" />
 
             </LinearLayout>
 

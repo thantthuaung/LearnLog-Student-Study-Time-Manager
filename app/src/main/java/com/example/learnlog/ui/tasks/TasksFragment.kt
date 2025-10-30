@@ -75,7 +75,12 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             }
         )
 
-        headerAdapter = HeaderAdapter()
+        headerAdapter = HeaderAdapter(
+            onSearchTextChanged = { query ->
+                viewModel.setSearchQuery(query)
+            }
+        )
+
         filterAdapter = FilterAdapter(
             onFilterChanged = { filter -> viewModel.setFilter(filter) },
             onSortClicked = { sortButton -> showSortMenu(sortButton) }
@@ -92,6 +97,11 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
 
     private fun setupFab() {
         binding.fabAddTask.setOnClickListener {
+            showAddEditSheet(null)
+        }
+
+        // Empty state CTA button
+        binding.btnEmptyAddTask.setOnClickListener {
             showAddEditSheet(null)
         }
     }
@@ -139,7 +149,10 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             .setTitle(task.title)
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> viewModel.toggleComplete(task, true)
+                    0 -> {
+                        viewModel.toggleComplete(task, true)
+                        Snackbar.make(binding.root, "Task marked as completed", Snackbar.LENGTH_SHORT).show()
+                    }
                     1 -> showAddEditSheet(task)
                     2 -> duplicateTask(task)
                     3 -> showDeleteConfirmation(task)
@@ -160,12 +173,9 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
     }
 
     private fun showDeleteConfirmation(task: TaskEntity) {
-        // Check if timer is running for this task (simplified for now)
-        // In a full implementation, check actual timer state
-
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Delete task \"${task.title}\"?")
-            .setMessage("This will remove the task from Tasks. Study sessions remain.")
+            .setTitle("Delete Task?")
+            .setMessage("Are you sure you want to delete \"${task.title}\"? This action cannot be undone. Study sessions will remain.")
             .setPositiveButton("Delete") { _, _ ->
                 performDelete(task)
             }
