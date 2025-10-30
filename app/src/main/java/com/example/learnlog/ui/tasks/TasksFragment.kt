@@ -1,10 +1,13 @@
 package com.example.learnlog.ui.tasks
 
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -12,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.learnlog.R
 import com.example.learnlog.data.entity.TaskEntity
@@ -93,6 +97,30 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             adapter = concatAdapter
             setHasFixedSize(true)
         }
+
+        // Setup swipe actions with visual feedback
+        val swipeCallback = TaskSwipeCallback(
+            context = requireContext(),
+            onSwipeLeft = { position ->
+                // Delete task
+                val adjustedPosition = position - 2 // Offset for header and filter adapters
+                if (adjustedPosition >= 0 && adjustedPosition < taskEntityAdapter.currentList.size) {
+                    val task = taskEntityAdapter.currentList[adjustedPosition]
+                    performHapticFeedback()
+                    handleSwipeDelete(task)
+                }
+            },
+            onSwipeRight = { position ->
+                // Mark as complete
+                val adjustedPosition = position - 2 // Offset for header and filter adapters
+                if (adjustedPosition >= 0 && adjustedPosition < taskEntityAdapter.currentList.size) {
+                    val task = taskEntityAdapter.currentList[adjustedPosition]
+                    performHapticFeedback()
+                    handleSwipeComplete(task)
+                }
+            }
+        )
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.recyclerViewTasks)
     }
 
     private fun setupFab() {
@@ -193,6 +221,47 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                 viewModel.restoreTask(task)
             }
             .show()
+    }
+
+    private fun handleSwipeComplete(task: TaskEntity) {
+        if (task.completed) {
+            // Already completed, show message
+            Snackbar.make(binding.root, "Task already completed", Snackbar.LENGTH_SHORT).show()
+            taskEntityAdapter.notifyDataSetChanged() // Reset view
+        } else {
+            // Mark as completed
+            viewModel.toggleComplete(task, true)
+            Snackbar.make(binding.root, "Marked completed", Snackbar.LENGTH_LONG)
+                .setAction("UNDO") {
+                    viewModel.toggleComplete(task, false)
+                }
+                .show()
+        }
+    }
+
+    private fun handleSwipeDelete(task: TaskEntity) {
+        // Check if timer is running for this task (placeholder check)
+        // TODO: Implement actual timer state check when timer service is integrated
+        // For now, allow delete
+
+        viewModel.deleteTaskWithUndo(task)
+        Snackbar.make(binding.root, "Task deleted", Snackbar.LENGTH_LONG)
+            .setAction("UNDO") {
+                viewModel.restoreTask(task)
+            }
+            .show()
+    }
+
+    private fun performHapticFeedback() {
+        val vibrator = ContextCompat.getSystemService(requireContext(), Vibrator::class.java)
+        vibrator?.let {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                it.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                it.vibrate(50)
+            }
+        }
     }
 
     override fun onDestroyView() {

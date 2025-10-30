@@ -9,6 +9,7 @@ data class CalendarDay(
     val isSelected: Boolean,
     val taskCount: Int,
     val completedCount: Int,
+    val inProgressCount: Int = 0,
     val overdueCount: Int,
     val hasHighPriority: Boolean
 )

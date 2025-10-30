@@ -46,6 +46,8 @@
     <color name="red">#F44336</color>
     <color name="blue">#2196F3</color>
     <color name="gray">#9E9E9E</color>
+    <color name="success_green">#4CAF50</color>
+    <color name="error_red">#F44336</color>
 
     <!-- Chip Colors -->
     <color name="chip_background_light">#F0F0F0</color>

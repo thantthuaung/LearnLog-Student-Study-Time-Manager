@@ -163,6 +163,7 @@ class PlannerViewModel @Inject constructor(
         }
 
         val completedCount = dayTasks.count { it.completed }
+        val inProgressCount = dayTasks.count { it.status == "IN_PROGRESS" && !it.completed }
         val overdueCount = dayTasks.count { task ->
             !task.completed && task.dueAt?.isBefore(dateTimeProvider.now()) == true
         }
@@ -175,6 +176,7 @@ class PlannerViewModel @Inject constructor(
             isSelected = date == selectedDate,
             taskCount = dayTasks.size,
             completedCount = completedCount,
+            inProgressCount = inProgressCount,
             overdueCount = overdueCount,
             hasHighPriority = hasHighPriority
         )
