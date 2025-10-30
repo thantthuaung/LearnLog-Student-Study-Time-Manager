@@ -10,7 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.learnlog.R
 import com.example.learnlog.databinding.FragmentSettingsBinding
+import com.example.learnlog.auth.AuthManager
 import com.example.learnlog.data.export.DataExporter
 import com.example.learnlog.data.export.DataImporter
 import com.example.learnlog.data.export.ImportMode
@@ -31,6 +33,9 @@ class SettingsFragment : Fragment() {
 
     @Inject
     lateinit var dataImporter: DataImporter
+
+    @Inject
+    lateinit var authManager: AuthManager
 
     private var selectedExportFormat: ExportFormat = ExportFormat.JSON
 
@@ -121,6 +126,11 @@ class SettingsFragment : Fragment() {
         // Clear All Data
         binding.cardClearData.setOnClickListener {
             showClearDataDialog()
+        }
+
+        // Sign Out
+        binding.cardSignOut.setOnClickListener {
+            showSignOutDialog()
         }
 
         // Version
@@ -267,6 +277,22 @@ class SettingsFragment : Fragment() {
                 Snackbar.make(binding.root, "Import error: ${e.message}", Snackbar.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun showSignOutDialog() {
+        val currentUser = authManager.currentUser
+        val userName = currentUser?.displayName ?: currentUser?.email ?: "User"
+        
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Sign Out")
+            .setMessage("Are you sure you want to sign out, $userName?")
+            .setPositiveButton("Sign Out") { _, _ ->
+                authManager.signOut()
+                // Navigate to login screen
+                findNavController().navigate(R.id.loginFragment)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onDestroyView() {

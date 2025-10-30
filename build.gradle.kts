@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     id("com.google.dagger.hilt.android") version "2.47" apply false
     id("androidx.navigation.safeargs.kotlin") version "2.7.7" apply false
+    id("com.google.gms.google-services") version "4.4.0" apply false
 }
 
 buildscript {
@@ -13,5 +14,6 @@ buildscript {
     }
     dependencies {
         classpath("com.google.dagger:hilt-android-gradle-plugin:2.47")
+        classpath("com.google.gms:google-services:4.4.0")
     }
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "762310666511",
+    "project_id": "learnlog-1babb",
+    "storage_bucket": "learnlog-1babb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762310666511:android:91fd3a81ccb65cd23cf67a",
+        "android_client_info": {
+          "package_name": "com.example.learnlog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARtaVMVgLwGazqAGbY6mxaXJOs7iNkzMc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

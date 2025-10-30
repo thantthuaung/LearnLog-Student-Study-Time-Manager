@@ -5,6 +5,7 @@ plugins {
     id("androidx.navigation.safeargs.kotlin") version "2.7.7"
     id("kotlin-parcelize")
     kotlin("kapt")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -108,6 +109,12 @@ dependencies {
     // --- Hilt (plugin applied above + kapt) ---
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-compiler:2.51.1")
+
+    // --- Firebase & Auth ---
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     // --- Gson ---
     implementation("com.google.code.gson:gson:2.10.1")
