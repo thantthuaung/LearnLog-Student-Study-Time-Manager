@@ -46,6 +46,11 @@ object DatabaseModule {
     }
 
     @Provides
+    fun provideDailyRollupDao(appDatabase: AppDatabase): DailyRollupDao {
+        return appDatabase.dailyRollupDao()
+    }
+
+    @Provides
     @Singleton
     fun provideNoteRepository(noteDao: NoteDao): NoteRepository {
         return NoteRepository(noteDao)

@@ -2,9 +2,7 @@ package com.example.learnlog.ui.insights
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -32,6 +30,11 @@ class InsightsFragment : Fragment() {
 
     private lateinit var topTasksAdapter: TopTasksAdapter
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -50,6 +53,28 @@ class InsightsFragment : Fragment() {
         setupTopTasksRecyclerView()
         setupCharts()
         observeData()
+        setupAnalyticsButton()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.main_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                findNavController().navigate(R.id.settingsFragment)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun setupAnalyticsButton() {
+        binding.cardOpenAnalytics.setOnClickListener {
+            findNavController().navigate(R.id.analyticsFragment)
+        }
     }
 
     private fun setupTimeRangeChips() {

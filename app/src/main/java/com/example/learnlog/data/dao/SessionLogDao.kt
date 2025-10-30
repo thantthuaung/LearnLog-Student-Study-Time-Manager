@@ -26,4 +26,7 @@ interface SessionLogDao {
 
     @Query("SELECT * FROM session_logs WHERE start_time >= :startTime AND start_time < :endTime")
     fun getSessionsInTimeRange(startTime: Long, endTime: Long): Flow<List<SessionLogEntity>>
+
+    @Query("SELECT * FROM session_logs WHERE start_time >= :startTime AND end_time <= :endTime")
+    fun getSessionsInDateRange(startTime: Long, endTime: Long): Flow<List<SessionLogEntity>>
 }

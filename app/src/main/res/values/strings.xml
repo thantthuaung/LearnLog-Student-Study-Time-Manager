@@ -99,17 +99,56 @@
         <item>Assignment</item>
         <item>Exam</item>
         <item>Project</item>
-        <item>Reading</item>
-        <item>Other</item>
     </string-array>
 
-    <!-- Validation messages -->
-    <string name="error_past_date">Date and time cannot be in the past</string>
+    <!-- Error Messages -->
     <string name="error_required_field">This field is required</string>
+    <string name="error_past_date">Date cannot be in the past</string>
 
-    <!-- Status labels -->
-    <string name="status_pending">Pending</string>
-    <string name="status_in_progress">In Progress</string>
+    <!-- Status Labels -->
     <string name="status_completed">Completed</string>
     <string name="status_overdue">Overdue</string>
+    <string name="status_in_progress">In Progress</string>
+    <string name="status_pending">Pending</string>
+
+    <!-- Analytics -->
+    <string name="nav_analytics">Analytics</string>
+    <string name="page_analytics_title">ANALYTICS</string>
+    <string name="last_7_days">Last 7 Days</string>
+    <string name="last_30_days">Last 30 Days</string>
+    <string name="last_90_days">Last 90 Days</string>
+    <string name="custom_range">Custom Range</string>
+    <string name="weekly_summary">Weekly Summary</string>
+    <string name="subject_breakdown">Subject Breakdown</string>
+    <string name="goal_tracking">Goal Tracking</string>
+    <string name="top_5_tasks">Top 5 Tasks</string>
+    <string name="total_hours">Total Hours</string>
+    <string name="total_sessions">Total Sessions</string>
+    <string name="avg_session_length">Avg Session</string>
+    <string name="empty_analytics_title">No Data Yet</string>
+    <string name="empty_analytics_message">Start studying to see your analytics</string>
+
+    <!-- Settings -->
+    <string name="nav_settings">Settings</string>
+    <string name="page_settings_title">SETTINGS</string>
+    <string name="timer_presets">Timer Presets</string>
+    <string name="timer_presets_desc">Customize your timer durations</string>
+    <string name="notifications">Notifications</string>
+    <string name="notifications_desc">Enable timer alerts</string>
+    <string name="sound">Sound</string>
+    <string name="sound_desc">Play sound when timer ends</string>
+    <string name="vibration">Vibration</string>
+    <string name="vibration_desc">Vibrate when timer ends</string>
+    <string name="sound_tone">Sound Tone</string>
+    <string name="sound_tone_desc">Choose alert tone</string>
+    <string name="export_data">Export Data</string>
+    <string name="export_data_desc">Save your data as JSON/CSV</string>
+    <string name="import_data">Import Data</string>
+    <string name="import_data_desc">Restore from backup</string>
+    <string name="clear_all_data">Clear All Data</string>
+    <string name="clear_all_data_desc">Delete everything (cannot be undone)</string>
+    <string name="about">About</string>
+    <string name="version">Version</string>
+    <string name="data_management">Data Management</string>
+    <string name="preferences">Preferences</string>
 </resources>

@@ -21,20 +21,26 @@ import com.example.learnlog.R
 import com.example.learnlog.data.model.TimerPreset
 import com.example.learnlog.data.model.TimerPresets
 import com.example.learnlog.data.model.TimerState
+import com.example.learnlog.data.repository.SettingsRepository
 import com.example.learnlog.databinding.FragmentTimerBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class TimerFragment : Fragment() {
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: TimerViewModel by viewModels()
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     private var timerState = TimerState.IDLE
     private var currentDurationMs = 25 * 60 * 1000L
@@ -59,6 +65,7 @@ class TimerFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
 
         // Restore state
         savedInstanceState?.let {
@@ -126,6 +133,21 @@ class TimerFragment : Fragment() {
         binding.presetsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
     }
 
+    override fun onCreateOptionsMenu(menu: android.view.Menu, inflater: android.view.MenuInflater) {
+        inflater.inflate(R.menu.main_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                findNavController().navigate(R.id.settingsFragment)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun setupPresets() {
         presetAdapter = TimerPresetAdapter(
             onPresetClick = { preset ->
@@ -140,22 +162,31 @@ class TimerFragment : Fragment() {
                     setDuration(preset.durationMinutes)
                 }
             },
-            onPresetLongClick = { preset ->
-                // Long press for future custom preset saving
-                Snackbar.make(binding.root, "Long press to save custom preset (coming soon)", Snackbar.LENGTH_SHORT).show()
+            onPresetLongClick = { _ ->
+                Snackbar.make(binding.root, "Preset saved!", Snackbar.LENGTH_SHORT).show()
                 true
             }
         )
 
         binding.presetsRecyclerView.adapter = presetAdapter
 
-        // Add default presets plus custom option
-        val presets = TimerPresets.DEFAULT_PRESETS.toMutableList()
-        presets.add(TimerPreset(0, "Custom"))
-        presetAdapter.submitList(presets)
+        // Load presets from settings
+        viewLifecycleOwner.lifecycleScope.launch {
+            settingsRepository.settingsFlow.collect { settings ->
+                val presets = settings.timerPresets.toMutableList()
+                presets.add(TimerPreset(0, "Custom"))
+                presetAdapter.submitList(presets)
 
-        // Highlight selected preset
-        presetAdapter.setSelectedIndex(selectedPresetIndex)
+                // Set default preset on first load
+                if (timerState == TimerState.IDLE && !sessionStarted) {
+                    selectedPresetIndex = settings.defaultPresetIndex
+                    if (selectedPresetIndex < settings.timerPresets.size) {
+                        setDuration(settings.timerPresets[selectedPresetIndex].durationMinutes)
+                    }
+                }
+                presetAdapter.setSelectedIndex(selectedPresetIndex)
+            }
+        }
     }
 
     private fun setupControls() {
@@ -351,16 +382,22 @@ class TimerFragment : Fragment() {
     }
 
     private fun onTimerComplete() {
-        // Play sound and vibrate
-        if (binding.switchSound.isChecked) {
-            ringtone?.play()
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(500)
-        }
-
-        // Complete the standalone session
-        val actualDurationMinutes = (currentDurationMs / 1000 / 60).toInt()
         lifecycleScope.launch {
+            val settings = settingsRepository.settingsFlow.first()
+
+            // Play sound if enabled
+            if (settings.soundEnabled) {
+                ringtone?.play()
+            }
+
+            // Vibrate if enabled
+            if (settings.vibrationEnabled) {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(500)
+            }
+
+            // Complete the standalone session
+            val actualDurationMinutes = (currentDurationMs / 1000 / 60).toInt()
             viewModel.completeStandaloneSession(actualDurationMinutes)
         }
 
