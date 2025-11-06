@@ -2,61 +2,96 @@ package com.example.learnlog.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.learnlog.data.model.AppSettings
-import com.example.learnlog.data.model.TimerPreset
-import com.example.learnlog.data.repository.SettingsRepository
+import com.example.learnlog.data.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
-    val settings: StateFlow<AppSettings> = settingsRepository.settingsFlow
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = AppSettings()
-        )
+    // Profile flows
+    val displayName: Flow<String> = userPreferences.displayName
+    val email: Flow<String> = userPreferences.email
+    val avatarUri: Flow<String?> = userPreferences.avatarUri
 
-    fun updateTimerPresets(presets: List<TimerPreset>) {
+    // Timer preference flows
+    val defaultPresetId: Flow<Long?> = userPreferences.defaultPresetId
+    val keepScreenOn: Flow<Boolean> = userPreferences.keepScreenOn
+    val confirmOnStop: Flow<Boolean> = userPreferences.confirmOnStop
+
+    // Notification preference flows
+    val notificationsEnabled: Flow<Boolean> = userPreferences.notificationsEnabled
+    val notificationSound: Flow<String> = userPreferences.notificationSound
+    val notificationVibrate: Flow<Boolean> = userPreferences.notificationVibrate
+    val showOngoingNotification: Flow<Boolean> = userPreferences.showOngoingNotification
+
+    fun updateProfile(displayName: String, email: String) {
         viewModelScope.launch {
-            settingsRepository.updateTimerPresets(presets)
+            userPreferences.updateProfile(displayName, email)
         }
     }
 
-    fun updateDefaultPreset(index: Int) {
+    fun updateAvatarUri(uri: String?) {
         viewModelScope.launch {
-            settingsRepository.updateDefaultPresetIndex(index)
+            userPreferences.updateAvatarUri(uri)
+        }
+    }
+
+    fun updateDefaultPresetId(presetId: Long?) {
+        viewModelScope.launch {
+            userPreferences.updateDefaultPresetId(presetId)
+        }
+    }
+
+    fun updateKeepScreenOn(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferences.updateKeepScreenOn(enabled)
+        }
+    }
+
+    fun updateConfirmOnStop(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferences.updateConfirmOnStop(enabled)
         }
     }
 
     fun updateNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            settingsRepository.updateNotificationsEnabled(enabled)
+            userPreferences.updateNotificationsEnabled(enabled)
         }
     }
 
-    fun updateSoundEnabled(enabled: Boolean) {
+    fun updateNotificationSound(sound: String) {
         viewModelScope.launch {
-            settingsRepository.updateSoundEnabled(enabled)
+            userPreferences.updateNotificationSound(sound)
         }
     }
 
-    fun updateSoundTone(tone: String) {
+    fun updateNotificationVibrate(enabled: Boolean) {
         viewModelScope.launch {
-            settingsRepository.updateSelectedSoundTone(tone)
+            userPreferences.updateNotificationVibrate(enabled)
         }
     }
 
-    fun updateVibrationEnabled(enabled: Boolean) {
+    fun updateShowOngoingNotification(enabled: Boolean) {
         viewModelScope.launch {
-            settingsRepository.updateVibrationEnabled(enabled)
+            userPreferences.updateShowOngoingNotification(enabled)
+        }
+    }
+
+    fun saveLastSection(section: Int) {
+        viewModelScope.launch {
+            userPreferences.updateLastSettingsSection(section)
+        }
+    }
+
+    fun clearProfile() {
+        viewModelScope.launch {
+            userPreferences.clearProfile()
         }
     }
 }

@@ -97,6 +97,17 @@
             app:argType="long"
             android:defaultValue="-1L" />
     </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.learnlog.ui.settings.SettingsFragment"
+        android:label="@string/page_settings_title">
+        <argument
+            android:name="section"
+            app:argType="integer"
+            android:defaultValue="0" />
+    </fragment>
+
     <fragment
         android:id="@+id/addEditNoteFragment"
         android:name="com.example.learnlog.ui.notes.AddEditNoteFragment"
@@ -115,5 +126,10 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.learnlog.ui.settings.SettingsFragment"
-        android:label="@string/nav_settings" />
+        android:label="@string/page_settings_title">
+        <argument
+            android:name="section"
+            app:argType="integer"
+            android:defaultValue="0" />
+    </fragment>
 </navigation>

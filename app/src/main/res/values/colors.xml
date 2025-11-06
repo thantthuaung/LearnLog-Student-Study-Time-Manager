@@ -52,6 +52,9 @@
     <color name="success_green">#4CAF50</color>
     <color name="error_red">#F44336</color>
 
+    <!-- Additional UI Colors -->
+    <color name="divider_light">#F0F0F0</color>
+
     <!-- Chip Colors -->
     <color name="chip_background_light">#F0F0F0</color>
     <color name="chip_background_selected">#43B8FF</color>
@@ -59,5 +62,3 @@
     <color name="chip_text_selected">#FFFFFF</color>
     <color name="chip_stroke">#E0E0E0</color>
 </resources>
-
-

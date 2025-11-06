@@ -49,4 +49,10 @@
         <item name="rippleColor">@color/ripple_white</item>
     </style>
 
+    <!-- Circle ImageView for avatar -->
+    <style name="CircleImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
 </resources>

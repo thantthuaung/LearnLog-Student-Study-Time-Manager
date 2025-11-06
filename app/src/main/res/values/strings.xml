@@ -87,6 +87,15 @@
     <string name="resume_timer">Resume</string>
     <string name="timer_label_focus">FOCUS</string>
 
+    <!-- Settings & Drawer -->
+    <string name="open_drawer">Open navigation drawer</string>
+    <string name="page_settings_title">SETTINGS</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_data_backup">Data &amp; Backup</string>
+    <string name="settings_help">Help &amp; About</string>
+
     <!-- Priority options -->
     <string-array name="priority_options">
         <item>Low</item>
@@ -130,7 +139,6 @@
 
     <!-- Settings -->
     <string name="nav_settings">Settings</string>
-    <string name="page_settings_title">SETTINGS</string>
     <string name="timer_presets">Timer Presets</string>
     <string name="timer_presets_desc">Customize your timer durations</string>
     <string name="notifications">Notifications</string>

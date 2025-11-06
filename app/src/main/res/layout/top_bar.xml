@@ -9,17 +9,36 @@
     android:paddingBottom="8dp"
     android:background="@color/screen_bg">
 
-    <TextView
-        android:id="@+id/brand_title"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="LEARNLOG"
-        android:textAlignment="center"
-        android:textColor="@color/sky_blue"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.1"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="12dp">
+
+        <ImageButton
+            android:id="@+id/hamburger_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/open_drawer"
+            android:src="@drawable/ic_menu"
+            android:tint="@color/sky_blue" />
+
+        <TextView
+            android:id="@+id/brand_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="LEARNLOG"
+            android:textAlignment="center"
+            android:textColor="@color/sky_blue"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1" />
+
+    </RelativeLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="wrap_content"

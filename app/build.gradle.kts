@@ -35,6 +35,7 @@ android {
     buildFeatures {
         dataBinding = true
         viewBinding = true
+        buildConfig = true
     }
 
     lint {
@@ -73,6 +74,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.fragment:fragment-ktx:1.8.3")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
 
     // --- Navigation ---
     val navVersion = "2.7.3"
@@ -122,6 +124,9 @@ dependencies {
     // --- Utilities ---
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.6")
+
+    // --- Glide for image loading ---
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     // --- Testing ---
     testImplementation("junit:junit:4.13.2")
