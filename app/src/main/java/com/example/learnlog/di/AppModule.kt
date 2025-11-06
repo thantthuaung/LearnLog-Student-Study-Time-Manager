@@ -1,6 +1,9 @@
 package com.example.learnlog.di
 
 import android.content.Context
+import com.example.learnlog.BuildConfig
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -9,13 +12,67 @@ import dagger.hilt.components.SingletonComponent
 import com.example.learnlog.data.repository.*
 import com.example.learnlog.data.dao.*
 import com.example.learnlog.data.preferences.UserPreferences
+import com.example.learnlog.network.QuoteApiService
 import com.example.learnlog.util.DateTimeProvider
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    // --- Networking: Moshi ---
+    @Provides
+    @Singleton
+    fun provideMoshi(): Moshi {
+        return Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+    }
+
+    // --- Networking: OkHttpClient ---
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+
+        // Add logging interceptor in debug builds
+        if (BuildConfig.DEBUG) {
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+            builder.addInterceptor(loggingInterceptor)
+        }
+
+        return builder.build()
+    }
+
+    // --- Networking: Retrofit ---
+    @Provides
+    @Singleton
+    fun provideRetrofit(moshi: Moshi, okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://api.quotable.io/")
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+    }
+
+    // --- Networking: API Services ---
+    @Provides
+    @Singleton
+    fun provideQuoteApiService(retrofit: Retrofit): QuoteApiService {
+        return retrofit.create(QuoteApiService::class.java)
+    }
+
+    // --- Repositories ---
     @Provides
     @Singleton
     fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
@@ -58,5 +115,20 @@ object AppModule {
     @Singleton
     fun provideUserPreferences(@ApplicationContext context: Context): UserPreferences {
         return UserPreferences(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(@ApplicationContext context: Context): SettingsRepository {
+        return SettingsRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideQuoteRepository(
+        @ApplicationContext context: Context,
+        quoteApiService: QuoteApiService
+    ): QuoteRepository {
+        return QuoteRepository(context, quoteApiService)
     }
 }

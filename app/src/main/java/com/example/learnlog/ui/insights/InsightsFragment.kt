@@ -3,6 +3,8 @@ package com.example.learnlog.ui.insights
 import android.graphics.Color
 import android.os.Bundle
 import android.view.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -11,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.learnlog.R
 import com.example.learnlog.databinding.FragmentInsightsBinding
+import com.example.learnlog.ui.insights.compose.InsightsComposeCards
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
@@ -49,6 +52,7 @@ class InsightsFragment : Fragment() {
 
         binding.topBar.pageTitle.text = getString(R.string.page_insights_title)
 
+        setupComposeView()
         setupTimeRangeChips()
         setupTopTasksRecyclerView()
         setupCharts()
@@ -74,6 +78,22 @@ class InsightsFragment : Fragment() {
     private fun setupAnalyticsButton() {
         binding.cardOpenAnalytics.setOnClickListener {
             findNavController().navigate(R.id.analyticsFragment)
+        }
+    }
+
+    private fun setupComposeView() {
+        binding.composeView.apply {
+            // Dispose of the Composition when the view's LifecycleOwner is destroyed
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+
+            setContent {
+                MaterialTheme {
+                    InsightsComposeCards(
+                        insightsDataFlow = viewModel.insightsData,
+                        quoteFlow = viewModel.quoteOfTheDay
+                    )
+                }
+            }
         }
     }
 

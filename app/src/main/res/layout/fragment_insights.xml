@@ -81,6 +81,12 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Jetpack Compose Cards -->
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/composeView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
             <!-- Total Focus Time Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
