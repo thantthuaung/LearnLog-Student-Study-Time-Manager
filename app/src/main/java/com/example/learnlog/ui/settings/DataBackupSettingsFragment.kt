@@ -185,7 +185,7 @@ class DataBackupSettingsFragment : Fragment() {
                 flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
             }
             startActivity(Intent.createChooser(intent, "Open with"))
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // No app to open file
         }
     }
