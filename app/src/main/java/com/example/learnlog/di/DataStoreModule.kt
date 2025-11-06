@@ -2,6 +2,8 @@ package com.example.learnlog.di
 
 import android.content.Context
 import com.example.learnlog.data.UserPreferencesRepository
+import com.example.learnlog.data.preferences.UserPreferences
+import com.example.learnlog.data.repository.SettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,5 +20,16 @@ object DataStoreModule {
     fun provideUserPreferencesRepository(@ApplicationContext context: Context): UserPreferencesRepository {
         return UserPreferencesRepository(context)
     }
-}
 
+    @Provides
+    @Singleton
+    fun provideUserPreferences(@ApplicationContext context: Context): UserPreferences {
+        return UserPreferences(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(@ApplicationContext context: Context): SettingsRepository {
+        return SettingsRepository(context)
+    }
+}

@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.learnlog.data.db.AppDatabase
 import com.example.learnlog.data.dao.*
 import com.example.learnlog.data.repository.NoteRepository
+import com.example.learnlog.data.repository.SubjectRepository
 import com.example.learnlog.data.repository.TaskRepository
 import dagger.Module
 import dagger.Provides
@@ -25,16 +26,19 @@ object DatabaseModule {
     }
 
     @Provides
+    @Singleton
     fun provideSessionLogDao(appDatabase: AppDatabase): SessionLogDao {
         return appDatabase.sessionLogDao()
     }
 
     @Provides
+    @Singleton
     fun provideSubjectDao(appDatabase: AppDatabase): SubjectDao {
         return appDatabase.subjectDao()
     }
 
     @Provides
+    @Singleton
     fun provideNoteDao(appDatabase: AppDatabase): NoteDao {
         return appDatabase.noteDao()
     }
@@ -46,9 +50,11 @@ object DatabaseModule {
     }
 
     @Provides
+    @Singleton
     fun provideDailyRollupDao(appDatabase: AppDatabase): DailyRollupDao {
         return appDatabase.dailyRollupDao()
     }
+
 
     @Provides
     @Singleton
@@ -60,5 +66,11 @@ object DatabaseModule {
     @Singleton
     fun provideTaskRepository(taskDao: TaskDao): TaskRepository {
         return TaskRepository(taskDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
+        return SubjectRepository(subjectDao)
     }
 }

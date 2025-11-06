@@ -43,10 +43,10 @@ object AppModule {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
 
-        // Add logging interceptor in debug builds
+        // Add logging interceptor in debug builds only
         if (BuildConfig.DEBUG) {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = HttpLoggingInterceptor.Level.BASIC
             }
             builder.addInterceptor(loggingInterceptor)
         }
@@ -72,13 +72,14 @@ object AppModule {
         return retrofit.create(QuoteApiService::class.java)
     }
 
-    // --- Repositories ---
+    // --- Utilities ---
     @Provides
     @Singleton
-    fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
-        return SubjectRepository(subjectDao)
+    fun provideDateTimeProvider(): DateTimeProvider {
+        return DateTimeProvider()
     }
 
+    // --- Repositories (non-database) ---
     @Provides
     @Singleton
     fun provideInsightsRepository(
@@ -88,12 +89,6 @@ object AppModule {
         dateTimeProvider: DateTimeProvider
     ): InsightsRepository {
         return InsightsRepository(sessionLogDao, tasksRepository, plannerRepository, dateTimeProvider)
-    }
-
-    @Provides
-    @Singleton
-    fun provideDateTimeProvider(): DateTimeProvider {
-        return DateTimeProvider()
     }
 
     @Provides
@@ -111,17 +106,6 @@ object AppModule {
         return PlannerRepository(tasksRepository, dateTimeProvider)
     }
 
-    @Provides
-    @Singleton
-    fun provideUserPreferences(@ApplicationContext context: Context): UserPreferences {
-        return UserPreferences(context)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSettingsRepository(@ApplicationContext context: Context): SettingsRepository {
-        return SettingsRepository(context)
-    }
 
     @Provides
     @Singleton
