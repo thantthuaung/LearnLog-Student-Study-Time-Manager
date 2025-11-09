@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.learnlog.R
 import com.example.learnlog.databinding.FragmentInsightsBinding
+import com.example.learnlog.ui.base.BaseFragment
 import com.example.learnlog.ui.insights.compose.InsightsComposeCards
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
@@ -26,7 +27,7 @@ import org.threeten.bp.LocalDate
 import org.threeten.bp.ZoneId
 
 @AndroidEntryPoint
-class InsightsFragment : Fragment() {
+class InsightsFragment : BaseFragment() {
     private var _binding: FragmentInsightsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: InsightsViewModel by viewModels()

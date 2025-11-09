@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.learnlog.R
 import com.example.learnlog.data.entity.TaskEntity
 import com.example.learnlog.databinding.FragmentPlannerBinding
+import com.example.learnlog.ui.base.BaseFragment
 import com.example.learnlog.ui.tasks.AddEditTaskBottomSheet
 import com.example.learnlog.ui.tasks.TaskEntityAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -25,7 +26,7 @@ import org.threeten.bp.format.DateTimeFormatter
 import java.util.Locale
 
 @AndroidEntryPoint
-class PlannerFragment : Fragment(R.layout.fragment_planner) {
+class PlannerFragment : BaseFragment(R.layout.fragment_planner) {
     private var _binding: FragmentPlannerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: PlannerViewModel by viewModels()

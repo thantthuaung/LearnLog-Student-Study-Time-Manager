@@ -3,8 +3,9 @@ package com.example.learnlog
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
+import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
@@ -55,7 +56,8 @@ class MainActivity : AppCompatActivity() {
         navGraph.setStartDestination(startDestination)
         navController.graph = navGraph
 
-        // Configure action bar
+        // Configure AppBarConfiguration with ONLY top-level destinations (bottom nav tabs)
+        // Settings is NOT a top-level destination, so it will show back arrow
         appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.tasksFragment,
@@ -64,8 +66,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.insightsFragment,
                 R.id.notesFragment,
                 R.id.loginFragment,
-                R.id.registerFragment,
-                R.id.settingsFragment
+                R.id.registerFragment
             ),
             binding.drawerLayout
         )
@@ -118,14 +119,21 @@ class MainActivity : AppCompatActivity() {
         // Setup drawer header profile updates
         setupDrawerHeader()
 
-        // Hide bottom navigation and drawer on auth screens
+        // Handle navigation destination changes
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.loginFragment, R.id.registerFragment -> {
+                    // Hide bottom nav and lock drawer on auth screens
                     binding.bottomNavigation.visibility = View.GONE
                     binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
                 }
+                R.id.settingsFragment -> {
+                    // Lock drawer on Settings (so back arrow works, not hamburger)
+                    binding.bottomNavigation.visibility = View.VISIBLE
+                    binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+                }
                 else -> {
+                    // Normal screens: show bottom nav and unlock drawer
                     binding.bottomNavigation.visibility = View.VISIBLE
                     binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED)
                 }
@@ -144,13 +152,13 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             userPreferences.displayName.collect { name ->
-                displayNameTextView.text = name.ifEmpty { "Student" }
+                displayNameTextView.text = name.ifEmpty { "Add your name" }
             }
         }
 
         lifecycleScope.launch {
             userPreferences.email.collect { email ->
-                emailTextView.text = email.ifEmpty { "student@learnlog.app" }
+                emailTextView.text = email.ifEmpty { "Add your email" }
             }
         }
 
@@ -175,8 +183,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openDrawer() {
-        binding.drawerLayout.openDrawer(GravityCompat.START)
+        // Ensure drawer opens reliably by posting to message queue
+        binding.drawerLayout.post {
+            if (!binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                binding.drawerLayout.openDrawer(GravityCompat.START, true)
+            }
+        }
     }
+
+    fun getNavController() = (supportFragmentManager
+        .findFragmentById(R.id.nav_host_fragment) as NavHostFragment).navController
 
     private fun handleNotificationIntent() {
         if (intent?.getBooleanExtra("open_timer_tab", false) == true) {
@@ -201,6 +217,7 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
+    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
     override fun onBackPressed() {
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
             binding.drawerLayout.closeDrawer(GravityCompat.START)

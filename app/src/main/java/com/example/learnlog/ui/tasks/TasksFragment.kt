@@ -19,13 +19,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.learnlog.R
 import com.example.learnlog.data.entity.TaskEntity
 import com.example.learnlog.databinding.FragmentTasksBinding
+import com.example.learnlog.ui.base.BaseFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class TasksFragment : Fragment(R.layout.fragment_tasks) {
+class TasksFragment : BaseFragment(R.layout.fragment_tasks) {
     private var _binding: FragmentTasksBinding? = null
     private val binding get() = _binding!!
     private val viewModel: TasksViewModel by viewModels()

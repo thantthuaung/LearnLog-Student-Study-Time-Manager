@@ -109,19 +109,23 @@ class AccountSettingsFragment : Fragment() {
         val displayName = binding.editDisplayName.text.toString().trim()
         val email = binding.editEmail.text.toString().trim()
 
+        // Validate display name
         if (displayName.isEmpty()) {
             binding.displayNameLayout.error = "Display name is required"
             return
         }
 
-        if (email.isEmpty()) {
-            binding.emailLayout.error = "Email is required"
+        // Validate email format if provided
+        if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.emailLayout.error = "Invalid email format"
             return
         }
 
+        // Clear errors
         binding.displayNameLayout.error = null
         binding.emailLayout.error = null
 
+        // Save to preferences
         viewModel.updateProfile(displayName, email)
 
         Snackbar.make(binding.root, "Profile updated successfully", Snackbar.LENGTH_SHORT).show()

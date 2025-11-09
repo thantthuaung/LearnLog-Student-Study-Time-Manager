@@ -34,7 +34,7 @@
         android:id="@+id/drawer_display_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Student"
+        android:text=""
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold" />
@@ -43,7 +43,7 @@
         android:id="@+id/drawer_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="student@learnlog.app"
+        android:text=""
         android:textColor="#B3FFFFFF"
         android:textSize="14sp"
         android:layout_marginTop="4dp" />

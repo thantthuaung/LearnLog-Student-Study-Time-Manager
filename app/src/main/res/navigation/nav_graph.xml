@@ -122,14 +122,4 @@
         android:id="@+id/analyticsFragment"
         android:name="com.example.learnlog.ui.analytics.AnalyticsFragment"
         android:label="@string/nav_analytics" />
-
-    <fragment
-        android:id="@+id/settingsFragment"
-        android:name="com.example.learnlog.ui.settings.SettingsFragment"
-        android:label="@string/page_settings_title">
-        <argument
-            android:name="section"
-            app:argType="integer"
-            android:defaultValue="0" />
-    </fragment>
 </navigation>

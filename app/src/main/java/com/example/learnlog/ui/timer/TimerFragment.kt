@@ -23,6 +23,7 @@ import com.example.learnlog.data.model.TimerPresets
 import com.example.learnlog.data.model.TimerState
 import com.example.learnlog.data.repository.SettingsRepository
 import com.example.learnlog.databinding.FragmentTimerBinding
+import com.example.learnlog.ui.base.BaseFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -34,7 +35,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class TimerFragment : Fragment() {
+class TimerFragment : BaseFragment() {
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: TimerViewModel by viewModels()

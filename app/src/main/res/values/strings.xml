@@ -89,6 +89,7 @@
 
     <!-- Settings & Drawer -->
     <string name="open_drawer">Open navigation drawer</string>
+    <string name="navigate_up">Navigate up</string>
     <string name="page_settings_title">SETTINGS</string>
     <string name="settings_account">Account</string>
     <string name="settings_preferences">Preferences</string>
