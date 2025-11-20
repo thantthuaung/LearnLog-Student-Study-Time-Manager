@@ -93,8 +93,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideTasksRepository(dateTimeProvider: DateTimeProvider): TasksRepository {
-        return TasksRepository(dateTimeProvider)
+    fun provideTasksRepository(
+        taskDao: TaskDao,
+        dateTimeProvider: DateTimeProvider
+    ): TasksRepository {
+        return TasksRepository(taskDao, dateTimeProvider)
     }
 
     @Provides

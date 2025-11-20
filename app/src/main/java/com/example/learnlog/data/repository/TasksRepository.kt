@@ -1,122 +1,117 @@
 package com.example.learnlog.data.repository
 
+import com.example.learnlog.data.dao.TaskDao
+import com.example.learnlog.data.entity.TaskEntity
 import com.example.learnlog.data.model.Task
 import com.example.learnlog.data.model.TaskStatus
 import com.example.learnlog.data.model.TaskPriority
 import com.example.learnlog.data.model.TaskType
 import com.example.learnlog.util.DateTimeProvider
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TasksRepository @Inject constructor(
+    private val taskDao: TaskDao,
     private val dateTimeProvider: DateTimeProvider
 ) {
-    private val tasksFlow = MutableStateFlow<List<Task>>(emptyList())
+    // Now reading from actual Room database instead of in-memory list
 
-    init {
-        // Add sample tasks
-        addSampleTasks()
+    fun getAllTasks(): Flow<List<Task>> = taskDao.getAll().map { entities ->
+        entities.map { it.toTask() }
     }
 
-    private fun addSampleTasks() {
+    fun getUpcomingTasks(): Flow<List<Task>> = taskDao.getAll().map { entities ->
         val now = dateTimeProvider.now()
-
-        // Add an upcoming task
-        addTask(
-            Task(
-                id = 1,
-                title = "Math Assignment",
-                subject = "Mathematics",
-                dueDate = now.plusDays(2),
-                priority = TaskPriority.HIGH,
-                type = TaskType.ASSIGNMENT,
-                status = TaskStatus.IN_PROGRESS,
-                description = "Complete exercises 1-10",
-                isNotificationEnabled = false
-            )
-        )
-
-        // Add an overdue task
-        addTask(
-            Task(
-                id = 2,
-                title = "Physics Lab Report",
-                subject = "Physics",
-                dueDate = now.minusDays(2),
-                priority = TaskPriority.MEDIUM,
-                type = TaskType.ASSIGNMENT,
-                status = TaskStatus.PENDING,
-                description = "Write lab report for experiment",
-                isNotificationEnabled = false
-            )
-        )
-
-        // Add a completed task
-        addTask(
-            Task(
-                id = 3,
-                title = "English Essay",
-                subject = "English",
-                dueDate = now,
-                priority = TaskPriority.LOW,
-                type = TaskType.ASSIGNMENT,
-                status = TaskStatus.COMPLETED,
-                description = "Essay on Shakespeare",
-                isNotificationEnabled = false
-            )
-        )
-    }
-
-    fun getAllTasks(): Flow<List<Task>> = tasksFlow
-
-    fun getUpcomingTasks(): Flow<List<Task>> = tasksFlow.map { tasks ->
-        val now = dateTimeProvider.now()
-        tasks.filter { task ->
+        entities.map { it.toTask() }.filter { task ->
             task.dueDate?.let { it.isAfter(now) } == true && task.status != TaskStatus.COMPLETED
         }
     }
 
-    fun getOverdueTasks(): Flow<List<Task>> = tasksFlow.map { tasks ->
+    fun getOverdueTasks(): Flow<List<Task>> = taskDao.getAll().map { entities ->
         val now = dateTimeProvider.now()
-        tasks.filter { task ->
+        entities.map { it.toTask() }.filter { task ->
             task.dueDate?.let { it.isBefore(now) } == true && task.status != TaskStatus.COMPLETED
         }
     }
 
-    fun getCompletedTasks(): Flow<List<Task>> = tasksFlow.map { tasks ->
-        tasks.filter { task -> task.status == TaskStatus.COMPLETED }
-    }
-
-    fun searchTasks(query: String): Flow<List<Task>> = tasksFlow.map { tasks ->
-        tasks.filter { task ->
-            task.title.contains(query, ignoreCase = true) ||
-                    task.subject?.contains(query, ignoreCase = true) == true ||
-                    task.description?.contains(query, ignoreCase = true) == true
+    fun getCompletedTasks(): Flow<List<Task>> = taskDao.getAll().map { entities ->
+        entities.map { it.toTask() }.filter { task ->
+            task.status == TaskStatus.COMPLETED
         }
     }
 
-    fun addTask(task: Task) {
-        val currentTasks = tasksFlow.value.toMutableList()
-        currentTasks.add(task)
-        tasksFlow.value = currentTasks
+    fun searchTasks(query: String): Flow<List<Task>> = taskDao.searchTasks(query).map { entities ->
+        entities.map { it.toTask() }
     }
 
-    fun updateTask(task: Task) {
-        val currentTasks = tasksFlow.value.toMutableList()
-        val index = currentTasks.indexOfFirst { it.id == task.id }
-        if (index != -1) {
-            currentTasks[index] = task
-            tasksFlow.value = currentTasks
-        }
+    suspend fun addTask(task: Task): Long {
+        return taskDao.insert(task.toEntity())
     }
 
-    fun deleteTask(taskId: Long) {
-        val currentTasks = tasksFlow.value.toMutableList()
-        currentTasks.removeAll { it.id == taskId }
-        tasksFlow.value = currentTasks
+    suspend fun updateTask(task: Task) {
+        taskDao.update(task.toEntity())
+    }
+
+    suspend fun deleteTask(taskId: Long) {
+        taskDao.deleteById(taskId)
+    }
+
+    // Extension functions to convert between Task and TaskEntity
+    private fun TaskEntity.toTask(): Task {
+        return Task(
+            id = id,
+            title = title,
+            subject = subject,
+            dueDate = dueAt,
+            priority = when (priority) {
+                3 -> TaskPriority.HIGH
+                2 -> TaskPriority.MEDIUM
+                else -> TaskPriority.LOW
+            },
+            type = when (type) {
+                "EXAM" -> TaskType.EXAM
+                "ASSIGNMENT" -> TaskType.ASSIGNMENT
+                "PROJECT" -> TaskType.PROJECT
+                "STUDY_SESSION" -> TaskType.STUDY_SESSION
+                else -> TaskType.ASSIGNMENT // Default to ASSIGNMENT
+            },
+            status = when (status) {
+                "COMPLETED" -> TaskStatus.COMPLETED
+                "IN_PROGRESS" -> TaskStatus.IN_PROGRESS
+                else -> TaskStatus.PENDING
+            },
+            description = notes,
+            isNotificationEnabled = false
+        )
+    }
+
+    private fun Task.toEntity(): TaskEntity {
+        return TaskEntity(
+            id = id,
+            title = title,
+            subject = subject,
+            dueAt = dueDate,
+            priority = when (priority) {
+                TaskPriority.HIGH -> 3
+                TaskPriority.MEDIUM -> 2
+                TaskPriority.LOW -> 1
+            },
+            type = when (type) {
+                TaskType.EXAM -> "EXAM"
+                TaskType.ASSIGNMENT -> "ASSIGNMENT"
+                TaskType.PROJECT -> "PROJECT"
+                TaskType.STUDY_SESSION -> "STUDY_SESSION"
+            },
+            status = when (status) {
+                TaskStatus.COMPLETED -> "COMPLETED"
+                TaskStatus.IN_PROGRESS -> "IN_PROGRESS"
+                TaskStatus.PENDING -> "PENDING"
+            },
+            completed = status == TaskStatus.COMPLETED,
+            notes = description
+        )
     }
 }

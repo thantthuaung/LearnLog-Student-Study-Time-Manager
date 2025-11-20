@@ -26,6 +26,7 @@ class UserPreferences @Inject constructor(
         // Timer Preferences
         val DEFAULT_PRESET_ID = longPreferencesKey("default_preset_id")
         val KEEP_SCREEN_ON = booleanPreferencesKey("keep_screen_on")
+        val KEEP_RUNNING_IN_BACKGROUND = booleanPreferencesKey("keep_running_in_background")
         val CONFIRM_ON_STOP = booleanPreferencesKey("confirm_on_stop")
 
         // Notification Preferences
@@ -46,6 +47,7 @@ class UserPreferences @Inject constructor(
     // Timer preference flows
     val defaultPresetId: Flow<Long?> = dataStore.data.map { it[DEFAULT_PRESET_ID] }
     val keepScreenOn: Flow<Boolean> = dataStore.data.map { it[KEEP_SCREEN_ON] ?: false }
+    val keepRunningInBackground: Flow<Boolean> = dataStore.data.map { it[KEEP_RUNNING_IN_BACKGROUND] ?: false }
     val confirmOnStop: Flow<Boolean> = dataStore.data.map { it[CONFIRM_ON_STOP] ?: true }
 
     // Notification preference flows
@@ -87,6 +89,12 @@ class UserPreferences @Inject constructor(
     suspend fun updateKeepScreenOn(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEEP_SCREEN_ON] = enabled
+        }
+    }
+
+    suspend fun updateKeepRunningInBackground(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEEP_RUNNING_IN_BACKGROUND] = enabled
         }
     }
 

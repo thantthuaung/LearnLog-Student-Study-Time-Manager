@@ -20,53 +20,9 @@ class PlannerRepository @Inject constructor(
 ) {
     private val sessionsFlow = MutableStateFlow<List<StudySession>>(emptyList())
 
-    init {
-        // Add some sample sessions for demo
-        addSampleSessions()
-    }
+    // Removed sample sessions - start with empty data
 
-    private fun addSampleSessions() {
-        val baseDateTime = dateTimeProvider.now()
-            .withHour(9)
-            .withMinute(0)
-            .withSecond(0)
-
-        // Morning study session
-        addSession(StudySession(
-            id = 1,
-            title = "Math Review",
-            subject = "Mathematics",
-            startTime = baseDateTime,
-            endTime = baseDateTime.plusMinutes(90),
-            durationMinutes = 90,
-            type = StudyType.ASSIGNMENT_WORK,
-            relatedTaskId = 1
-        ))
-
-        // Afternoon session (2 PM)
-        val afternoonDateTime = baseDateTime.withHour(14)
-        addSession(StudySession(
-            id = 2,
-            title = "Physics Lab Prep",
-            subject = "Physics",
-            startTime = afternoonDateTime,
-            endTime = afternoonDateTime.plusMinutes(60),
-            durationMinutes = 60,
-            type = StudyType.EXAM_PREP
-        ))
-
-        // Evening session (7 PM)
-        val eveningDateTime = baseDateTime.withHour(19)
-        addSession(StudySession(
-            id = 3,
-            title = "Math Assignment",
-            subject = "Mathematics",
-            startTime = eveningDateTime,
-            endTime = eveningDateTime.plusMinutes(120),
-            durationMinutes = 120,
-            type = StudyType.ASSIGNMENT_WORK
-        ))
-    }
+    // Removed sample sessions - start with empty data
 
     fun getSessionsForDay(date: LocalDateTime): Flow<List<StudySession>> {
         return sessionsFlow.map { sessions ->

@@ -1,0 +1,18 @@
+<resources>
+    <!-- Force light theme colors in night mode - no auto dark mode -->
+    <!-- Same as values/colors.xml -->
+
+    <color name="colorPrimary">#38A3F1</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorSurface">#F7F9FC</color>
+    <color name="colorSurfaceContainer">#FFFFFF</color>
+    <color name="colorOnSurface">#24313F</color>
+    <color name="colorOutline">#E3E8EF</color>
+
+    <color name="text_primary">#24313F</color>
+    <color name="text_secondary">#7A8A99</color>
+    <color name="screen_bg">#F7F9FC</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>
+

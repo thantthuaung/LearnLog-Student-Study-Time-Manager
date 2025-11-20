@@ -10,7 +10,6 @@ import com.example.learnlog.ui.insights.TopTask
 import com.example.learnlog.util.DateTimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -57,7 +56,8 @@ class InsightsRepository @Inject constructor(
             val totalPlanned = filteredPlanned.sumOf { it.durationMinutes }
             val totalActual = totalFocusMinutes
 
-            // Completion rate
+            // Completion rate - live sync with tasks
+            // Tasks are considered "in range" if their due date falls within the selected date range
             val tasksInRange = tasks.filter { task ->
                 task.dueDate?.let { dueDate ->
                     val dueLocalDate = dueDate.toLocalDate()
@@ -66,7 +66,12 @@ class InsightsRepository @Inject constructor(
             }
             val completedCount = tasksInRange.count { it.status == TaskStatus.COMPLETED }
             val totalCount = tasksInRange.size
-            val completionRate = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+            // Use ceiling to match requirement
+            val completionRate = if (totalCount > 0) {
+                Math.ceil(completedCount.toDouble() * 100.0 / totalCount.toDouble()).toFloat() / 100f
+            } else {
+                0f
+            }
 
             // Planned vs actual by day
             val plannedByDay = filteredPlanned

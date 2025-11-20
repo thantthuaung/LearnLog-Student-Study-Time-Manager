@@ -1,64 +1,89 @@
 <resources>
-    <!-- Material 3 Light Theme Colors -->
-    <color name="primaryColor">#87CEEB</color>
-    <color name="secondaryColor">#87CEEB</color>
-    <color name="sky_blue">#4DBFFF</color>
-    <color name="primary_light_blue">#43B8FF</color>
-    <color name="nav_blue">#43B8FF</color>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- Premium Design Tokens - LearnLog 2.0                        -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
 
-    <!-- Surface & Background Colors -->
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="screen_bg">#F8F9FB</color>
-    <color name="background_color">#F8F9FB</color>
+    <!-- Primary Brand Color - Sky Blue -->
+    <color name="colorPrimary">#38A3F1</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="primaryColor">#38A3F1</color>
+    <color name="nav_blue">#38A3F1</color>
+    <color name="primary_light_blue">#38A3F1</color>
+    <color name="sky_blue">#38A3F1</color>
+    <color name="primary_blue">#38A3F1</color>
+    <color name="blue">#38A3F1</color>
+
+    <!-- Surface Colors - Clean & Bright -->
+    <color name="colorSurface">#F7F9FC</color>
+    <color name="colorSurfaceContainer">#FFFFFF</color>
+    <color name="colorOnSurface">#24313F</color>
+    <color name="screen_bg">#F7F9FC</color>
+    <color name="background_color">#F7F9FC</color>
     <color name="surface">#FFFFFF</color>
     <color name="surface_container">#FFFFFF</color>
-    <color name="surface_variant">#F2F2F2</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Outline & Dividers -->
+    <color name="colorOutline">#E3E8EF</color>
+    <color name="outline">#E3E8EF</color>
+    <color name="divider_color">#E3E8EF</color>
+    <color name="divider_light">#E3E8EF</color>
+    <color name="chip_stroke">#E3E8EF</color>
 
     <!-- Text Colors -->
-    <color name="text_primary">#0D2A3A</color>
-    <color name="on_surface">#263238</color>
+    <color name="text_primary">#24313F</color>
+    <color name="on_surface">#24313F</color>
     <color name="text_secondary">#7A8A99</color>
     <color name="on_surface_variant">#7A8A99</color>
     <color name="text_hint">#B0BEC5</color>
-    <color name="outline">#DADADA</color>
-    <color name="divider_color">#E0E0E0</color>
+    <color name="ink">#24313F</color>
 
-    <!-- Legacy Colors -->
-    <color name="dark_slate">#2F4F4F</color>
-    <color name="light_gray">#EDEDED</color>
-    <color name="light_blue_background">#E3F2FD</color>
-    <color name="ripple_white">#80FFFFFF</color>
-    <color name="ink">#0D2A3A</color>
+    <!-- Accent Colors - Success, Warning, Danger, Info -->
+    <color name="success">#25C18A</color>
+    <color name="success_green">#25C18A</color>
+    <color name="green">#25C18A</color>
+    <color name="low_priority">#25C18A</color>
 
-    <!-- Priority Colors -->
-    <color name="low_priority">#66BB6A</color>
-    <color name="medium_priority">#FFA726</color>
-    <color name="high_priority">#FF5252</color>
+    <color name="warning">#FFB020</color>
+    <color name="amber">#FFB020</color>
+    <color name="medium_priority">#FFB020</color>
+    <color name="priority_medium">#FFB020</color>
 
-    <!-- Timer Colors -->
-    <color name="pomodoroFocus">#1976D2</color>
-    <color name="pomodoroShortBreak">#43A047</color>
-    <color name="pomodoroLongBreak">#FBC02D</color>
+    <color name="danger">#F04438</color>
+    <color name="error_red">#F04438</color>
+    <color name="red">#F04438</color>
+    <color name="high_priority">#F04438</color>
+    <color name="rose">#F04438</color>
 
-    <!-- Status Colors -->
-    <color name="amber">#FFC107</color>
-    <color name="green">#4CAF50</color>
-    <color name="rose">#B33050</color>
-    <color name="red">#F44336</color>
-    <color name="blue">#2196F3</color>
-    <color name="primary_blue">#2196F3</color>
-    <color name="gray">#9E9E9E</color>
-    <color name="success_green">#4CAF50</color>
-    <color name="error_red">#F44336</color>
+    <color name="info">#7A8DFF</color>
 
-    <!-- Additional UI Colors -->
-    <color name="divider_light">#F0F0F0</color>
+    <!-- Status Dot Colors -->
+    <color name="status_pending">#38A3F1</color>
+    <color name="status_in_progress">#FFB020</color>
+    <color name="status_completed">#E3E8EF</color>
+    <color name="status_overdue">#F04438</color>
+
+    <!-- Progress Track -->
+    <color name="progress_track">#D8DEE6</color>
+
+    <!-- Timer/Pomodoro Colors -->
+    <color name="pomodoroFocus">#38A3F1</color>
+    <color name="pomodoroShortBreak">#25C18A</color>
+    <color name="pomodoroLongBreak">#FFB020</color>
 
     <!-- Chip Colors -->
-    <color name="chip_background_light">#F0F0F0</color>
-    <color name="chip_background_selected">#43B8FF</color>
-    <color name="chip_text_light">#263238</color>
+    <color name="chip_background_light">#F7F9FC</color>
+    <color name="chip_background_selected">#38A3F1</color>
+    <color name="chip_text_light">#24313F</color>
     <color name="chip_text_selected">#FFFFFF</color>
-    <color name="chip_stroke">#E0E0E0</color>
+
+    <!-- Legacy/Misc -->
+    <color name="secondaryColor">#38A3F1</color>
+    <color name="surface_variant">#F7F9FC</color>
+    <color name="light_blue_background">#E3F2FD</color>
+    <color name="ripple_white">#80FFFFFF</color>
+    <color name="dark_slate">#2F4F4F</color>
+    <color name="gray">#9E9E9E</color>
+    <color name="light_gray">#E3E8EF</color>
 </resources>

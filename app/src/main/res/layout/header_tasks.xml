@@ -7,12 +7,7 @@
     android:paddingHorizontal="16dp"
     android:paddingTop="16dp">
 
-    <TextView
-        style="@style/Widget.LearnLog.TasksHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="TASKS &amp; DEADLINES" />
+    <!-- Removed duplicate header - already shown in top_bar blue capsule -->
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"

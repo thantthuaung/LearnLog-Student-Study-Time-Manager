@@ -1,10 +1,17 @@
 package com.example.learnlog.ui.timer
 
+import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.IBinder
 import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
@@ -12,8 +19,10 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
@@ -21,8 +30,10 @@ import com.example.learnlog.R
 import com.example.learnlog.data.model.TimerPreset
 import com.example.learnlog.data.model.TimerPresets
 import com.example.learnlog.data.model.TimerState
+import com.example.learnlog.data.preferences.UserPreferences
 import com.example.learnlog.data.repository.SettingsRepository
 import com.example.learnlog.databinding.FragmentTimerBinding
+import com.example.learnlog.service.TimerService
 import com.example.learnlog.ui.base.BaseFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -43,6 +54,9 @@ class TimerFragment : BaseFragment() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
+    @Inject
+    lateinit var userPreferences: UserPreferences
+
     private var timerState = TimerState.IDLE
     private var currentDurationMs = 25 * 60 * 1000L
     private var remainingMillis = currentDurationMs
@@ -56,6 +70,26 @@ class TimerFragment : BaseFragment() {
 
     private lateinit var presetAdapter: TimerPresetAdapter
 
+    // Timer service binding
+    private var timerService: TimerService? = null
+    private var isBound = false
+    private var useServiceMode = false
+
+    // Preferences
+    private var keepScreenOn = false
+    private var keepRunningInBackground = false
+
+    // Lifecycle observer for app foreground/background
+    private val appLifecycleObserver = object : DefaultLifecycleObserver {
+        override fun onStart(owner: LifecycleOwner) {
+            handleAppForegrounded()
+        }
+
+        override fun onStop(owner: LifecycleOwner) {
+            handleAppBackgrounded()
+        }
+    }
+
     companion object {
         private const val STATE_DURATION_MS = "duration_ms"
         private const val STATE_REMAINING_MS = "remaining_ms"
@@ -64,9 +98,58 @@ class TimerFragment : BaseFragment() {
         private const val STATE_SELECTED_PRESET = "selected_preset"
     }
 
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as TimerService.TimerBinder
+            timerService = binder.getService()
+            isBound = true
+
+            // Sync with service state
+            lifecycleScope.launch {
+                timerService?.remainingMillis?.collect { millis ->
+                    if (useServiceMode) {
+                        remainingMillis = millis
+                        updateTimerDisplay()
+                    }
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            timerService = null
+            isBound = false
+        }
+    }
+
+    private val timerCompleteReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.example.learnlog.TIMER_COMPLETE") {
+                onTimerComplete()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+
+        // Register lifecycle observer
+        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
+
+        // Register broadcast receiver
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(
+                timerCompleteReceiver,
+                IntentFilter("com.example.learnlog.TIMER_COMPLETE"),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            requireContext().registerReceiver(
+                timerCompleteReceiver,
+                IntentFilter("com.example.learnlog.TIMER_COMPLETE")
+            )
+        }
 
         // Restore state
         savedInstanceState?.let {
@@ -116,7 +199,42 @@ class TimerFragment : BaseFragment() {
         setupUI()
         setupControls()
         setupPresets()
+        loadPreferences()
         updateTimerDisplay()
+    }
+
+    private fun loadPreferences() {
+        lifecycleScope.launch {
+            // Load keep screen on preference
+            userPreferences.keepScreenOn.collect { enabled ->
+                keepScreenOn = enabled
+                binding.switchKeepScreenOn.isChecked = enabled
+                applyKeepScreenOn()
+            }
+        }
+
+        lifecycleScope.launch {
+            // Load keep running in background preference
+            userPreferences.keepRunningInBackground.collect { enabled ->
+                keepRunningInBackground = enabled
+                binding.switchKeepRunningInBackground.isChecked = enabled
+            }
+        }
+    }
+
+    private fun applyKeepScreenOn() {
+        if (keepScreenOn && (timerState == TimerState.RUNNING || timerState == TimerState.PAUSED)) {
+            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        updateLockIndicator()
+    }
+
+    private fun updateLockIndicator() {
+        // Show lock icon when Keep Screen On is enabled AND timer is active
+        val shouldShowLock = keepScreenOn && (timerState == TimerState.RUNNING || timerState == TimerState.PAUSED)
+        _binding?.screenLockIndicator?.isVisible = shouldShowLock
     }
 
     private fun setupUI() {
@@ -221,10 +339,18 @@ class TimerFragment : BaseFragment() {
 
         // Keep screen on toggle
         binding.switchKeepScreenOn.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            } else {
-                activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            keepScreenOn = isChecked
+            lifecycleScope.launch {
+                userPreferences.updateKeepScreenOn(isChecked)
+            }
+            applyKeepScreenOn()
+        }
+
+        // Keep running in background toggle
+        binding.switchKeepRunningInBackground.setOnCheckedChangeListener { _, isChecked ->
+            keepRunningInBackground = isChecked
+            lifecycleScope.launch {
+                userPreferences.updateKeepRunningInBackground(isChecked)
             }
         }
     }
@@ -258,6 +384,9 @@ class TimerFragment : BaseFragment() {
         // Restore full opacity (in case resuming from pause)
         binding.progressCircle.alpha = 1.0f
         binding.textCountdown.alpha = 1.0f
+
+        // Update lock indicator since timer is now running
+        updateLockIndicator()
 
         // Show notification
         notificationManager.showTimerNotification(remainingMillis)
@@ -363,6 +492,9 @@ class TimerFragment : BaseFragment() {
         binding.progressCircle.alpha = 0.5f
         binding.textCountdown.alpha = 0.7f
 
+        // Update lock indicator (should still show if keep screen on is enabled)
+        updateLockIndicator()
+
         // Update notification to paused state
         notificationManager.updateTimerNotification(remainingMillis, isPaused = true)
     }
@@ -377,6 +509,9 @@ class TimerFragment : BaseFragment() {
         binding.btnStartPause.setIconResource(R.drawable.ic_play)
         binding.btnReset.visibility = View.INVISIBLE
         binding.presetsRecyclerView.isEnabled = true
+
+        // Update lock indicator (should hide since timer is idle)
+        updateLockIndicator()
 
         // Cancel notification
         notificationManager.cancelTimerNotification()
@@ -432,6 +567,76 @@ class TimerFragment : BaseFragment() {
         }
     }
 
+    private fun handleAppBackgrounded() {
+        if (timerState != TimerState.RUNNING && timerState != TimerState.PAUSED) {
+            return
+        }
+
+        if (keepRunningInBackground) {
+            // Move to service mode - keep timer running in background
+            if (timerState == TimerState.RUNNING) {
+                countDownTimer?.cancel()
+                startTimerService()
+                Snackbar.make(binding.root, "Timer running in background", Snackbar.LENGTH_SHORT).show()
+            }
+        } else {
+            // Auto-pause timer
+            if (timerState == TimerState.RUNNING) {
+                pauseTimer()
+                Snackbar.make(binding.root, "Timer paused in background", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun handleAppForegrounded() {
+        if (useServiceMode && isBound) {
+            // Return from service mode
+            timerService?.let { service ->
+                remainingMillis = service.remainingMillis.value
+                if (service.isRunning.value) {
+                    timerState = TimerState.RUNNING
+                } else {
+                    timerState = TimerState.PAUSED
+                }
+                updateTimerDisplay()
+            }
+            stopTimerService()
+            useServiceMode = false
+
+            // Resume local timer if it was running
+            if (timerState == TimerState.RUNNING) {
+                startTimer()
+            }
+        }
+    }
+
+    private fun startTimerService() {
+        useServiceMode = true
+        val serviceIntent = Intent(requireContext(), TimerService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            requireContext().startForegroundService(serviceIntent)
+        } else {
+            requireContext().startService(serviceIntent)
+        }
+        requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+
+        // Start the service timer
+        lifecycleScope.launch {
+            // Wait for binding
+            kotlinx.coroutines.delay(100)
+            timerService?.startTimer(remainingMillis)
+        }
+    }
+
+    private fun stopTimerService() {
+        if (isBound) {
+            requireContext().unbindService(serviceConnection)
+            isBound = false
+        }
+        timerService?.stopTimer()
+        timerService = null
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         countDownTimer?.cancel()
@@ -445,6 +650,19 @@ class TimerFragment : BaseFragment() {
         }
 
         _binding = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
+        try {
+            requireContext().unregisterReceiver(timerCompleteReceiver)
+        } catch (e: IllegalArgumentException) {
+            // Receiver not registered
+        }
+        if (isBound) {
+            requireContext().unbindService(serviceConnection)
+        }
     }
 }
 
