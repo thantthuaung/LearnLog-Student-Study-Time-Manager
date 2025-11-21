@@ -118,4 +118,18 @@ object AppModule {
     ): QuoteRepository {
         return QuoteRepository(context, quoteApiService)
     }
+
+    @Provides
+    @Singleton
+    fun provideSampleDataPopulator(
+        @ApplicationContext context: Context,
+        taskDao: TaskDao,
+        sessionLogDao: SessionLogDao
+    ): com.example.learnlog.data.SampleDataPopulator {
+        return com.example.learnlog.data.SampleDataPopulator(
+            taskDao,
+            sessionLogDao,
+            context
+        )
+    }
 }

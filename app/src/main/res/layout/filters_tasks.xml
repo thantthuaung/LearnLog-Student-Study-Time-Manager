@@ -21,28 +21,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="All" />
+            android:text="@string/filter_all" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/chipDue"
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Due" />
+            android:text="@string/filter_due" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/chipCompleted"
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Completed" />
+            android:text="@string/filter_completed" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/chipSort"
             style="@style/Widget.Material3.Chip.Assist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sort ▾"
+            android:text="@string/filter_sort"
             app:chipIcon="@drawable/ic_sort" />
 
     </com.google.android.material.chip.ChipGroup>

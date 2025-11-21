@@ -1,5 +1,7 @@
 package com.example.learnlog.ui.tasks
 
+import android.animation.ArgbEvaluator
+import android.animation.ValueAnimator
 import android.graphics.PorterDuff
 import android.view.LayoutInflater
 import android.view.View
@@ -89,14 +91,43 @@ class TaskEntityAdapter(
             statusText.text = statusInfo.text
             statusText.setTextColor(ContextCompat.getColor(itemView.context, statusInfo.textColor))
 
-            // Thin progress line (time-to-due)
+            // Thin progress line (time-to-due) with animation
             thinProgressLine.visibility = View.VISIBLE
             val progressInfo = calculateProgress(task)
-            thinProgressLine.progress = progressInfo.progress
-            thinProgressLine.progressDrawable.setColorFilter(
-                ContextCompat.getColor(itemView.context, progressInfo.color),
-                PorterDuff.Mode.SRC_IN
-            )
+
+            // Animate progress
+            val currentProgress = thinProgressLine.progress
+            if (currentProgress != progressInfo.progress) {
+                ValueAnimator.ofInt(currentProgress, progressInfo.progress).apply {
+                    duration = 300
+                    addUpdateListener { animator ->
+                        thinProgressLine.progress = animator.animatedValue as Int
+                    }
+                    start()
+                }
+            } else {
+                thinProgressLine.progress = progressInfo.progress
+            }
+
+            // Animate color change
+            val newColor = ContextCompat.getColor(itemView.context, progressInfo.color)
+            val currentColor = thinProgressLine.progressDrawable.colorFilter?.let {
+                // Try to get current color, fallback to new color
+                newColor
+            } ?: newColor
+
+            ValueAnimator().apply {
+                setIntValues(currentColor, newColor)
+                setEvaluator(ArgbEvaluator())
+                duration = 300
+                addUpdateListener { animator ->
+                    thinProgressLine.progressDrawable.setColorFilter(
+                        animator.animatedValue as Int,
+                        PorterDuff.Mode.SRC_IN
+                    )
+                }
+                start()
+            }
 
             // Buttons
             startTimerButton.setOnClickListener { onStartTimer(task) }
@@ -137,20 +168,21 @@ class TaskEntityAdapter(
 
         private fun calculateProgress(task: TaskEntity): ProgressInfo {
             if (task.completed) {
+                // Completed tasks show green with 100% progress
                 return ProgressInfo(
                     progress = 100,
-                    color = android.R.color.darker_gray
+                    color = R.color.low_priority // Green
                 )
             }
 
-            val dueAt = task.dueAt ?: return ProgressInfo(0, R.color.sky_blue)
+            val dueAt = task.dueAt ?: return ProgressInfo(0, R.color.medium_priority) // Yellow for no due date
             val createdAt = task.createdAt
             val now = LocalDateTime.now()
 
             // Calculate total time from creation to due
             val totalMinutes = ChronoUnit.MINUTES.between(createdAt, dueAt)
             if (totalMinutes <= 0) {
-                return ProgressInfo(100, R.color.high_priority)
+                return ProgressInfo(100, R.color.high_priority) // Red for overdue
             }
 
             // Calculate elapsed time
@@ -160,11 +192,12 @@ class TaskEntityAdapter(
             // Calculate remaining hours
             val hoursRemaining = ChronoUnit.HOURS.between(now, dueAt)
 
-            // Determine color based on urgency
+            // Color based on status and urgency:
+            // - Pending/In-Progress: Yellow (medium_priority)
+            // - Overdue: Red (high_priority)
             val color = when {
                 now.isAfter(dueAt) -> R.color.high_priority // Overdue = red
-                hoursRemaining <= 48 -> R.color.medium_priority // <= 48h = orange
-                else -> R.color.sky_blue // > 48h = blue
+                else -> R.color.medium_priority // Pending/In-Progress = yellow
             }
 
             return ProgressInfo(progress, color)

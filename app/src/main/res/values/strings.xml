@@ -163,4 +163,33 @@
     <string name="default_web_client_id" translatable="false">762310666511-c2ik8qs34mok05i2leoi2igjabtpsp5t.apps.googleusercontent.com</string>
     <string name="data_management">Data Management</string>
     <string name="preferences">Preferences</string>
+
+    <!-- Filter Chips -->
+    <string name="filter_all">All</string>
+    <string name="filter_due">Due</string>
+    <string name="filter_completed">Completed</string>
+    <string name="filter_sort">Sort ▾</string>
+
+    <!-- Placeholder texts (for tools:text) -->
+    <string name="placeholder_task_title" translatable="false">Task Title</string>
+    <string name="placeholder_subject" translatable="false">Subject</string>
+    <string name="placeholder_due_date" translatable="false">Oct 5, 23:59</string>
+    <string name="placeholder_time" translatable="false">0h 0m</string>
+    <string name="placeholder_duration" translatable="false">25 min</string>
+    <string name="placeholder_task_name" translatable="false">Task Name</string>
+
+    <!-- Buttons -->
+    <string name="button_edit">Edit</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_change_avatar">Change Avatar</string>
+    <string name="label_profile_information">Profile Information</string>
+
+    <!-- URLs (non-translatable) -->
+    <string name="url_privacy_policy" translatable="false">https://github.com/thantthuaung/LearnLog-Student-Study-Time-Manager/blob/main/PRIVACY.md</string>
+    <string name="url_play_store" translatable="false">https://play.google.com/store/apps/details?id=%s</string>
+
+    <!-- Contact/Support -->
+    <string name="support_email" translatable="false">thantthuaung.dev@gmail.com</string>
+    <string name="email_subject">LearnLog Support</string>
+    <string name="email_body_template">Version: %1$s\nBuild: %2$s\n\n</string>
 </resources>

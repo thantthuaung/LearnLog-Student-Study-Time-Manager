@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.example.learnlog.BuildConfig
+import com.example.learnlog.R
 import com.example.learnlog.databinding.SettingsHelpAboutBinding
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,7 +38,7 @@ class HelpAboutSettingsFragment : Fragment() {
         binding.tvBuild.text = BuildConfig.VERSION_CODE.toString()
 
         binding.linkPrivacy.setOnClickListener {
-            openUrl("https://learnlog.app/privacy")
+            openUrl(getString(R.string.url_privacy_policy))
         }
 
         binding.linkContact.setOnClickListener {
@@ -61,9 +62,9 @@ class HelpAboutSettingsFragment : Fragment() {
     private fun sendEmail() {
         try {
             val intent = Intent(Intent.ACTION_SENDTO).apply {
-                data = Uri.parse("mailto:support@learnlog.app")
-                putExtra(Intent.EXTRA_SUBJECT, "LearnLog Support")
-                putExtra(Intent.EXTRA_TEXT, "Version: ${BuildConfig.VERSION_NAME}\nBuild: ${BuildConfig.VERSION_CODE}\n\n")
+                data = Uri.parse("mailto:${getString(R.string.support_email)}")
+                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject))
+                putExtra(Intent.EXTRA_TEXT, getString(R.string.email_body_template, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE))
             }
             startActivity(Intent.createChooser(intent, "Send Email"))
         } catch (e: Exception) {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -39,7 +40,7 @@
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:textColor="@color/ink"
-                android:text="Task Title" />
+                tools:text="@string/placeholder_task_title" />
             <TextView
                 android:id="@+id/textTaskSubject"
                 android:layout_width="wrap_content"
@@ -49,7 +50,7 @@
                 android:textSize="12sp"
                 android:gravity="center"
                 android:paddingHorizontal="16dp"
-                android:text="Subject"
+                tools:text="@string/placeholder_subject"
                 android:layout_marginStart="8dp" />
         </LinearLayout>
 
@@ -70,7 +71,7 @@
                 android:id="@+id/textTaskDue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Oct 5, 23:59"
+                tools:text="@string/placeholder_due_date"
                 android:textColor="@color/ink"
                 android:textSize="14sp"
                 android:layout_marginStart="4dp"
@@ -99,7 +100,7 @@
             android:id="@+id/textTaskStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pending"
+            tools:text="@string/status_pending"
             android:textColor="@color/ink"
             android:textSize="12sp"
             android:textStyle="bold"
@@ -127,7 +128,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Start Timer"
+                android:text="@string/start_timer"
                 android:contentDescription="Start timer for this task"
                 android:minHeight="48dp"
                 style="@style/Widget.Material3.Button.OutlinedButton"
@@ -137,7 +138,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Edit"
+                android:text="@string/button_edit"
                 android:contentDescription="Edit task"
                 android:minHeight="48dp"
                 style="@style/Widget.Material3.Button.TextButton" />
