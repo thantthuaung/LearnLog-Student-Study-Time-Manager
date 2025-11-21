@@ -53,6 +53,7 @@ class TasksFragment : BaseFragment(R.layout.fragment_tasks) {
         // Set page title in header
         binding.topBar.pageTitle.text = getString(R.string.page_tasks_title)
 
+        setupSearchView()
         setupRecyclerView()
         setupFab()
         observeViewModel()
@@ -71,6 +72,19 @@ class TasksFragment : BaseFragment(R.layout.fragment_tasks) {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun setupSearchView() {
+        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                viewModel.setSearchQuery(newText ?: "")
+                return true
+            }
+        })
     }
 
     private fun setupRecyclerView() {

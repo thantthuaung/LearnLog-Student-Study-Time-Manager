@@ -7,27 +7,7 @@
     android:paddingHorizontal="16dp"
     android:paddingTop="16dp">
 
-    <!-- Removed duplicate header - already shown in top_bar blue capsule -->
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="Search tasks..."
-        app:startIconDrawable="@drawable/ic_search"
-        app:boxBackgroundMode="filled"
-        app:endIconMode="clear_text"
-        style="@style/Widget.Material3.TextInputLayout.FilledBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/search_input"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:maxLines="1"
-            android:imeOptions="actionSearch" />
-
-    </com.google.android.material.textfield.TextInputLayout>
+    <!-- Search bar removed - using the one in fragment_tasks.xml instead -->
 
 </LinearLayout>
 

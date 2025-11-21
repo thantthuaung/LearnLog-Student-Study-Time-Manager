@@ -2,7 +2,6 @@ package com.example.learnlog.ui.tasks
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.RecyclerView
 import com.example.learnlog.databinding.HeaderTasksBinding
 
@@ -23,9 +22,7 @@ class HeaderAdapter(
         onSearchTextChanged: (String) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         init {
-            binding.searchInput.doAfterTextChanged { text ->
-                onSearchTextChanged(text?.toString() ?: "")
-            }
+            // Search input removed from header - now using fragment's search bar
         }
     }
 }

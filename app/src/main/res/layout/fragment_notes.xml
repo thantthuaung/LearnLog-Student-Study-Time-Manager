@@ -18,18 +18,21 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/searchCard"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
         app:cardElevation="2dp"
-        app:cardCornerRadius="24dp"
+        app:cardCornerRadius="20dp"
         app:layout_constraintTop_toBottomOf="@id/top_bar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.85"
+        app:contentPadding="0dp">
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
+            android:minHeight="40dp"
             app:iconifiedByDefault="false"
             app:queryHint="Search notes..."
             app:queryBackground="@android:color/transparent" />

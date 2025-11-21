@@ -1,24 +1,19 @@
 package com.example.learnlog
 
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.bumptech.glide.Glide
 import com.example.learnlog.auth.AuthManager
-import com.example.learnlog.data.preferences.UserPreferences
 import com.example.learnlog.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,8 +24,6 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var authManager: AuthManager
 
-    @Inject
-    lateinit var userPreferences: UserPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Install splash screen before super.onCreate
@@ -150,44 +143,35 @@ class MainActivity : AppCompatActivity() {
         val displayNameTextView = headerView.findViewById<TextView>(R.id.drawer_display_name)
         val emailTextView = headerView.findViewById<TextView>(R.id.drawer_email)
 
-        lifecycleScope.launch {
-            userPreferences.displayName.collect { name ->
-                displayNameTextView.text = name.ifEmpty { "Add your name" }
-            }
-        }
+        // Get user info from Firebase Auth
+        val currentUser = authManager.currentUser
 
-        lifecycleScope.launch {
-            userPreferences.email.collect { email ->
-                emailTextView.text = email.ifEmpty { "Add your email" }
-            }
-        }
+        // Set display name from Firebase Auth
+        val displayName = currentUser?.displayName
+        displayNameTextView.text = displayName?.takeIf { it.isNotEmpty() } ?: "User"
 
-        lifecycleScope.launch {
-            userPreferences.avatarUri.collect { uri ->
-                if (uri != null) {
-                    try {
-                        Glide.with(this@MainActivity)
-                            .load(Uri.parse(uri))
-                            .placeholder(R.drawable.ic_person)
-                            .error(R.drawable.ic_person)
-                            .circleCrop()
-                            .into(avatarImageView)
-                    } catch (e: Exception) {
-                        avatarImageView.setImageResource(R.drawable.ic_person)
-                    }
-                } else {
-                    avatarImageView.setImageResource(R.drawable.ic_person)
-                }
-            }
+        // Set email from Firebase Auth
+        val email = currentUser?.email
+        emailTextView.text = email?.takeIf { it.isNotEmpty() } ?: "No email"
+
+        // Set profile photo from Firebase Auth or use default
+        val photoUrl = currentUser?.photoUrl
+        if (photoUrl != null) {
+            Glide.with(this)
+                .load(photoUrl)
+                .placeholder(R.drawable.ic_person)
+                .error(R.drawable.ic_person)
+                .circleCrop()
+                .into(avatarImageView)
+        } else {
+            avatarImageView.setImageResource(R.drawable.ic_person)
         }
     }
 
     fun openDrawer() {
-        // Ensure drawer opens reliably by posting to message queue
-        binding.drawerLayout.post {
-            if (!binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                binding.drawerLayout.openDrawer(GravityCompat.START, true)
-            }
+        // Open drawer immediately without checking if it's already open
+        if (!binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.openDrawer(GravityCompat.START, true)
         }
     }
 

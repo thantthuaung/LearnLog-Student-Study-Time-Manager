@@ -39,21 +39,23 @@ abstract class BaseFragment : Fragment {
             val currentDestination = navController.currentDestination?.id
             val isTopLevel = currentDestination in topLevelDestinations
 
-            // Clear any existing click listeners
+            // Ensure button is fully interactive
             button.setOnClickListener(null)
             button.setOnLongClickListener(null)
-
+            button.isEnabled = true
             // Make button clickable and focusable
             button.isClickable = true
             button.isFocusable = true
 
             if (isTopLevel) {
-                // Show hamburger icon and open drawer
+                // Show hamburger and open drawer
                 button.setImageResource(R.drawable.ic_menu)
                 button.contentDescription = getString(R.string.open_drawer)
                 button.setOnClickListener {
-                    // Open drawer immediately on click
-                    (activity as? MainActivity)?.openDrawer()
+                    // Use post to ensure MainActivity is ready
+                    view.post {
+                        (activity as? MainActivity)?.openDrawer()
+                    }
                 }
             } else {
                 // Show back arrow and navigate up
