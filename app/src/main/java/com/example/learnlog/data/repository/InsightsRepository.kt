@@ -1,7 +1,7 @@
 package com.example.learnlog.data.repository
 
 import com.example.learnlog.data.dao.SessionLogDao
-import com.example.learnlog.data.model.SessionLog
+import com.example.learnlog.data.entity.SessionLogEntity
 import com.example.learnlog.data.model.TaskStatus
 import com.example.learnlog.ui.insights.DateRange
 import com.example.learnlog.ui.insights.InsightsData
@@ -11,6 +11,7 @@ import com.example.learnlog.util.DateTimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import org.threeten.bp.LocalDate
+import org.threeten.bp.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,30 +26,31 @@ class InsightsRepository @Inject constructor(
     fun getInsightsData(dateRange: DateRange, customStart: LocalDate? = null, customEnd: LocalDate? = null): Flow<InsightsData> {
         val (startDate, endDate) = getDateRangeFor(dateRange, customStart, customEnd)
 
+        val startTimestamp = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val endTimestamp = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
         return combine(
             tasksRepository.getAllTasks(),
-            plannerRepository.getSessionsForWeek(startDate.atStartOfDay())
-        ) { tasks, plannedSessions ->
+            plannerRepository.getSessionsForWeek(startDate.atStartOfDay()),
+            sessionLogDao.getSessionsInTimeRange(startTimestamp, endTimestamp)
+        ) { tasks, plannedSessions, sessionEntities ->
 
-            // For now, return mock data since session logs might be empty
-            // In production, fetch from sessionLogDao.getSessionsInTimeRange()
-            val sessions = emptyList<SessionLog>() // TODO: Fetch real sessions
+            val totalFocusMinutes = sessionEntities
+                .filter { it.isCompleted }
+                .sumOf { it.durationMinutes }
 
-            // Total focus time
-            val totalFocusMinutes = sessions.sumOf { it.focusMinutes }
-
-            // Time by subject
-            val timeBySubject = sessions
+            val timeBySubject = sessionEntities
+                .filter { it.isCompleted }
                 .groupBy { session ->
-                    tasks.find { it.id == session.taskId }?.subject ?: "Other"
+                    session.taskId?.let { taskId ->
+                        tasks.find { it.id == taskId }?.subject
+                    } ?: session.subject ?: "General Study"
                 }
-                .mapValues { (_, sessions) -> sessions.sumOf { it.focusMinutes } }
+                .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
                 .filter { it.value > 0 }
 
-            // Current streak
-            val streak = calculateStreak(sessions)
+            val streak = calculateStreak(sessionEntities)
 
-            // Planned vs actual
             val filteredPlanned = plannedSessions.filter { session ->
                 val sessionDate = session.startTime.toLocalDate()
                 !sessionDate.isBefore(startDate) && !sessionDate.isAfter(endDate)
@@ -56,31 +58,28 @@ class InsightsRepository @Inject constructor(
             val totalPlanned = filteredPlanned.sumOf { it.durationMinutes }
             val totalActual = totalFocusMinutes
 
-            // Completion rate - live sync with tasks
-            // Tasks are considered "in range" if their due date falls within the selected date range
             val tasksInRange = tasks.filter { task ->
-                task.dueDate?.let { dueDate ->
-                    val dueLocalDate = dueDate.toLocalDate()
+                task.dueDate?.let { dueDateTime ->
+                    val dueLocalDate = dueDateTime.toLocalDate()
                     !dueLocalDate.isBefore(startDate) && !dueLocalDate.isAfter(endDate)
                 } ?: false
             }
             val completedCount = tasksInRange.count { it.status == TaskStatus.COMPLETED }
             val totalCount = tasksInRange.size
-            // Use ceiling to match requirement
             val completionRate = if (totalCount > 0) {
-                Math.ceil(completedCount.toDouble() * 100.0 / totalCount.toDouble()).toFloat() / 100f
+                completedCount.toFloat() / totalCount.toFloat()
             } else {
                 0f
             }
 
-            // Planned vs actual by day
             val plannedByDay = filteredPlanned
                 .groupBy { it.startTime.toLocalDate() }
                 .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
 
-            val actualByDay = sessions
+            val actualByDay = sessionEntities
+                .filter { it.isCompleted }
                 .groupBy { it.startTime.toLocalDate() }
-                .mapValues { (_, sessions) -> sessions.sumOf { it.focusMinutes } }
+                .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
 
             val allDates = (plannedByDay.keys + actualByDay.keys).toSet()
             val plannedVsActualByDay = allDates.associate { date ->
@@ -90,9 +89,8 @@ class InsightsRepository @Inject constructor(
                 )
             }.toSortedMap()
 
-            // Top tasks by time
-            val topTasks = sessions
-                .filter { it.taskId != null }
+            val topTasks = sessionEntities
+                .filter { it.taskId != null && it.isCompleted }
                 .groupBy { it.taskId }
                 .mapNotNull { (taskId, taskSessions) ->
                     val task = tasks.find { it.id == taskId }
@@ -100,18 +98,18 @@ class InsightsRepository @Inject constructor(
                         TopTask(
                             taskId = it.id,
                             title = it.title,
-                            subject = it.subject,
-                            totalMinutes = taskSessions.sumOf { s -> s.focusMinutes }
+                            subject = it.subject ?: "",
+                            totalMinutes = taskSessions.sumOf { s -> s.durationMinutes }
                         )
                     }
                 }
                 .sortedByDescending { it.totalMinutes }
                 .take(5)
 
-            // Interruptions (count sessions with breaks)
-            val totalInterruptions = sessions.count { it.breakMinutes > 0 }
-            val avgSessionMinutes = if (sessions.isNotEmpty())
-                sessions.sumOf { it.focusMinutes } / sessions.size
+            val completedSessions = sessionEntities.filter { it.isCompleted }
+            val totalInterruptions = 0
+            val avgSessionMinutes = if (completedSessions.isNotEmpty())
+                completedSessions.sumOf { it.durationMinutes } / completedSessions.size
             else 0
 
             InsightsData(
@@ -156,14 +154,16 @@ class InsightsRepository @Inject constructor(
         }
     }
 
-    private fun calculateStreak(sessions: List<SessionLog>): Int {
+    private fun calculateStreak(sessions: List<SessionLogEntity>): Int {
         if (sessions.isEmpty()) return 0
 
         val today = dateTimeProvider.now().toLocalDate()
+
         val sessionsByDate = sessions
+            .filter { it.isCompleted }
             .groupBy { it.startTime.toLocalDate() }
-            .mapValues { (_, sessions) -> sessions.sumOf { it.focusMinutes } }
-            .filterValues { it >= 25 } // At least 25 minutes to count
+            .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
+            .filterValues { it > 0 }
 
         var streak = 0
         var currentDate = today
@@ -176,3 +176,4 @@ class InsightsRepository @Inject constructor(
         return streak
     }
 }
+

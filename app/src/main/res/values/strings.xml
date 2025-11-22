@@ -41,10 +41,10 @@
     <string name="session_statistics">Session Statistics</string>
     <string name="avg_session">Avg Session</string>
     <string name="interruptions">Interruptions</string>
-    <string name="empty_focus_time">No focus time yet — start a 25m session</string>
+    <string name="empty_focus_time">No focus time yet — start studying to track your progress</string>
     <string name="empty_sessions">No sessions yet</string>
     <string name="empty_top_tasks">No tasks with logged time yet</string>
-    <string name="empty_streak">No streak yet — start a session to begin!</string>
+    <string name="empty_streak">No streak yet — start studying to begin!</string>
 
     <!-- Notes -->
     <string name="pinned_only">Pinned Only</string>
