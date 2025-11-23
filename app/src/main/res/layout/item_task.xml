@@ -76,6 +76,21 @@
                 android:textSize="14sp"
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="12dp" />
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_timer"
+                app:tint="@color/nav_blue"
+                android:contentDescription="Duration"
+                android:layout_marginEnd="4dp" />
+            <TextView
+                android:id="@+id/textTaskDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="30 min"
+                android:textColor="@color/ink"
+                android:textSize="14sp"
+                android:layout_marginEnd="12dp" />
             <View
                 android:id="@+id/priorityDot"
                 android:layout_width="10dp"

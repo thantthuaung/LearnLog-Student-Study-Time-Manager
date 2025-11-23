@@ -42,6 +42,7 @@ class TaskEntityAdapter(
         private val titleText: TextView = itemView.findViewById(R.id.textTaskTitle)
         private val subjectText: TextView = itemView.findViewById(R.id.textTaskSubject)
         private val dueDateText: TextView = itemView.findViewById(R.id.textTaskDue)
+        private val durationText: TextView = itemView.findViewById(R.id.textTaskDuration)
         private val statusText: TextView = itemView.findViewById(R.id.textTaskStatus)
         private val progressBar: ProgressBar = itemView.findViewById(R.id.progressTask)
         private val thinProgressLine: ProgressBar = itemView.findViewById(R.id.progressBar)
@@ -71,6 +72,16 @@ class TaskEntityAdapter(
             }
             dueDateText.text = dueText
 
+            // Duration
+            val duration = task.durationMinutes
+            durationText.text = if (duration < 60) {
+                "$duration min"
+            } else {
+                val hours = duration / 60
+                val mins = duration % 60
+                if (mins == 0) "$hours h" else "$hours h $mins min"
+            }
+
             // Priority dot color
             val priorityColor = when (task.priority) {
                 0 -> R.color.low_priority // Low = green
@@ -99,7 +110,7 @@ class TaskEntityAdapter(
             val currentProgress = thinProgressLine.progress
             if (currentProgress != progressInfo.progress) {
                 ValueAnimator.ofInt(currentProgress, progressInfo.progress).apply {
-                    duration = 300
+                    setDuration(300)
                     addUpdateListener { animator ->
                         thinProgressLine.progress = animator.animatedValue as Int
                     }
@@ -119,7 +130,7 @@ class TaskEntityAdapter(
             ValueAnimator().apply {
                 setIntValues(currentColor, newColor)
                 setEvaluator(ArgbEvaluator())
-                duration = 300
+                setDuration(300)
                 addUpdateListener { animator ->
                     thinProgressLine.progressDrawable.setColorFilter(
                         animator.animatedValue as Int,

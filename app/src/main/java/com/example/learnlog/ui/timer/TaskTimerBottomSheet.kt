@@ -33,8 +33,9 @@ class TaskTimerBottomSheet : BottomSheetDialogFragment() {
     private var currentDurationMs = 25 * 60 * 1000L
     private var remainingMillis = currentDurationMs
     private var countDownTimer: CountDownTimer? = null
-    private var isRunning = false
+    private var actualStartTimeMillis: Long = 0 // Track actual wall-clock start time
     private var sessionStarted = false
+    private var isRunning = false
 
     private var vibrator: Vibrator? = null
     private var ringtone: Ringtone? = null
@@ -152,7 +153,7 @@ class TaskTimerBottomSheet : BottomSheetDialogFragment() {
             viewModel.startTimerSession(taskId, taskTitle, durationMinutes)
             sessionStarted = true
         }
-
+            actualStartTimeMillis = System.currentTimeMillis() // Record actual start time
         isRunning = true
         binding.btnStartPause.text = "Pause"
         binding.btnStartPause.setIconResource(R.drawable.ic_pause)
@@ -240,16 +241,23 @@ class TaskTimerBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun completeSession(markTaskCompleted: Boolean) {
-        val actualDurationMinutes = ((currentDurationMs - remainingMillis) / 1000 / 60).toInt()
+        // Calculate actual elapsed time from wall-clock, not countdown timer
+        val actualElapsedMs = if (actualStartTimeMillis > 0) {
+            System.currentTimeMillis() - actualStartTimeMillis
+        } else {
+            // Fallback to countdown calculation if start time wasn't set
+            currentDurationMs - remainingMillis
+        }
+        val actualDurationMinutes = (actualElapsedMs / 1000 / 60).toInt().coerceAtLeast(1)
+
         viewModel.completeTimerSession(actualDurationMinutes)
 
-        if (markTaskCompleted && taskId != -1L) {
+        if (markTaskCompleted) {
             viewModel.markTaskCompleted(taskId)
         }
 
-        // Show snackbar on parent view
         val message = if (markTaskCompleted) {
-            "Session saved • Task completed"
+            "Task completed! Session saved."
         } else {
             "Session saved"
         }

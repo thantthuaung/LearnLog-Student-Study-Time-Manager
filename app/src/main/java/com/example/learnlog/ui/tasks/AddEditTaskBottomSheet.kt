@@ -1,38 +1,45 @@
 package com.example.learnlog.ui.tasks
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import androidx.core.widget.doAfterTextChanged
+import android.widget.AutoCompleteTextView
 import androidx.fragment.app.activityViewModels
 import com.example.learnlog.R
 import com.example.learnlog.data.entity.TaskEntity
 import com.example.learnlog.databinding.DialogAddTaskBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.LocalDate
-import org.threeten.bp.LocalTime
-import org.threeten.bp.ZoneId
-import org.threeten.bp.format.DateTimeFormatter
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.switchmaterial.SwitchMaterial
 import dagger.hilt.android.AndroidEntryPoint
+import org.threeten.bp.LocalDateTime
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 @AndroidEntryPoint
 class AddEditTaskBottomSheet : BottomSheetDialogFragment() {
+
     private val viewModel: TasksViewModel by activityViewModels()
-    private var task: TaskEntity? = null
     private var _binding: DialogAddTaskBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedDate: LocalDate? = null
-    private var selectedTime: LocalTime? = null
-    private var selectedPriority: Int = 0 // 0=Low, 1=Medium, 2=High
-    private var selectedType: String = "Assignment"
+    private var task: TaskEntity? = null
+    private lateinit var titleInput: TextInputEditText
+    private lateinit var subjectInput: TextInputEditText
+    private lateinit var dateInput: TextInputEditText
+    private lateinit var timeInput: TextInputEditText
+    private lateinit var priorityInput: AutoCompleteTextView
+    private lateinit var typeInput: AutoCompleteTextView
+    private lateinit var durationInput: TextInputEditText
+    private lateinit var descriptionInput: TextInputEditText
+    private lateinit var notificationSwitch: SwitchMaterial
+
+    private var selectedDate: Calendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,221 +65,190 @@ class AddEditTaskBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupPriorityDropdown()
-        setupTypeDropdown()
-        setupDatePicker()
-        setupTimePicker()
-        setupValidation()
+        initializeViews()
+        setupInputs()
 
-        val currentTask = task
-        if (currentTask != null) {
+        // Pre-fill if editing existing task
+        task?.let { existingTask ->
             binding.dialogTitle.text = getString(R.string.edit_task)
-            binding.titleInput.setText(currentTask.title)
-            binding.subjectInput.setText(currentTask.subject ?: "")
+            titleInput.setText(existingTask.title)
+            subjectInput.setText(existingTask.subject ?: "")
+            descriptionInput.setText(existingTask.notes ?: "")
+            durationInput.setText(existingTask.durationMinutes.toString())
 
-            // Set date and time from task.dueAt
-            currentTask.dueAt?.let { dueAt ->
-                selectedDate = dueAt.toLocalDate()
-                selectedTime = dueAt.toLocalTime()
-                updateDateDisplay()
-                updateTimeDisplay()
+            // Set due date/time if exists
+            existingTask.dueAt?.let { dueAt ->
+                selectedDate = Calendar.getInstance().apply {
+                    set(dueAt.year, dueAt.monthValue - 1, dueAt.dayOfMonth,
+                        dueAt.hour, dueAt.minute)
+                }
+                updateDateTimeDisplay()
             }
 
             // Set priority
-            selectedPriority = currentTask.priority
-            val priorityOptions = resources.getStringArray(R.array.priority_options)
-            binding.priorityInput.setText(priorityOptions[selectedPriority], false)
+            val priorityArray = resources.getStringArray(R.array.priority_options)
+            if (existingTask.priority in priorityArray.indices) {
+                priorityInput.setText(priorityArray[existingTask.priority], false)
+            }
 
-            // Set type
-            selectedType = currentTask.type
-            binding.typeInput.setText(selectedType, false)
-
-            binding.descriptionInput.setText(currentTask.notes ?: "")
             binding.btnSave.text = getString(R.string.update_task)
-        } else {
+        } ?: run {
             binding.dialogTitle.text = getString(R.string.add_task)
             binding.btnSave.text = getString(R.string.save_task)
         }
 
         binding.btnSave.setOnClickListener {
-            if (validateInputs()) {
-                saveTask()
-            }
+            saveTask()
         }
     }
 
-    private fun setupPriorityDropdown() {
+    private fun initializeViews() {
+        titleInput = binding.titleInput
+        subjectInput = binding.subjectInput
+        dateInput = binding.dateInput
+        timeInput = binding.timeInput
+        priorityInput = binding.priorityInput
+        typeInput = binding.typeInput
+        durationInput = binding.durationInput
+        descriptionInput = binding.descriptionInput
+        notificationSwitch = binding.notificationSwitch
+    }
+
+    private fun setupInputs() {
+        // Set default duration
+        durationInput.setText("30")
+        durationInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                durationInput.selectAll()
+            }
+        }
+
+        // Setup priority dropdown
         val priorities = resources.getStringArray(R.array.priority_options)
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, priorities)
-        binding.priorityInput.setAdapter(adapter)
-        binding.priorityInput.setOnItemClickListener { _, _, position, _ ->
-            selectedPriority = position
-            validateInputs()
-        }
-    }
+        priorityInput.setAdapter(ArrayAdapter(requireContext(),
+            android.R.layout.simple_dropdown_item_1line, priorities))
 
-    private fun setupTypeDropdown() {
+        // Setup type dropdown
         val types = resources.getStringArray(R.array.type_options)
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, types)
-        binding.typeInput.setAdapter(adapter)
-        binding.typeInput.setOnItemClickListener { _, _, position, _ ->
-            selectedType = types[position]
-            validateInputs()
-        }
+        typeInput.setAdapter(ArrayAdapter(requireContext(),
+            android.R.layout.simple_dropdown_item_1line, types))
+
+        // Setup date/time pickers
+        dateInput.setOnClickListener { showDatePicker() }
+        timeInput.setOnClickListener { showTimePicker() }
+
+        // Set default date/time to now
+        updateDateTimeDisplay()
     }
 
-    private fun setupDatePicker() {
-        binding.dateInput.setOnClickListener {
-            val datePickerBuilder = MaterialDatePicker.Builder.datePicker()
-                .setTitleText("Select Due Date")
-
-            selectedDate?.let {
-                val millis = it.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                datePickerBuilder.setSelection(millis)
-            }
-
-            val datePicker = datePickerBuilder.build()
-            datePicker.addOnPositiveButtonClickListener { selection ->
-                selectedDate = LocalDate.ofEpochDay(selection / (24 * 60 * 60 * 1000))
-                updateDateDisplay()
-                validateInputs()
-            }
-            datePicker.show(parentFragmentManager, "DATE_PICKER")
-        }
+    private fun showDatePicker() {
+        val picker = DatePickerDialog(
+            requireContext(),
+            { _, year, month, day ->
+                selectedDate.set(year, month, day)
+                updateDateTimeDisplay()
+            },
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH),
+            selectedDate.get(Calendar.DAY_OF_MONTH)
+        )
+        picker.show()
     }
 
-    private fun setupTimePicker() {
-        binding.timeInput.setOnClickListener {
-            val timePickerBuilder = MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_12H)
-                .setTitleText("Select Due Time")
-
-            selectedTime?.let {
-                timePickerBuilder.setHour(it.hour)
-                timePickerBuilder.setMinute(it.minute)
-            }
-
-            val timePicker = timePickerBuilder.build()
-            timePicker.addOnPositiveButtonClickListener {
-                selectedTime = LocalTime.of(timePicker.hour, timePicker.minute)
-                updateTimeDisplay()
-                validateInputs()
-            }
-            timePicker.show(parentFragmentManager, "TIME_PICKER")
-        }
+    private fun showTimePicker() {
+        val picker = TimePickerDialog(
+            requireContext(),
+            { _, hour, minute ->
+                selectedDate.set(Calendar.HOUR_OF_DAY, hour)
+                selectedDate.set(Calendar.MINUTE, minute)
+                updateDateTimeDisplay()
+            },
+            selectedDate.get(Calendar.HOUR_OF_DAY),
+            selectedDate.get(Calendar.MINUTE),
+            false
+        )
+        picker.show()
     }
 
-    private fun updateDateDisplay() {
-        selectedDate?.let {
-            val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault())
-            binding.dateInput.setText(it.format(formatter))
-        }
-    }
-
-    private fun updateTimeDisplay() {
-        selectedTime?.let {
-            val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
-            binding.timeInput.setText(it.format(formatter))
-        }
-    }
-
-    private fun setupValidation() {
-        binding.titleInput.doAfterTextChanged { validateInputs() }
-    }
-
-    private fun validateInputs(): Boolean {
-        var isValid = true
-
-        // Validate title
-        val title = binding.titleInput.text.toString()
-        if (title.isBlank()) {
-            binding.titleInput.error = getString(R.string.error_required_field)
-            isValid = false
-        } else {
-            binding.titleInput.error = null
-        }
-
-        // Validate date and time
-        if (selectedDate == null) {
-            binding.dateInput.error = getString(R.string.error_required_field)
-            isValid = false
-        } else {
-            binding.dateInput.error = null
-        }
-
-        if (selectedTime == null) {
-            binding.timeInput.error = getString(R.string.error_required_field)
-            isValid = false
-        } else {
-            binding.timeInput.error = null
-        }
-
-        // Validate date/time not in the past
-        if (selectedDate != null && selectedTime != null) {
-            val dueDateTime = LocalDateTime.of(selectedDate, selectedTime)
-            if (dueDateTime.isBefore(LocalDateTime.now())) {
-                binding.dateInput.error = getString(R.string.error_past_date)
-                isValid = false
-            }
-        }
-
-        // Enable/disable save button
-        binding.btnSave.isEnabled = isValid
-
-        return isValid
+    private fun updateDateTimeDisplay() {
+        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+        dateInput.setText(dateFormat.format(selectedDate.time))
+        timeInput.setText(timeFormat.format(selectedDate.time))
     }
 
     private fun saveTask() {
-        val title = binding.titleInput.text.toString()
-        val subject = binding.subjectInput.text.toString()
-        val notes = binding.descriptionInput.text.toString()
-        val dueAt = if (selectedDate != null && selectedTime != null) {
-            LocalDateTime.of(selectedDate, selectedTime)
-        } else {
-            null
+        val title = titleInput.text.toString()
+        if (title.isBlank()) {
+            titleInput.error = "Title is required"
+            return
         }
 
-        val now = LocalDateTime.now()
+        // Get duration with validation
+        val durationText = durationInput.text.toString().trim()
+        val duration = if (durationText.isEmpty()) {
+            30
+        } else {
+            val parsed = durationText.toIntOrNull()
+            when {
+                parsed == null -> {
+                    durationInput.error = "Please enter a valid number"
+                    return
+                }
+                parsed < 1 -> {
+                    durationInput.error = "Duration must be at least 1 minute"
+                    return
+                }
+                parsed > 480 -> {
+                    durationInput.error = "Duration cannot exceed 480 minutes (8 hours)"
+                    return
+                }
+                else -> parsed
+            }
+        }
+
+        val dueDateTime = LocalDateTime.of(
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH) + 1,
+            selectedDate.get(Calendar.DAY_OF_MONTH),
+            selectedDate.get(Calendar.HOUR_OF_DAY),
+            selectedDate.get(Calendar.MINUTE)
+        )
+
+        // Get priority from dropdown (default to MEDIUM = 1)
+        val priorityText = priorityInput.text.toString()
+        val priorities = resources.getStringArray(R.array.priority_options)
+        val priority = priorities.indexOf(priorityText).takeIf { it >= 0 } ?: 1
+
         val existingTask = task
-
-        val newTask = if (existingTask != null) {
-            existingTask.copy(
+        if (existingTask != null) {
+            // Update existing task
+            val updatedTask = existingTask.copy(
                 title = title,
-                subject = subject.takeIf { it.isNotBlank() },
-                dueAt = dueAt,
-                priority = selectedPriority,
-                type = selectedType,
-                notes = notes.takeIf { it.isNotBlank() },
-                updatedAt = now
+                subject = subjectInput.text.toString().takeIf { it.isNotBlank() },
+                dueAt = dueDateTime,
+                priority = priority,
+                notes = descriptionInput.text.toString().takeIf { it.isNotBlank() },
+                durationMinutes = duration
             )
+            viewModel.updateExisting(updatedTask)
         } else {
-            TaskEntity(
+            // Create new task
+            val newTask = TaskEntity(
                 title = title,
-                subject = subject.takeIf { it.isNotBlank() },
-                dueAt = dueAt,
-                priority = selectedPriority,
+                subject = subjectInput.text.toString().takeIf { it.isNotBlank() },
+                dueAt = dueDateTime,
+                priority = priority,
+                type = typeInput.text.toString().takeIf { it.isNotBlank() } ?: "Assignment",
                 status = "PENDING",
-                progress = 0,
+                notes = descriptionInput.text.toString().takeIf { it.isNotBlank() },
+                durationMinutes = duration,
                 completed = false,
-                notes = notes.takeIf { it.isNotBlank() },
-                createdAt = now,
-                updatedAt = now,
-                type = selectedType
+                createdAt = LocalDateTime.now()
             )
+            viewModel.saveNew(newTask)
         }
 
-        if (existingTask == null) {
-            viewModel.saveNew(newTask)
-            // Show success message
-            view?.let {
-                com.google.android.material.snackbar.Snackbar.make(it, "Task created successfully", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
-            }
-        } else {
-            viewModel.updateExisting(newTask)
-            view?.let {
-                com.google.android.material.snackbar.Snackbar.make(it, "Task updated successfully", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
-            }
-        }
         dismiss()
     }
 
@@ -293,3 +269,4 @@ class AddEditTaskBottomSheet : BottomSheetDialogFragment() {
         }
     }
 }
+

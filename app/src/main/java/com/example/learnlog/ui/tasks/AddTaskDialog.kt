@@ -66,6 +66,15 @@ class AddTaskDialog : DialogFragment() {
     }
 
     private fun setupInputs() {
+        // Set default duration to 30 minutes
+        durationInput.setText("30")
+        // Select all text when focused for easy replacement
+        durationInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                durationInput.selectAll()
+            }
+        }
+
         // Setup priority dropdown
         val priorities = TaskPriority.entries.map { it.name }
         priorityInput.setAdapter(ArrayAdapter(requireContext(),
@@ -127,8 +136,28 @@ class AddTaskDialog : DialogFragment() {
             return
         }
 
-        // Get duration from input, default to 30 if empty or invalid
-        val duration = durationInput.text.toString().toIntOrNull()?.coerceIn(1, 480) ?: 30
+        // Get duration from input with validation
+        val durationText = durationInput.text.toString().trim()
+        val duration = if (durationText.isEmpty()) {
+            30 // Default to 30 if field is empty
+        } else {
+            val parsed = durationText.toIntOrNull()
+            when {
+                parsed == null -> {
+                    durationInput.error = "Please enter a valid number"
+                    return
+                }
+                parsed < 1 -> {
+                    durationInput.error = "Duration must be at least 1 minute"
+                    return
+                }
+                parsed > 480 -> {
+                    durationInput.error = "Duration cannot exceed 480 minutes (8 hours)"
+                    return
+                }
+                else -> parsed
+            }
+        }
 
         val dueDateTime = LocalDateTime.of(
             selectedDate.get(Calendar.YEAR),

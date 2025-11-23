@@ -96,12 +96,12 @@ class TasksFragment : BaseFragment(R.layout.fragment_tasks) {
                 // Mark task as IN_PROGRESS when timer starts
                 viewModel.markAsInProgress(task)
 
-                // Open task timer bottom sheet (popup)
+                // Open task timer bottom sheet (popup) with task's duration
                 val timerSheet = com.example.learnlog.ui.timer.TaskTimerBottomSheet.newInstance(
                     taskId = task.id,
                     taskTitle = task.title,
                     taskSubject = task.subject,
-                    durationMinutes = 25 // Default 25 minutes, can be adjusted
+                    durationMinutes = task.durationMinutes // Use task's actual duration
                 )
                 timerSheet.show(childFragmentManager, "TaskTimerSheet")
             },

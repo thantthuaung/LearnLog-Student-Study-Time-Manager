@@ -55,15 +55,19 @@ class InsightsRepository @Inject constructor(
                 val sessionDate = session.startTime.toLocalDate()
                 !sessionDate.isBefore(startDate) && !sessionDate.isAfter(endDate)
             }
-            val totalPlanned = filteredPlanned.sumOf { it.durationMinutes }
-            val totalActual = totalFocusMinutes
 
+            // Calculate planned time from both planner sessions AND task durations
+            val plannedFromSessions = filteredPlanned.sumOf { it.durationMinutes }
             val tasksInRange = tasks.filter { task ->
                 task.dueDate?.let { dueDateTime ->
                     val dueLocalDate = dueDateTime.toLocalDate()
                     !dueLocalDate.isBefore(startDate) && !dueLocalDate.isAfter(endDate)
                 } ?: false
             }
+            val plannedFromTasks = tasksInRange.sumOf { it.durationMinutes }
+            val totalPlanned = plannedFromSessions + plannedFromTasks
+            val totalActual = totalFocusMinutes
+
             val completedCount = tasksInRange.count { it.status == TaskStatus.COMPLETED }
             val totalCount = tasksInRange.size
             val completionRate = if (totalCount > 0) {
