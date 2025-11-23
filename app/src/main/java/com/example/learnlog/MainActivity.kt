@@ -129,6 +129,8 @@ class MainActivity : AppCompatActivity() {
                     // Normal screens: show bottom nav and unlock drawer
                     binding.bottomNavigation.visibility = View.VISIBLE
                     binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED)
+                    // Refresh drawer header when navigating to main screens (after login/register)
+                    setupDrawerHeader()
                 }
             }
         }
@@ -177,6 +179,12 @@ class MainActivity : AppCompatActivity() {
 
     fun getNavController() = (supportFragmentManager
         .findFragmentById(R.id.nav_host_fragment) as NavHostFragment).navController
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh drawer header when activity resumes to show updated user info
+        setupDrawerHeader()
+    }
 
     private fun handleNotificationIntent() {
         if (intent?.getBooleanExtra("open_timer_tab", false) == true) {
