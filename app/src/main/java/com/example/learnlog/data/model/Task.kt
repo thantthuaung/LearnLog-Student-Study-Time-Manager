@@ -11,5 +11,6 @@ data class Task(
     val type: TaskType,
     val status: TaskStatus,
     val description: String?,
-    val isNotificationEnabled: Boolean
+    val isNotificationEnabled: Boolean,
+    val durationMinutes: Int = 30
 )

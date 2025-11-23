@@ -27,5 +27,6 @@ data class TaskEntity(
     val notes: String? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),
-    val type: String
+    val type: String,
+    val durationMinutes: Int = 30  // Default 30 minutes for planned time
 ) : Parcelable

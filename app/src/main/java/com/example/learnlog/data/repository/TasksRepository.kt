@@ -84,7 +84,8 @@ class TasksRepository @Inject constructor(
                 else -> TaskStatus.PENDING
             },
             description = notes,
-            isNotificationEnabled = false
+            isNotificationEnabled = false,
+            durationMinutes = durationMinutes
         )
     }
 
@@ -111,7 +112,8 @@ class TasksRepository @Inject constructor(
                 TaskStatus.PENDING -> "PENDING"
             },
             completed = status == TaskStatus.COMPLETED,
-            notes = description
+            notes = description,
+            durationMinutes = durationMinutes
         )
     }
 }

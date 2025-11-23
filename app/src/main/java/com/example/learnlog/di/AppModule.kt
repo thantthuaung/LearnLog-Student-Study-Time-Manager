@@ -132,4 +132,24 @@ object AppModule {
             context
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideDataResetRepository(
+        appDatabase: com.example.learnlog.data.db.AppDatabase,
+        taskDao: TaskDao,
+        sessionLogDao: SessionLogDao,
+        noteDao: NoteDao,
+        subjectDao: SubjectDao,
+        dailyRollupDao: DailyRollupDao
+    ): DataResetRepository {
+        return DataResetRepository(
+            appDatabase,
+            taskDao,
+            sessionLogDao,
+            noteDao,
+            subjectDao,
+            dailyRollupDao
+        )
+    }
 }

@@ -51,6 +51,7 @@
     <color name="priority_medium">#FFB020</color>
 
     <color name="danger">#F04438</color>
+    <color name="danger_light">#FFEBEE</color>
     <color name="error_red">#F04438</color>
     <color name="red">#F04438</color>
     <color name="high_priority">#F04438</color>

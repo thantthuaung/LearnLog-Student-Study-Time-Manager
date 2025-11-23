@@ -15,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class InsightsViewModel @Inject constructor(
     private val insightsRepository: InsightsRepository,
-    private val quoteRepository: QuoteRepository
+    private val quoteRepository: QuoteRepository,
+    private val dataResetRepository: com.example.learnlog.data.repository.DataResetRepository
 ) : ViewModel() {
 
     private val _dateRange = MutableStateFlow(DateRange.TODAY)
@@ -62,6 +63,16 @@ class InsightsViewModel @Inject constructor(
     fun refreshQuote() {
         viewModelScope.launch {
             quoteRepository.getQuoteOfTheDay()
+        }
+    }
+
+    /**
+     * Resets all app data (tasks, notes, sessions, etc.)
+     * WARNING: This cannot be undone!
+     */
+    fun resetAllData() {
+        viewModelScope.launch {
+            dataResetRepository.resetAllData()
         }
     }
 }

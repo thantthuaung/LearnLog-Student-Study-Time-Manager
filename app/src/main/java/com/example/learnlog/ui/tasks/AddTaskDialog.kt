@@ -27,6 +27,7 @@ class AddTaskDialog : DialogFragment() {
     private lateinit var timeInput: TextInputEditText
     private lateinit var priorityInput: AutoCompleteTextView
     private lateinit var typeInput: AutoCompleteTextView
+    private lateinit var durationInput: TextInputEditText
     private lateinit var descriptionInput: TextInputEditText
     private lateinit var notificationSwitch: SwitchMaterial
 
@@ -59,6 +60,7 @@ class AddTaskDialog : DialogFragment() {
         timeInput = view.findViewById(R.id.timeInput)
         priorityInput = view.findViewById(R.id.priorityInput)
         typeInput = view.findViewById(R.id.typeInput)
+        durationInput = view.findViewById(R.id.durationInput)
         descriptionInput = view.findViewById(R.id.descriptionInput)
         notificationSwitch = view.findViewById(R.id.notificationSwitch)
     }
@@ -125,6 +127,9 @@ class AddTaskDialog : DialogFragment() {
             return
         }
 
+        // Get duration from input, default to 30 if empty or invalid
+        val duration = durationInput.text.toString().toIntOrNull()?.coerceIn(1, 480) ?: 30
+
         val dueDateTime = LocalDateTime.of(
             selectedDate.get(Calendar.YEAR),
             selectedDate.get(Calendar.MONTH) + 1,  // Calendar months are 0-based
@@ -141,7 +146,8 @@ class AddTaskDialog : DialogFragment() {
             type = TaskType.valueOf(typeInput.text.toString().ifEmpty { TaskType.STUDY_SESSION.name }),
             status = TaskStatus.PENDING,
             description = descriptionInput.text.toString(),
-            isNotificationEnabled = notificationSwitch.isChecked
+            isNotificationEnabled = notificationSwitch.isChecked,
+            durationMinutes = duration
         )
         onTaskCreated?.invoke(task)
     }

@@ -59,6 +59,7 @@ class InsightsFragment : BaseFragment() {
         setupCharts()
         observeData()
         setupAnalyticsButton()
+        setupResetButton()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -80,6 +81,36 @@ class InsightsFragment : BaseFragment() {
         binding.cardOpenAnalytics.setOnClickListener {
             findNavController().navigate(R.id.analyticsFragment)
         }
+    }
+
+    private fun setupResetButton() {
+        binding.cardResetData.setOnClickListener {
+            showResetConfirmationDialog()
+        }
+    }
+
+    private fun showResetConfirmationDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Reset All Data")
+            .setMessage("Are you sure you want to delete ALL data?\n\n" +
+                    "This will permanently delete:\n" +
+                    "• All tasks\n" +
+                    "• All notes\n" +
+                    "• All study sessions\n" +
+                    "• All subjects\n" +
+                    "• All statistics\n\n" +
+                    "This action CANNOT be undone!")
+            .setPositiveButton("DELETE ALL") { _, _ ->
+                viewModel.resetAllData()
+                android.widget.Toast.makeText(
+                    requireContext(),
+                    "All data has been deleted",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
     }
 
     private fun setupComposeView() {

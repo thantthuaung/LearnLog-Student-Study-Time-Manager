@@ -64,8 +64,8 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideTaskRepository(taskDao: TaskDao): TaskRepository {
-        return TaskRepository(taskDao)
+    fun provideTaskRepository(taskDao: TaskDao, sessionLogDao: SessionLogDao): TaskRepository {
+        return TaskRepository(taskDao, sessionLogDao)
     }
 
     @Provides
