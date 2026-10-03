@@ -1,405 +1,416 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/screen_bg">
+    android:background="?android:attr/colorBackground"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:paddingBottom="@dimen/bottom_nav_clearance">
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="100dp"
-        android:fillViewport="true">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <include
+            android:id="@+id/top_bar"
+            layout="@layout/top_bar" />
+
+        <!-- Linked task -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/task_card"
+            style="@style/Widget.LearnLog.Card.Tonal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <include
-                android:id="@+id/top_bar"
-                layout="@layout/top_bar"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/page_gutter"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="@dimen/page_gutter"
+            app:shapeAppearance="@style/ShapeAppearance.LearnLog.Medium">
 
             <LinearLayout
-                android:id="@+id/timerContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:paddingTop="16dp"
-                app:layout_constraintTop_toBottomOf="@id/top_bar"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
+                android:gravity="center_vertical"
+                android:minHeight="64dp"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="10dp">
 
-            <!-- Task Info Container (hidden for standalone timer) -->
-            <LinearLayout
-                android:id="@+id/taskInfoContainer"
-                android:layout_width="match_parent"
+                <FrameLayout
+                    android:layout_width="@dimen/icon_tile"
+                    android:layout_height="@dimen/icon_tile"
+                    android:background="@drawable/bg_icon_tile"
+                    android:backgroundTint="?attr/colorPrimaryContainer">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_target"
+                        app:tint="?attr/colorOnPrimaryContainer" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/task_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/timer_linked_task"
+                        android:textAppearance="?attr/textAppearanceLabelMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <TextView
+                        android:id="@+id/task_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        tools:text="Calculus problem set" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/task_action"
+                    style="@style/Widget.LearnLog.Button.Text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Remove" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Ring -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <View
+                android:id="@+id/ring_glow"
+                android:layout_width="@dimen/timer_ring"
+                android:layout_height="@dimen/timer_ring"
+                android:layout_gravity="center"
+                android:alpha="0"
+                android:background="@drawable/bg_dot"
+                android:backgroundTint="?attr/colorPrimaryContainer" />
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progress_ring"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
-                android:orientation="vertical"
-                android:visibility="gone">
+                android:layout_gravity="center"
+                android:max="1000"
+                app:indicatorColor="?attr/colorPrimary"
+                app:indicatorSize="@dimen/timer_ring"
+                app:trackColor="?attr/colorSurfaceContainerHigh"
+                app:trackCornerRadius="10dp"
+                app:trackThickness="14dp"
+                tools:progress="350" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/textPrompt"
+                    android:id="@+id/state_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="12dp"
-                    android:text="LEARNLOG"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:background="@drawable/bg_pill"
+                    android:paddingStart="12dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="4dp"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Ready to focus" />
+
+                <TextView
+                    android:id="@+id/text_countdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:includeFontPadding="false"
+                    android:textAppearance="@style/TextAppearance.LearnLog.Numeric"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="25:00" />
+
+                <TextView
+                    android:id="@+id/text_focused"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="of 25 min" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Adjust -->
+        <LinearLayout
+            android:id="@+id/adjust_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_decrease"
+                style="@style/Widget.LearnLog.Button.Outlined"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="40dp"
+                android:contentDescription="@string/timer_minus_one"
+                android:text="−1"
+                app:icon="@drawable/ic_remove"
+                tools:ignore="HardcodedText" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_increase"
+                style="@style/Widget.LearnLog.Button.Outlined"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:minHeight="40dp"
+                android:contentDescription="@string/timer_plus_five"
+                android:text="+5"
+                app:icon="@drawable/ic_add"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+
+        <!-- Controls -->
+        <LinearLayout
+            android:id="@+id/controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_reset"
+                style="@style/Widget.LearnLog.IconButton.Tonal"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:contentDescription="@string/timer_reset"
+                app:icon="@drawable/ic_restart" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_start_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="64dp"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="18dp"
+                android:minWidth="152dp"
+                android:textSize="17sp"
+                app:icon="@drawable/ic_play"
+                app:iconSize="26dp"
+                app:shapeAppearance="@style/ShapeAppearance.LearnLog.Pill"
+                tools:text="Start" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_finish"
+                style="@style/Widget.LearnLog.IconButton.Tonal"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:contentDescription="@string/finish"
+                app:icon="@drawable/ic_check" />
+        </LinearLayout>
+
+        <!-- Completion -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/complete_card"
+            style="@style/Widget.LearnLog.Card.Static"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/page_gutter"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="@dimen/page_gutter"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorTertiaryContainer"
+            app:strokeWidth="0dp"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <ImageView
+                    android:id="@+id/complete_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_trophy"
+                    app:tint="?attr/colorOnTertiaryContainer" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/timer_complete_title"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
+                    android:textColor="?attr/colorOnTertiaryContainer" />
+
+                <TextView
+                    android:id="@+id/complete_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnTertiaryContainer"
+                    tools:text="25 min of focus added to your log." />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
+                    android:layout_marginTop="16dp"
                     android:orientation="horizontal">
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipTaskTitle"
-                        style="@style/Widget.MaterialComponents.Chip.Entry"
-                        android:layout_width="wrap_content"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/complete_secondary"
+                        style="@style/Widget.LearnLog.Button.Outlined"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:text="Task Title" />
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        app:strokeColor="?attr/colorOnTertiaryContainer"
+                        tools:text="Still working" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipSubject"
-                        style="@style/Widget.MaterialComponents.Chip.Entry"
-                        android:layout_width="wrap_content"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/complete_primary"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Subject" />
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        app:backgroundTint="?attr/colorTertiary"
+                        tools:text="Mark done" />
                 </LinearLayout>
             </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <!-- Countdown Display -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="280dp"
-                android:layout_height="280dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="140dp"
-                app:cardElevation="8dp">
+        <!-- Presets -->
+        <TextView
+            android:id="@+id/presets_label"
+            style="@style/LearnLog.SectionLabel"
+            android:layout_marginStart="@dimen/page_gutter"
+            android:layout_marginTop="26dp"
+            android:text="@string/timer_presets" />
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/timer_circle_background"
-                    android:padding="24dp">
+        <HorizontalScrollView
+            android:id="@+id/presets_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/page_gutter"
+            android:paddingEnd="@dimen/page_gutter"
+            android:scrollbars="none">
 
-                    <ProgressBar
-                        android:id="@+id/progressCircle"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:indeterminate="false"
-                        android:max="100"
-                        android:progress="0"
-                        android:progressDrawable="@drawable/circular_progress" />
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/preset_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true"
+                app:singleSelection="true" />
+        </HorizontalScrollView>
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:orientation="vertical">
+        <!-- Daily goal -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/goal_card"
+            style="@style/Widget.LearnLog.Card.Static"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/page_gutter"
+            android:layout_marginTop="22dp"
+            android:layout_marginEnd="@dimen/page_gutter">
 
-                        <TextView
-                            android:id="@+id/textCountdown"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:text="25:00"
-                            android:textColor="@color/nav_blue"
-                            android:textSize="48sp"
-                            android:textStyle="bold" />
-
-                        <!-- Screen Lock Indicator -->
-                        <LinearLayout
-                            android:id="@+id/screenLockIndicator"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="4dp"
-                            android:gravity="center"
-                            android:orientation="horizontal"
-                            android:visibility="gone">
-
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:src="@drawable/ic_lock"
-                                android:contentDescription="Screen locked"
-                                android:layout_marginEnd="4dp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Screen Locked"
-                                android:textColor="@color/nav_blue"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/textTimerStatus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="8dp"
-                            android:text="Ready"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </RelativeLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Start/Pause Button (Directly Under Clock) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnStartPause"
-                    style="@style/Widget.MaterialComponents.Button"
-                    android:layout_width="200dp"
-                    android:layout_height="56dp"
-                    android:backgroundTint="@color/nav_blue"
-                    android:text="Start"
-                    android:textColor="@color/white"
-                    app:cornerRadius="28dp" />
-            </LinearLayout>
-
-            <!-- Time Adjustment Buttons -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="24dp"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDecrease"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:text="-1m"
-                    app:icon="@drawable/ic_remove" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnIncrease"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+5m"
-                    app:icon="@drawable/ic_add" />
-            </LinearLayout>
-
-            <!-- Duration Presets -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="Quick Presets"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/presetsRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                android:nestedScrollingEnabled="false" />
-
-            <!-- Settings Toggles -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
+                android:orientation="vertical"
+                android:padding="18dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_fire"
+                        app:tint="?attr/colorSecondary" />
+
+                    <TextView
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/timer_daily_goal"
+                        android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Sound on finish"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchSound"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="@color/light_gray" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/goal_text"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Vibrate on finish"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchVibrate"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="@color/light_gray" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Keep screen on"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchKeepScreenOn"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="false" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Keep running in background"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchKeepRunningInBackground"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="false" />
-                    </LinearLayout>
+                        android:textAppearance="?attr/textAppearanceLabelLarge"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="45m of 2h" />
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Task Action Buttons (hidden for standalone timer) -->
-            <LinearLayout
-                android:id="@+id/taskActionsContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:visibility="gone">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnAddNote"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/goal_progress"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:text="Add Note" />
+                    android:layout_marginTop="12dp"
+                    android:max="1000"
+                    app:indicatorColor="?attr/colorSecondary"
+                    app:trackThickness="8dp"
+                    tools:progress="380" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnMarkCompleted"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:text="Mark Completed" />
-            </LinearLayout>
-
-            <!-- Control Buttons -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnReset"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="200dp"
-                    android:layout_height="56dp"
-                    android:text="Reset"
-                    android:textColor="@color/nav_blue"
-                    android:visibility="invisible"
-                    app:cornerRadius="28dp"
-                    app:strokeColor="@color/nav_blue"
-                    app:strokeWidth="2dp" />
-
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSettings"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                <TextView
+                    android:id="@+id/goal_reached"
                     android:layout_width="wrap_content"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="8dp"
-                    android:text="Settings"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/timer_goal_reached"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorSecondary"
                     android:visibility="gone" />
             </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            </LinearLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.core.widget.NestedScrollView>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
-
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switch_keep_screen_on"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/page_gutter"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="@dimen/page_gutter"
+            android:minHeight="56dp"
+            android:paddingStart="4dp"
+            android:text="@string/timer_keep_screen_on"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

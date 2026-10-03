@@ -35,6 +35,15 @@ interface NoteDao {
     """)
     fun searchNotesWithFilters(query: String, subjectId: Long?, taskId: Long?): Flow<List<Note>>
 
+    @Query("SELECT * FROM notes")
+    suspend fun getAllOnce(): List<Note>
+
+    @Query("DELETE FROM notes")
+    suspend fun deleteAll()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(notes: List<Note>)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: Note): Long
 

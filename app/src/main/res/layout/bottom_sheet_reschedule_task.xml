@@ -4,78 +4,47 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingBottom="20dp">
+
+    <com.google.android.material.bottomsheet.BottomSheetDragHandleView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Reschedule to..."
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:paddingBottom="16dp" />
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/reschedule_title"
+        android:textAppearance="?attr/textAppearanceTitleLarge" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnToday"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Today"
-        android:gravity="start|center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:layout_marginBottom="8dp" />
+    <TextView
+        android:id="@+id/btn_today"
+        style="@style/LearnLog.SheetRow"
+        android:text="@string/reschedule_today"
+        app:drawableStartCompat="@drawable/ic_today" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnTomorrow"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Tomorrow"
-        android:gravity="start|center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:layout_marginBottom="8dp" />
+    <TextView
+        android:id="@+id/btn_tomorrow"
+        style="@style/LearnLog.SheetRow"
+        android:text="@string/reschedule_tomorrow"
+        app:drawableStartCompat="@drawable/ic_event" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnThisWeekend"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="This Weekend"
-        android:gravity="start|center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:layout_marginBottom="8dp" />
+    <TextView
+        android:id="@+id/btn_this_weekend"
+        style="@style/LearnLog.SheetRow"
+        android:text="@string/reschedule_weekend"
+        app:drawableStartCompat="@drawable/ic_star" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnNextWeek"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Next Week"
-        android:gravity="start|center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:layout_marginBottom="8dp" />
+    <TextView
+        android:id="@+id/btn_next_week"
+        style="@style/LearnLog.SheetRow"
+        android:text="@string/reschedule_next_week"
+        app:drawableStartCompat="@drawable/ic_chevron_right" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnPickDateTime"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Pick Date &amp; Time"
-        android:gravity="start|center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:layout_marginBottom="16dp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnCancel"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cancel" />
-
+    <TextView
+        android:id="@+id/btn_pick_date_time"
+        style="@style/LearnLog.SheetRow"
+        android:text="@string/reschedule_pick"
+        app:drawableStartCompat="@drawable/ic_schedule" />
 </LinearLayout>
-

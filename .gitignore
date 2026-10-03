@@ -45,3 +45,9 @@ SUBMISSION_*.md
 DELETE_*.md
 !README.md
 
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Local build output kept out of iCloud Drive sync
+*.nosync

@@ -1,285 +1,232 @@
 package com.example.learnlog.ui.planner
 
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.view.*
+import android.view.GestureDetector
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.learnlog.R
-import com.example.learnlog.data.entity.TaskEntity
 import com.example.learnlog.databinding.FragmentPlannerBinding
 import com.example.learnlog.ui.base.BaseFragment
-import com.example.learnlog.ui.tasks.AddEditTaskBottomSheet
-import com.example.learnlog.ui.tasks.TaskEntityAdapter
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
+import com.example.learnlog.ui.common.Format
+import com.example.learnlog.ui.common.Motion
+import com.example.learnlog.ui.common.Reselectable
+import com.example.learnlog.ui.tasks.TaskInteractions
+import com.example.learnlog.ui.tasks.TaskListAdapter
+import com.example.learnlog.ui.tasks.TaskOpsViewModel
+import com.example.learnlog.ui.tasks.TaskSwipeCallback
+import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
+import org.threeten.bp.YearMonth
 import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.format.TextStyle
 import java.util.Locale
+import kotlin.math.abs
 
 @AndroidEntryPoint
-class PlannerFragment : BaseFragment(R.layout.fragment_planner) {
+class PlannerFragment : BaseFragment(), Reselectable {
+
     private var _binding: FragmentPlannerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: PlannerViewModel by viewModels()
+    private val ops: TaskOpsViewModel by viewModels()
+    private lateinit var interactions: TaskInteractions
 
     private lateinit var calendarAdapter: CalendarAdapter
-    private lateinit var dayTasksAdapter: TaskEntityAdapter
+    private lateinit var tasksAdapter: TaskListAdapter
+    private var shownMonth: YearMonth? = null
 
-    private val monthYearFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-    private val dayDateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())
+    private val monthFormat = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    private val dayFormat = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentPlannerBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        interactions = TaskInteractions(this, ops) { binding.fabAddTask }
+        interactions.register()
 
-        // Set page title in header
-        binding.topBar.pageTitle.text = getString(R.string.page_planner_title)
+        setupTopBar(
+            binding.topBar.root,
+            title = getString(R.string.page_planner_title),
+            actionIcon = R.drawable.ic_today,
+            actionDescription = getString(R.string.today)
+        ) { viewModel.goToToday() }
 
+        setupWeekdays()
         setupCalendar()
-        setupDayTasksList()
+        setupDayList()
         setupFilters()
-        setupButtons()
-        observeViewModel()
+        binding.btnPrevMonth.setOnClickListener { viewModel.goToPreviousMonth() }
+        binding.btnNextMonth.setOnClickListener { viewModel.goToNextMonth() }
+        binding.fabAddTask.setOnClickListener { interactions.create(viewModel.newTaskTemplate()) }
+        binding.emptyState.emptyAction.setOnClickListener { interactions.create(viewModel.newTaskTemplate()) }
+        observe()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.main_menu, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_settings -> {
-                findNavController().navigate(R.id.settingsFragment)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+    private fun setupWeekdays() {
+        val row = binding.weekdayRow
+        row.removeAllViews()
+        (0 until 7).forEach { i ->
+            val day = viewModel.firstDayOfWeek.plus(i.toLong())
+            row.addView(TextView(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                gravity = Gravity.CENTER
+                text = day.getDisplayName(TextStyle.NARROW, Locale.getDefault())
+                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.jakarta_semibold)
+                setTextColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant))
+            })
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupCalendar() {
-        calendarAdapter = CalendarAdapter { day ->
-            viewModel.selectDate(day.date)
-        }
-
+        calendarAdapter = CalendarAdapter { day -> viewModel.selectDate(day.date) }
         binding.calendarRecyclerView.apply {
             layoutManager = GridLayoutManager(requireContext(), 7)
             adapter = calendarAdapter
-            setHasFixedSize(true)
+            itemAnimator = null
         }
+        // Swipe the month grid sideways to change month
+        val detector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                val dx = e2.x - (e1?.x ?: e2.x)
+                if (abs(dx) > 120 && abs(velocityX) > abs(velocityY) * 1.5f) {
+                    if (dx < 0) viewModel.goToNextMonth() else viewModel.goToPreviousMonth()
+                    return true
+                }
+                return false
+            }
+        })
+        binding.calendarRecyclerView.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
+            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                detector.onTouchEvent(e)
+                return false
+            }
+        })
     }
 
-    private fun setupDayTasksList() {
-        dayTasksAdapter = TaskEntityAdapter(
-            onTaskClick = { task ->
-                showAddEditSheet(task)
-            },
-            onStartTimer = { task ->
-                // Mark task as IN_PROGRESS when timer starts
-                viewModel.toggleTaskCompletion(task, false)
-
-                // Open task timer bottom sheet (popup) with task's duration
-                val timerSheet = com.example.learnlog.ui.timer.TaskTimerBottomSheet.newInstance(
-                    taskId = task.id,
-                    taskTitle = task.title,
-                    taskSubject = task.subject,
-                    durationMinutes = task.durationMinutes // Use task's actual duration
-                )
-                timerSheet.show(childFragmentManager, "TaskTimerSheet")
-            },
-            onCheckChanged = { task, isChecked ->
-                viewModel.toggleTaskCompletion(task, isChecked)
-            },
-            onLongPress = { task ->
-                showTaskActionsMenu(task)
-            }
+    private fun setupDayList() {
+        tasksAdapter = TaskListAdapter(
+            onTaskClick = interactions::edit,
+            onTaskLongClick = interactions::showActions,
+            onCheckedChange = interactions::setCompleted,
+            onStartFocus = interactions::focus,
+            showTimeOnly = true
         )
-
-        binding.dayTasksRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = dayTasksAdapter
-        }
+        binding.dayTasksRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.dayTasksRecyclerView.adapter = tasksAdapter
+        ItemTouchHelper(
+            TaskSwipeCallback(requireContext(), tasksAdapter,
+                onSwipeComplete = { interactions.setCompleted(it, !it.completed) },
+                onSwipeDelete = interactions::delete)
+        ).attachToRecyclerView(binding.dayTasksRecyclerView)
     }
 
     private fun setupFilters() {
-        binding.filterChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
-            val filter = when {
-                checkedIds.contains(R.id.chipPending) -> "PENDING"
-                checkedIds.contains(R.id.chipInProgress) -> "IN_PROGRESS"
-                checkedIds.contains(R.id.chipCompleted) -> "COMPLETED"
-                checkedIds.contains(R.id.chipOverdue) -> "OVERDUE"
-                else -> null // All
-            }
-            viewModel.setFilter(filter)
+        binding.filterChipGroup.setOnCheckedStateChangeListener { _, ids ->
+            viewModel.setFilter(
+                when (ids.firstOrNull()) {
+                    R.id.chip_pending -> PlannerFilter.OPEN
+                    R.id.chip_overdue -> PlannerFilter.OVERDUE
+                    R.id.chip_completed -> PlannerFilter.DONE
+                    else -> PlannerFilter.ALL
+                }
+            )
         }
     }
 
-    private fun setupButtons() {
-        // Month navigation
-        binding.btnPrevMonth.setOnClickListener {
-            viewModel.goToPreviousMonth()
-        }
-
-        binding.btnNextMonth.setOnClickListener {
-            viewModel.goToNextMonth()
-        }
-
-        binding.btnToday.setOnClickListener {
-            viewModel.goToToday()
-        }
-
-        // FAB for adding task
-        binding.fabAddTask.setOnClickListener {
-            val selectedDate = viewModel.selectedDate.value
-            showAddEditSheet(null, selectedDate)
-        }
-
-        // Empty state CTA button
-        binding.btnEmptyAddTask.setOnClickListener {
-            val selectedDate = viewModel.selectedDate.value
-            showAddEditSheet(null, selectedDate)
-        }
-    }
-
-    private fun observeViewModel() {
+    private fun observe() {
         viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Observe current month
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.currentMonth.collect { month ->
-                        binding.textMonthYear.text = month.format(monthYearFormatter)
+                        binding.textMonthYear.text = month.format(monthFormat)
+                        setTopBarSubtitle(binding.topBar.root, month.format(monthFormat))
                     }
                 }
-
-                // Observe calendar days
                 launch {
                     viewModel.calendarDays.collect { days ->
-                        calendarAdapter.submitList(days)
+                        if (days.isEmpty()) return@collect
+                        val month = YearMonth.from(days[days.size / 2].date)
+                        val previous = shownMonth
+                        shownMonth = month
+                        if (previous != null && previous != month) {
+                            slideMonth(forward = month.isAfter(previous)) { calendarAdapter.submitList(days) }
+                        } else {
+                            calendarAdapter.submitList(days)
+                        }
                     }
                 }
-
-                // Observe selected date
                 launch {
-                    viewModel.selectedDate.collect { date ->
-                        binding.textSelectedDate.text = getString(
-                            R.string.tasks_for_date,
-                            date.format(dayDateFormatter)
+                    viewModel.dayPlan.collect { plan ->
+                        binding.textSelectedDate.text = when (plan.date) {
+                            LocalDate.now() -> getString(R.string.today) + " · " + plan.date.format(DateTimeFormatter.ofPattern("d MMMM", Locale.getDefault()))
+                            else -> plan.date.format(dayFormat)
+                        }
+                        binding.textDaySummary.text = if (plan.taskCount == 0) getString(R.string.planner_day_empty)
+                        else getString(
+                            R.string.planner_day_summary, plan.taskCount, Format.minutes(requireContext(), plan.plannedMinutes)
                         )
-                    }
-                }
-
-                // Observe day tasks
-                launch {
-                    viewModel.dayTasks.collect { tasks ->
-                        dayTasksAdapter.submitList(tasks)
-                        binding.emptyState.isVisible = tasks.isEmpty()
-                        binding.dayTasksRecyclerView.isVisible = tasks.isNotEmpty()
+                        tasksAdapter.submitList(plan.rows)
+                        val empty = plan.rows.isEmpty()
+                        binding.emptyContainer.isVisible = empty
+                        binding.dayTasksRecyclerView.isVisible = !empty
+                        if (empty) with(binding.emptyState) {
+                            emptyIcon.setImageResource(R.drawable.ic_empty_calendar)
+                            emptyTitle.setText(R.string.planner_empty_title)
+                            emptyMessage.setText(R.string.planner_empty_message)
+                            emptyAction.setText(R.string.planner_add_for_day)
+                            emptyAction.isVisible = true
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun showAddEditSheet(task: TaskEntity?, prefilledDate: LocalDate? = null) {
-        val bottomSheet = if (task != null) {
-            AddEditTaskBottomSheet.newInstance(task)
-        } else if (prefilledDate != null) {
-            // Create a new task with the selected date
-            val taskWithDate = TaskEntity(
-                title = "",
-                subject = null,
-                dueAt = prefilledDate.atTime(23, 59),
-                priority = 0,
-                status = "PENDING",
-                type = "ASSIGNMENT"
-            )
-            AddEditTaskBottomSheet.newInstance(taskWithDate)
-        } else {
-            AddEditTaskBottomSheet.newInstance(null)
-        }
-        bottomSheet.show(childFragmentManager, "AddEditTaskBottomSheet")
+    /** Slides the month grid out and the new month in from the direction of travel. */
+    private fun slideMonth(forward: Boolean, swap: () -> Unit) {
+        val grid = binding.calendarRecyclerView
+        val distance = grid.width * 0.25f * if (forward) -1 else 1
+        grid.animate().cancel()
+        grid.animate().translationX(distance).alpha(0f).setDuration(120).withEndAction {
+            swap()
+            grid.translationX = -distance
+            grid.animate().translationX(0f).alpha(1f).setDuration(240).setInterpolator(Motion.EMPHASIZED).start()
+        }.start()
     }
 
-    private fun showTaskActionsMenu(task: TaskEntity) {
-        val options = arrayOf(
-            "Reschedule",
-            "Mark Completed",
-            "Edit",
-            "Duplicate",
-            "Delete"
-        )
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(task.title)
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> showRescheduleOptions(task)
-                    1 -> viewModel.toggleTaskCompletion(task, true)
-                    2 -> showAddEditSheet(task)
-                    3 -> duplicateTask(task)
-                    4 -> showDeleteConfirmation(task)
-                }
-            }
-            .show()
+    override fun onReselected() {
+        _binding ?: return
+        viewModel.goToToday()
+        binding.appBar.setExpanded(true, true)
+        binding.dayTasksRecyclerView.smoothScrollToPosition(0)
     }
-
-    private fun showRescheduleOptions(task: TaskEntity) {
-        val rescheduleSheet = RescheduleTaskBottomSheet.newInstance(task) { date, time ->
-            val newDateTime = date.atTime(time)
-            viewModel.updateTaskDueDate(task.id, newDateTime)
-            Snackbar.make(binding.root, "Task rescheduled", Snackbar.LENGTH_SHORT).show()
-        }
-        rescheduleSheet.show(childFragmentManager, "RescheduleSheet")
-    }
-
-    private fun duplicateTask(task: TaskEntity) {
-        // Open AddEditTaskBottomSheet with duplicated task (no ID)
-        val duplicatedTask = task.copy(
-            id = 0,
-            title = "${task.title} (Copy)"
-        )
-        showAddEditSheet(duplicatedTask)
-    }
-
-    private fun showDeleteConfirmation(task: TaskEntity) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Delete Task")
-            .setMessage("Are you sure you want to delete \"${task.title}\"?")
-            .setPositiveButton("Delete") { _, _ ->
-                viewModel.deleteTask(task.id)
-                Snackbar.make(binding.root, "Task deleted", Snackbar.LENGTH_SHORT)
-                    .setAction("Undo") {
-                        // TODO: Implement undo
-                    }
-                    .show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        shownMonth = null
     }
 }

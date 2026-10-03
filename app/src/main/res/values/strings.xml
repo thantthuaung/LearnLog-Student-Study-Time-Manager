@@ -1,195 +1,417 @@
 <resources>
     <string name="app_name">LearnLog</string>
-    <string name="page_tasks">Tasks</string>
-    <string name="page_tasks_title">TASKS &amp; DEADLINES</string>
-    <string name="page_planner_title">PLANNER</string>
-    <string name="page_timer_title">TIMER</string>
-    <string name="page_insights_title">INSIGHTS</string>
-    <string name="page_notes_title">NOTES</string>
-    <string name="page_timer">Timer</string>
-    <string name="add_task">Add Task</string>
-    <string name="edit_task">Edit Task</string>
-    <string name="update_task">Update Task</string>
-    <string name="save_task">Save Task</string>
-    <string name="start_timer">Start Timer</string>
-    <string name="add_note">Add Note</string>
-    <string name="title">Title</string>
-    <string name="content">Content</string>
-    <string name="empty_insights_description">No insights yet</string>
-    <string name="empty_insights_title">No data</string>
-    <string name="empty_insights_message">Start using the app to see your progress</string>
+    <string name="app_tagline">Track · Focus · Achieve</string>
+
+    <!-- Navigation -->
     <string name="nav_tasks">Tasks</string>
     <string name="nav_planner">Planner</string>
-    <string name="nav_timer">Timer</string>
+    <string name="nav_timer">Focus</string>
     <string name="nav_insights">Insights</string>
     <string name="nav_notes">Notes</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_settings">Settings</string>
+    <string name="open_drawer">Open menu</string>
+    <string name="navigate_up">Back</string>
+    <string name="open_account">Your account</string>
 
-    <string name="insights_today">Today</string>
-    <string name="insights_week">Week</string>
-    <string name="insights_month">Month</string>
-    <string name="insights_custom">Custom</string>
-    <string name="total_focus_time">Total Focus Time</string>
-    <string name="total_focus_time_format">Total Focus: %s</string>
-    <string name="time_by_subject">Time by Subject</string>
-    <string name="planned_vs_actual">Planned vs Actual</string>
-    <string name="planned">Planned</string>
-    <string name="actual">Actual</string>
-    <string name="adherence">Adherence</string>
-    <string name="task_completion_rate">Task Completion Rate</string>
-    <string name="current_streak">Current Streak</string>
-    <string name="top_tasks_by_time">Top Tasks by Time</string>
-    <string name="session_statistics">Session Statistics</string>
-    <string name="avg_session">Avg Session</string>
-    <string name="interruptions">Interruptions</string>
-    <string name="empty_focus_time">No focus time yet — start studying to track your progress</string>
-    <string name="empty_sessions">No sessions yet</string>
-    <string name="empty_top_tasks">No tasks with logged time yet</string>
-    <string name="empty_streak">No streak yet — start studying to begin!</string>
+    <!-- Page titles -->
+    <string name="page_tasks_title">Tasks</string>
+    <string name="page_planner_title">Planner</string>
+    <string name="page_timer_title">Focus</string>
+    <string name="page_insights_title">Insights</string>
+    <string name="page_notes_title">Notes</string>
+    <string name="page_settings_title">Settings</string>
+    <string name="page_analytics_title">Analytics</string>
 
-    <!-- Notes -->
-    <string name="pinned_only">Pinned Only</string>
-    <string name="clear_filters">Clear Filters</string>
-    <string name="no_notes_icon_desc">No notes</string>
-    <string name="no_notes_title">No notes yet</string>
-    <string name="no_notes_message">Tap + to create your first note</string>
+    <!-- Greetings -->
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="greeting_named">%1$s, %2$s</string>
 
-    <!-- Planner -->
-    <string name="previous_month">Previous month</string>
-    <string name="next_month">Next month</string>
-    <string name="today">Today</string>
-    <string name="all">All</string>
-    <string name="pending">Pending</string>
-    <string name="in_progress">In Progress</string>
-    <string name="completed">Completed</string>
-    <string name="overdue">Overdue</string>
-    <string name="no_tasks_for_date">No tasks for this date</string>
-    <string name="add_task_hint">Tap + to add a task</string>
-    <string name="add_task_desc">Add task</string>
-    <string name="tasks_for_date">Tasks for %1$s</string>
-    <string name="streak_days_format">%d Day Streak</string>
-    <string name="session_time_format">%1$s - %2$s</string>
-    <string name="dialog_add_session_title">Add Study Session</string>
+    <!-- Common actions -->
     <string name="action_add">Add</string>
     <string name="action_cancel">Cancel</string>
-    <string name="dialog_reschedule_title">Reschedule Session</string>
-    <string name="action_update">Update</string>
-    <string name="timer_notification_channel">Timer Notifications</string>
-    <string name="timer_notification_title">LearnLog Timer</string>
-    <string name="timer_notification_focus">Focus session running</string>
-    <string name="timer_notification_break">Break running</string>
-    <string name="timer_session_complete">Focus session complete!</string>
-    <string name="timer_break_complete">Break complete!</string>
-    <string name="chip_pomodoro">Pomodoro</string>
-    <string name="chip_short_break">Short Break</string>
-    <string name="chip_long_break">Long Break</string>
-    <string name="timer_prompt_standalone">Select your focus duration</string>
-    <string name="pause_timer">Pause</string>
-    <string name="resume_timer">Resume</string>
-    <string name="timer_label_focus">FOCUS</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_duplicate">Duplicate</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_done">Done</string>
+    <string name="action_ok">OK</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_reschedule">Reschedule</string>
+    <string name="action_mark_done">Mark as done</string>
+    <string name="action_mark_not_done">Mark as not done</string>
+    <string name="action_start_focus">Start focus</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_open">Open</string>
+    <string name="action_close">Close</string>
+    <string name="action_change">Change</string>
+    <string name="more_options">More options</string>
 
-    <!-- Settings & Drawer -->
-    <string name="open_drawer">Open navigation drawer</string>
-    <string name="navigate_up">Navigate up</string>
-    <string name="page_settings_title">SETTINGS</string>
-    <string name="settings_account">Account</string>
-    <string name="settings_preferences">Preferences</string>
-    <string name="settings_notifications">Notifications</string>
-    <string name="settings_data_backup">Data &amp; Backup</string>
-    <string name="settings_help">Help &amp; About</string>
+    <!-- Auth -->
+    <string name="auth_welcome_back">Welcome back</string>
+    <string name="auth_welcome_back_sub">Sign in to keep your study streak going.</string>
+    <string name="auth_create_account">Create your account</string>
+    <string name="auth_create_account_sub">Plan your study, focus deeply, and see your progress.</string>
+    <string name="auth_name">Full name</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_confirm_password">Confirm password</string>
+    <string name="auth_sign_in">Sign in</string>
+    <string name="auth_sign_up">Create account</string>
+    <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_or">or</string>
+    <string name="auth_continue_google">Continue with Google</string>
+    <string name="auth_no_account">New to LearnLog?</string>
+    <string name="auth_have_account">Already have an account?</string>
+    <string name="auth_sign_up_link">Create an account</string>
+    <string name="auth_sign_in_link">Sign in</string>
+    <string name="auth_password_hint">At least 6 characters</string>
+    <string name="auth_enter_email_first">Enter your email above, then tap “Forgot password?” again.</string>
+    <string name="auth_reset_sent">Check your inbox – we sent a password reset link.</string>
+    <string name="auth_google_not_configured">Google sign-in isn\'t set up for this build yet (add the app\'s SHA-1 in the Firebase console). Use email and password for now.</string>
+    <string name="auth_google_failed">Google sign-in didn\'t complete. Please try again.</string>
+    <string name="auth_offline">You\'re offline. Connect to the internet to sign in.</string>
+    <string name="auth_invalid_email">Enter a valid email address</string>
+    <string name="auth_short_password">Password must be at least 6 characters</string>
+    <string name="auth_passwords_mismatch">Passwords don\'t match</string>
+    <string name="auth_name_required">Please enter your name</string>
 
-    <!-- Priority options -->
+    <!-- Drawer -->
+    <string name="drawer_account">Account</string>
+    <string name="drawer_preferences">Preferences</string>
+    <string name="drawer_notifications">Notifications</string>
+    <string name="drawer_data">Data &amp; backup</string>
+    <string name="drawer_help">Help &amp; about</string>
+    <string name="drawer_analytics">Analytics</string>
+    <string name="drawer_sign_out">Sign out</string>
+    <string name="sign_out_title">Sign out?</string>
+    <string name="sign_out_message">Your data stays on this device and comes back when you sign in again.</string>
+    <string name="guest_name">Student</string>
+
+    <!-- Tasks -->
+    <string name="tasks_search_hint">Search tasks or subjects</string>
+    <string name="tasks_new">New task</string>
+    <string name="filter_all">All</string>
+    <string name="filter_today">Today</string>
+    <string name="filter_upcoming">Upcoming</string>
+    <string name="filter_overdue">Overdue</string>
+    <string name="filter_done">Done</string>
+    <string name="filter_with_count">%1$s · %2$d</string>
+    <string name="section_overdue">Overdue</string>
+    <string name="section_today">Today</string>
+    <string name="section_tomorrow">Tomorrow</string>
+    <string name="section_upcoming">Upcoming</string>
+    <string name="section_no_date">No due date</string>
+    <string name="section_done">Completed</string>
+    <string name="sort_title">Sort tasks</string>
+    <string name="sort_due">Due date</string>
+    <string name="sort_priority">Priority</string>
+    <string name="sort_title_az">Title (A–Z)</string>
+    <string name="today_progress">%1$d of %2$d done today</string>
+    <string name="today_progress_none">Nothing due today</string>
+    <string name="today_focus">%1$s focused today</string>
+    <string name="empty_tasks_title">No tasks yet</string>
+    <string name="empty_tasks_message">Add your assignments, exams and projects to start planning your study time.</string>
+    <string name="empty_filter_title">Nothing here</string>
+    <string name="empty_filter_message">No tasks match this filter.</string>
+    <string name="empty_search_title">No results</string>
+    <string name="empty_search_message">Try another word or subject.</string>
+    <string name="task_deleted">Task deleted</string>
+    <string name="task_completed_toast">Nice work! Task completed</string>
+    <string name="task_reopened">Task marked as not done</string>
+    <string name="task_duplicated">Task duplicated</string>
+    <string name="task_rescheduled">Moved to %1$s</string>
+    <string name="task_saved">Task saved</string>
+    <string name="task_added">Task added</string>
+    <string name="due_today_at">Today · %1$s</string>
+    <string name="due_tomorrow_at">Tomorrow · %1$s</string>
+    <string name="due_yesterday_at">Yesterday · %1$s</string>
+    <string name="overdue_by">Overdue · %1$s</string>
+    <string name="no_due_date">No due date</string>
+    <string name="status_in_progress">In progress</string>
+    <string name="delete_task_title">Delete task?</string>
+    <string name="delete_task_message">“%1$s” will be removed. Focus time you logged for it stays in Insights.</string>
+
+    <!-- Add / edit task -->
+    <string name="add_task">New task</string>
+    <string name="edit_task">Edit task</string>
+    <string name="task_title_hint">What do you need to do?</string>
+    <string name="task_subject_hint">Subject (optional)</string>
+    <string name="task_notes_hint">Notes (optional)</string>
+    <string name="task_type">Type</string>
+    <string name="task_priority">Priority</string>
+    <string name="task_due">Due</string>
+    <string name="task_planned_time">Planned study time</string>
+    <string name="task_title_required">Give your task a title</string>
+    <string name="pick_date">Pick a date</string>
+    <string name="pick_time">Pick a time</string>
+    <string name="custom">Custom</string>
+    <string name="custom_minutes_title">Planned minutes</string>
+    <string name="custom_minutes_hint">Minutes (1–480)</string>
+    <string name="minutes_range_hint">Minutes (%1$d–%2$d)</string>
+    <string name="invalid_minutes">Enter a number between %1$d and %2$d</string>
+    <string name="save_task">Add task</string>
+    <string name="update_task">Save changes</string>
+    <string name="minutes_short">%d min</string>
+    <string name="hours_short">%d h</string>
+    <string name="hours_minutes_short">%1$d h %2$d min</string>
+
     <string-array name="priority_options">
         <item>Low</item>
         <item>Medium</item>
         <item>High</item>
     </string-array>
-
-    <!-- Type options -->
     <string-array name="type_options">
         <item>Assignment</item>
         <item>Exam</item>
         <item>Project</item>
+        <item>Study</item>
     </string-array>
 
-    <!-- Error Messages -->
-    <string name="error_required_field">This field is required</string>
-    <string name="error_past_date">Date cannot be in the past</string>
+    <!-- Planner -->
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="today">Today</string>
+    <string name="planner_day_summary">%1$d tasks · %2$s planned</string>
+    <string name="planner_day_empty">Free day – nothing due</string>
+    <string name="planner_empty_title">Nothing due</string>
+    <string name="planner_empty_message">Tap + to plan something for this day.</string>
+    <string name="planner_add_for_day">Add for this day</string>
+    <string name="reschedule_title">Reschedule</string>
+    <string name="reschedule_today">Today</string>
+    <string name="reschedule_tomorrow">Tomorrow</string>
+    <string name="reschedule_weekend">This weekend</string>
+    <string name="reschedule_next_week">Next week</string>
+    <string name="reschedule_pick">Pick date &amp; time</string>
 
-    <!-- Status Labels -->
-    <string name="status_completed">Completed</string>
-    <string name="status_overdue">Overdue</string>
-    <string name="status_in_progress">In Progress</string>
-    <string name="status_pending">Pending</string>
+    <!-- Timer / focus -->
+    <string name="focus_session">Focus session</string>
+    <string name="timer_ready">Ready to focus</string>
+    <string name="timer_focusing">Focusing</string>
+    <string name="timer_paused">Paused</string>
+    <string name="timer_complete">Session complete</string>
+    <string name="timer_start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="finish">Finish</string>
+    <string name="timer_reset">Reset</string>
+    <string name="timer_link_task">Link a task</string>
+    <string name="timer_linked_task">Working on</string>
+    <string name="timer_unlink">Remove</string>
+    <string name="timer_choose_task">What are you working on?</string>
+    <string name="timer_no_open_tasks">No open tasks. Add one on the Tasks tab.</string>
+    <string name="timer_presets">Duration</string>
+    <string name="timer_minus_one">Remove 1 minute</string>
+    <string name="timer_plus_five">Add 5 minutes</string>
+    <string name="timer_daily_goal">Today\'s goal</string>
+    <string name="timer_goal_progress">%1$s of %2$s</string>
+    <string name="timer_goal_reached">Goal reached – amazing focus!</string>
+    <string name="timer_finish_title">Finish this session?</string>
+    <string name="timer_finish_message">You\'ve focused for %1$s. Save it to your log?</string>
+    <string name="timer_finish_too_short">Less than a minute so far – it won\'t be saved.</string>
+    <string name="timer_save">Save session</string>
+    <string name="timer_discard">Discard</string>
+    <string name="timer_saved">Saved %1$s of focus</string>
+    <string name="timer_discarded">Session discarded</string>
+    <string name="timer_complete_title">Great work!</string>
+    <string name="timer_complete_message">%1$s of focus added to your log.</string>
+    <string name="timer_complete_task">Is “%1$s” finished?</string>
+    <string name="timer_keep_going">Still working on it</string>
+    <string name="timer_new_session">Start another</string>
+    <string name="timer_running_elsewhere">A session for “%1$s” is running.</string>
+    <string name="timer_running_free">A focus session is already running.</string>
+    <string name="timer_open">Open timer</string>
+    <string name="timer_switch">Switch to this task</string>
+    <string name="timer_keep_screen_on">Keep screen on</string>
+    <string name="timer_custom_duration">Custom duration</string>
+    <string name="timer_max_duration">Sessions can be up to 3 hours</string>
+    <string name="timer_notifications_rationale">Allow notifications so LearnLog can show the countdown and tell you when a session ends.</string>
+
+    <!-- Notifications -->
+    <string name="channel_timer_ongoing">Focus timer</string>
+    <string name="channel_timer_ongoing_desc">Live countdown while a focus session runs</string>
+    <string name="channel_timer_alerts">Session alerts</string>
+    <string name="channel_timer_alerts_desc">Tells you when a focus session ends</string>
+    <string name="notif_focusing">Focusing – stay with it</string>
+    <string name="notif_paused">Paused · %1$s left</string>
+    <string name="notif_complete_title">Focus session complete 🎉</string>
+    <string name="notif_complete_body">%1$d minutes logged. Time for a short break.</string>
+    <string name="notif_complete_task">%1$d minutes logged for “%2$s”.</string>
+
+    <!-- Insights -->
+    <string name="insights_today">Today</string>
+    <string name="insights_week">Week</string>
+    <string name="insights_month">Month</string>
+    <string name="insights_custom">Custom</string>
+    <string name="insights_range_label">Showing %1$s</string>
+    <string name="insights_pick_range">Choose dates</string>
+    <string name="total_focus_time">Focus time</string>
+    <string name="sessions">Sessions</string>
+    <string name="avg_session">Avg session</string>
+    <string name="current_streak">Day streak</string>
+    <string name="best_streak">Best: %1$d days</string>
+    <string name="streak_days">%1$d</string>
+    <string name="time_by_subject">Time by subject</string>
+    <string name="planned_vs_actual">Planned vs actual</string>
+    <string name="planned">Planned</string>
+    <string name="actual">Actual</string>
+    <string name="adherence">On plan</string>
+    <string name="task_completion_rate">Tasks completed</string>
+    <string name="completion_detail">%1$d of %2$d tasks due in this period</string>
+    <string name="completion_none">No tasks due in this period</string>
+    <string name="top_tasks_by_time">Most focused tasks</string>
+    <string name="open_analytics">Detailed analytics</string>
+    <string name="open_analytics_sub">Trends over the last 7, 30 and 90 days</string>
+    <string name="quote_of_the_day">Quote of the day</string>
+    <string name="empty_focus_title">No focus time yet</string>
+    <string name="empty_focus_message">Start a focus session and your progress will show up here.</string>
+    <string name="empty_subjects">Focus on a task with a subject to see this breakdown.</string>
+    <string name="empty_top_tasks">Link a task when you focus to see which ones take the most time.</string>
+    <string name="empty_planned_vs_actual">Give tasks due dates and focus on them to compare plan and reality.</string>
+    <string name="chart_minutes_axis">min</string>
 
     <!-- Analytics -->
-    <string name="nav_analytics">Analytics</string>
-    <string name="page_analytics_title">ANALYTICS</string>
-    <string name="last_7_days">Last 7 Days</string>
-    <string name="last_30_days">Last 30 Days</string>
-    <string name="last_90_days">Last 90 Days</string>
-    <string name="custom_range">Custom Range</string>
-    <string name="weekly_summary">Weekly Summary</string>
-    <string name="subject_breakdown">Subject Breakdown</string>
-    <string name="goal_tracking">Goal Tracking</string>
-    <string name="top_5_tasks">Top 5 Tasks</string>
-    <string name="total_hours">Total Hours</string>
-    <string name="total_sessions">Total Sessions</string>
-    <string name="avg_session_length">Avg Session</string>
-    <string name="empty_analytics_title">No Data Yet</string>
-    <string name="empty_analytics_message">Start studying to see your analytics</string>
+    <string name="last_7_days">7 days</string>
+    <string name="last_30_days">30 days</string>
+    <string name="last_90_days">90 days</string>
+    <string name="total_hours">Total</string>
+    <string name="total_sessions">Sessions</string>
+    <string name="avg_session_length">Average</string>
+    <string name="daily_minutes">Focus per day</string>
+    <string name="subject_breakdown">By subject</string>
+    <string name="top_5_tasks">Top tasks</string>
+    <string name="best_day">Best day</string>
+    <string name="share_of_focus">%1$d%% of focus</string>
+    <string name="empty_analytics_title">No data yet</string>
+    <string name="empty_analytics_message">Complete a few focus sessions to see your trends.</string>
+
+    <!-- Notes -->
+    <string name="notes_search_hint">Search notes</string>
+    <string name="pinned_only">Pinned</string>
+    <string name="notes_new">New note</string>
+    <string name="notes_pinned_section">Pinned</string>
+    <string name="notes_others_section">Others</string>
+    <string name="no_notes_title">No notes yet</string>
+    <string name="no_notes_message">Capture formulas, summaries and ideas while you study.</string>
+    <string name="no_notes_found">No notes match your search.</string>
+    <string name="note_deleted">Note deleted</string>
+    <string name="note_title_hint">Title</string>
+    <string name="note_content_hint">Start writing…</string>
+    <string name="note_add_tag">Add tag</string>
+    <string name="note_tag_hint">Tag name</string>
+    <string name="note_pin">Pin</string>
+    <string name="note_unpin">Unpin</string>
+    <string name="note_title_required">Add a title to save this note</string>
+    <string name="note_edited">Edited %1$s</string>
+    <string name="note_discard_title">Discard this note?</string>
+    <string name="note_discard_message">It has no title, so it can\'t be saved.</string>
+    <string name="note_delete_title">Delete note?</string>
+    <string name="note_delete_message">This can\'t be undone.</string>
+    <string name="note_words">%d words</string>
 
     <!-- Settings -->
-    <string name="nav_settings">Settings</string>
-    <string name="timer_presets">Timer Presets</string>
-    <string name="timer_presets_desc">Customize your timer durations</string>
-    <string name="notifications">Notifications</string>
-    <string name="notifications_desc">Enable timer alerts</string>
-    <string name="sound">Sound</string>
-    <string name="sound_desc">Play sound when timer ends</string>
-    <string name="vibration">Vibration</string>
-    <string name="vibration_desc">Vibrate when timer ends</string>
-    <string name="sound_tone">Sound Tone</string>
-    <string name="sound_tone_desc">Choose alert tone</string>
-    <string name="export_data">Export Data</string>
-    <string name="export_data_desc">Save your data as JSON/CSV</string>
-    <string name="import_data">Import Data</string>
-    <string name="import_data_desc">Restore from backup</string>
-    <string name="clear_all_data">Clear All Data</string>
-    <string name="clear_all_data_desc">Delete everything (cannot be undone)</string>
-    <string name="about">About</string>
-    <string name="version">Version</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_notifications">Alerts</string>
+    <string name="settings_data_backup">Data</string>
+    <string name="settings_help">About</string>
+
+    <string name="account_name">Display name</string>
+    <string name="account_email">Email</string>
+    <string name="account_save">Save profile</string>
+    <string name="account_saved">Profile updated</string>
+    <string name="account_change_photo">Change photo</string>
+    <string name="account_remove_photo">Remove photo</string>
+    <string name="account_photo_updated">Photo updated</string>
+    <string name="account_reset_password">Reset password</string>
+    <string name="account_reset_password_sub">We\'ll email you a reset link</string>
+    <string name="account_member_since">Member since %1$s</string>
+
+    <string name="pref_appearance">Appearance</string>
+    <string name="pref_theme">Theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="pref_focus">Focus timer</string>
+    <string name="pref_default_preset">Default duration</string>
+    <string name="pref_manage_presets">Duration presets</string>
+    <string name="pref_manage_presets_sub">Choose the quick durations on the Focus tab</string>
+    <string name="pref_daily_goal">Daily focus goal</string>
+    <string name="pref_keep_screen_on">Keep screen on while focusing</string>
+    <string name="pref_keep_running">Keep running in the background</string>
+    <string name="pref_keep_running_sub">When off, the timer pauses when you leave the app</string>
+    <string name="pref_confirm_stop">Ask before finishing early</string>
+    <string name="presets_title">Duration presets</string>
+    <string name="presets_message">Tap a preset to remove it. Add up to 8.</string>
+    <string name="presets_add">Add preset</string>
+    <string name="presets_min_one">Keep at least one preset</string>
+    <string name="presets_max">You can have up to 8 presets</string>
+    <string name="daily_goal_title">Daily focus goal</string>
+
+    <string name="notif_enabled">Session alerts</string>
+    <string name="notif_enabled_sub">Notify me when a focus session ends</string>
+    <string name="notif_sound">Alert sound</string>
+    <string name="notif_vibrate">Vibrate</string>
+    <string name="notif_ongoing">Live countdown notification</string>
+    <string name="notif_ongoing_sub">Also keeps the timer running reliably in the background</string>
+    <string name="notif_permission_denied">Notifications are blocked. You can allow them in system settings.</string>
+    <string name="notif_open_settings">Open settings</string>
+    <string-array name="sound_options">
+        <item>Notification sound</item>
+        <item>Alarm sound</item>
+        <item>Silent</item>
+    </string-array>
+
+    <string name="data_overview">Your data</string>
+    <string name="data_tasks">Tasks</string>
+    <string name="data_sessions">Sessions</string>
+    <string name="data_notes">Notes</string>
+    <string name="data_backup">Back up</string>
+    <string name="data_export_json">Export backup (JSON)</string>
+    <string name="data_export_json_sub">Everything, restorable later</string>
+    <string name="data_export_csv">Export spreadsheets (CSV)</string>
+    <string name="data_export_csv_sub">A .zip with tasks, sessions and notes</string>
+    <string name="data_restore">Restore</string>
+    <string name="data_import_merge">Import and merge</string>
+    <string name="data_import_merge_sub">Adds anything that\'s missing</string>
+    <string name="data_import_replace">Import and replace</string>
+    <string name="data_import_replace_sub">Replaces all tasks, sessions and notes</string>
+    <string name="data_danger">Danger zone</string>
+    <string name="data_reset">Delete all data</string>
+    <string name="data_reset_sub">Permanently removes everything on this device</string>
+    <string name="data_reset_title">Delete all data?</string>
+    <string name="data_reset_message">All tasks, notes, focus sessions and statistics on this device will be permanently deleted. Consider exporting a backup first.</string>
+    <string name="data_reset_confirm">Delete everything</string>
+    <string name="data_reset_done">All data deleted</string>
+    <string name="data_replace_title">Replace all data?</string>
+    <string name="data_replace_message">Your current tasks, sessions and notes will be replaced by the backup. This can\'t be undone.</string>
+    <string name="data_replace_confirm">Replace</string>
+    <string name="data_exported">Exported %1$d tasks, %2$d sessions, %3$d notes</string>
+    <string name="data_imported">Imported %1$d tasks, %2$d sessions, %3$d notes</string>
+    <string name="data_export_failed">Export failed: %1$s</string>
+    <string name="data_import_failed">Import failed: %1$s</string>
+
+    <string name="about_version">Version %1$s (%2$d)</string>
+    <string name="about_description">LearnLog helps students plan tasks, focus with a timer, and understand where their study time goes.</string>
+    <string name="about_contact">Contact support</string>
+    <string name="about_privacy">Privacy policy</string>
+    <string name="about_rate">Rate LearnLog</string>
+    <string name="about_tips_title">Tips</string>
+    <string name="about_tip_1">Swipe a task right to complete it, left to delete it.</string>
+    <string name="about_tip_2">Link a task on the Focus tab so your time shows up per subject.</string>
+    <string name="about_tip_3">The timer keeps running when you switch tabs or lock your phone.</string>
+    <string name="open_link_failed">Couldn\'t open the link</string>
+    <string name="no_email_app">No email app found</string>
 
     <!-- Firebase Google Sign-In -->
     <string name="default_web_client_id" translatable="false">762310666511-c2ik8qs34mok05i2leoi2igjabtpsp5t.apps.googleusercontent.com</string>
-    <string name="data_management">Data Management</string>
-    <string name="preferences">Preferences</string>
 
-    <!-- Filter Chips -->
-    <string name="filter_all">All</string>
-    <string name="filter_due">Due</string>
-    <string name="filter_completed">Completed</string>
-    <string name="filter_sort">Sort ▾</string>
-
-    <!-- Placeholder texts (for tools:text) -->
-    <string name="placeholder_task_title" translatable="false">Task Title</string>
-    <string name="placeholder_subject" translatable="false">Subject</string>
-    <string name="placeholder_due_date" translatable="false">Oct 5, 23:59</string>
-    <string name="placeholder_time" translatable="false">0h 0m</string>
-    <string name="placeholder_duration" translatable="false">25 min</string>
-    <string name="placeholder_task_name" translatable="false">Task Name</string>
-
-    <!-- Buttons -->
-    <string name="button_edit">Edit</string>
-    <string name="button_delete">Delete</string>
-    <string name="button_change_avatar">Change Avatar</string>
-    <string name="label_profile_information">Profile Information</string>
-
-    <!-- URLs (non-translatable) -->
+    <!-- URLs / contact (non-translatable) -->
     <string name="url_privacy_policy" translatable="false">https://github.com/thantthuaung/LearnLog-Student-Study-Time-Manager/blob/main/PRIVACY.md</string>
-    <string name="url_play_store" translatable="false">https://play.google.com/store/apps/details?id=%s</string>
-
-    <!-- Contact/Support -->
     <string name="support_email" translatable="false">thantthuaung.dev@gmail.com</string>
-    <string name="email_subject">LearnLog Support</string>
+    <string name="email_subject">LearnLog support</string>
     <string name="email_body_template">Version: %1$s\nBuild: %2$s\n\n</string>
 </resources>

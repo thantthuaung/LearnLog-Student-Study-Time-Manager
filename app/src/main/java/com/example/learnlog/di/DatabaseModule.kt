@@ -1,11 +1,8 @@
 package com.example.learnlog.di
 
 import android.content.Context
-import com.example.learnlog.data.db.AppDatabase
 import com.example.learnlog.data.dao.*
-import com.example.learnlog.data.repository.NoteRepository
-import com.example.learnlog.data.repository.SubjectRepository
-import com.example.learnlog.data.repository.TaskRepository
+import com.example.learnlog.data.db.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,58 +16,21 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAppDatabase(
-        @ApplicationContext context: Context
-    ): AppDatabase {
-        return AppDatabase.getInstance(context)
-    }
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
+        AppDatabase.getInstance(context)
 
     @Provides
-    @Singleton
-    fun provideSessionLogDao(appDatabase: AppDatabase): SessionLogDao {
-        return appDatabase.sessionLogDao()
-    }
+    fun provideSessionLogDao(db: AppDatabase): SessionLogDao = db.sessionLogDao()
 
     @Provides
-    @Singleton
-    fun provideSubjectDao(appDatabase: AppDatabase): SubjectDao {
-        return appDatabase.subjectDao()
-    }
+    fun provideSubjectDao(db: AppDatabase): SubjectDao = db.subjectDao()
 
     @Provides
-    @Singleton
-    fun provideNoteDao(appDatabase: AppDatabase): NoteDao {
-        return appDatabase.noteDao()
-    }
+    fun provideNoteDao(db: AppDatabase): NoteDao = db.noteDao()
 
     @Provides
-    @Singleton
-    fun provideTaskDao(appDatabase: AppDatabase): TaskDao {
-        return appDatabase.taskDao()
-    }
+    fun provideTaskDao(db: AppDatabase): TaskDao = db.taskDao()
 
     @Provides
-    @Singleton
-    fun provideDailyRollupDao(appDatabase: AppDatabase): DailyRollupDao {
-        return appDatabase.dailyRollupDao()
-    }
-
-
-    @Provides
-    @Singleton
-    fun provideNoteRepository(noteDao: NoteDao): NoteRepository {
-        return NoteRepository(noteDao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideTaskRepository(taskDao: TaskDao, sessionLogDao: SessionLogDao): TaskRepository {
-        return TaskRepository(taskDao, sessionLogDao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSubjectRepository(subjectDao: SubjectDao): SubjectRepository {
-        return SubjectRepository(subjectDao)
-    }
+    fun provideDailyRollupDao(db: AppDatabase): DailyRollupDao = db.dailyRollupDao()
 }

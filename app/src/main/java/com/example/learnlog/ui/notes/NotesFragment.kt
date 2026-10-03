@@ -4,162 +4,117 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.learnlog.R
 import com.example.learnlog.databinding.FragmentNotesBinding
+import com.example.learnlog.ui.base.BaseFragment
+import com.example.learnlog.ui.common.Motion.animateFirstLayout
+import com.example.learnlog.ui.common.Reselectable
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class NotesFragment : Fragment() {
+class NotesFragment : BaseFragment(), Reselectable {
 
     private var _binding: FragmentNotesBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: NotesViewModel by viewModels()
     private lateinit var notesAdapter: NotesAdapter
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentNotesBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupTopBar(binding.topBar.root, getString(R.string.page_notes_title))
 
-        binding.topBar.pageTitle.text = getString(R.string.page_notes_title)
-
-        // Apply filters from arguments if any
-        arguments?.let {
-            val subjectId = it.getLong("subjectId", -1L)
-            val taskId = it.getLong("taskId", -1L)
-            if (subjectId > 0) viewModel.setSubjectFilter(subjectId)
-            if (taskId > 0) viewModel.setTaskFilter(taskId)
-        }
-
-        setupRecyclerView()
-        setupSearchView()
-        setupFab()
-        observeNotes()
-        setupSwipeToDelete()
-    }
-
-    private fun setupRecyclerView() {
         notesAdapter = NotesAdapter(
-            onClick = { note ->
-                val action = NotesFragmentDirections.actionNotesFragmentToAddEditNoteFragment(note.id)
-                findNavController().navigate(action)
-            },
-            onPinClick = { note ->
-                viewModel.togglePin(note)
-            }
+            onClick = { openEditor(it.id) },
+            onPinClick = viewModel::togglePin
         )
+        binding.recyclerViewNotes.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        binding.recyclerViewNotes.adapter = notesAdapter
+        setupSwipeToDelete()
 
-        binding.recyclerViewNotes.apply {
-            adapter = notesAdapter
-            layoutManager = LinearLayoutManager(context)
-        }
-    }
-
-    private fun setupSearchView() {
-        val searchView = view?.findViewById<SearchView>(R.id.searchView)
-        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                viewModel.setSearchQuery(newText ?: "")
-                return true
+        binding.searchInput.doAfterTextChanged { viewModel.setSearchQuery(it?.toString().orEmpty()) }
+        binding.chipPinnedOnly.setOnCheckedChangeListener { _, checked -> viewModel.setPinnedOnly(checked) }
+        binding.fabAddNote.setOnClickListener { openEditor(-1L) }
+        binding.emptyState.emptyAction.setOnClickListener { openEditor(-1L) }
+        binding.recyclerViewNotes.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 8 && binding.fabAddNote.isExtended) binding.fabAddNote.shrink()
+                else if ((dy < -8 || !rv.canScrollVertically(-1)) && !binding.fabAddNote.isExtended) binding.fabAddNote.extend()
             }
         })
 
-        // Filter chips
-        view?.findViewById<com.google.android.material.chip.Chip>(R.id.chipPinnedOnly)?.setOnCheckedChangeListener { _, _ ->
-            viewModel.togglePinnedFilter()
-        }
-
-        view?.findViewById<com.google.android.material.chip.Chip>(R.id.chipClearFilters)?.setOnClickListener {
-            viewModel.clearFilters()
-            searchView?.setQuery("", false)
-            view?.findViewById<com.google.android.material.chip.Chip>(R.id.chipPinnedOnly)?.isChecked = false
-        }
-    }
-
-    private fun setupFab() {
-        binding.fabAddNote.setOnClickListener {
-            val action = NotesFragmentDirections.actionNotesFragmentToAddEditNoteFragment(-1L)
-            findNavController().navigate(action)
-        }
-    }
-
-    private fun observeNotes() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.notes.collect { notes ->
-                notesAdapter.submitList(notes)
-                updateEmptyState(notes.isEmpty())
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { if (it.loaded) render(it) }
             }
         }
+    }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                state.error?.let { error ->
-                    Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
-                    viewModel.clearError()
-                }
+    private fun render(state: NotesUiState) {
+        notesAdapter.submitList(state.notes) {
+            if (state.notes.isNotEmpty()) binding.recyclerViewNotes.animateFirstLayout()
+        }
+        setTopBarSubtitle(binding.topBar.root,
+            if (state.totalCount > 0) resources.getQuantityString(R.plurals.notes_count, state.totalCount, state.totalCount) else null)
+        if (binding.chipPinnedOnly.isChecked != state.pinnedOnly) binding.chipPinnedOnly.isChecked = state.pinnedOnly
 
-                // Update filter chip visibility
-                val hasFilters = state.searchQuery.isNotBlank() ||
-                                state.selectedSubjectId != null ||
-                                state.selectedTaskId != null ||
-                                state.showPinnedOnly
-                view?.findViewById<com.google.android.material.chip.Chip>(R.id.chipClearFilters)?.isVisible = hasFilters
+        val empty = state.notes.isEmpty()
+        binding.emptyContainer.isVisible = empty
+        binding.recyclerViewNotes.isVisible = !empty
+        if (empty) with(binding.emptyState) {
+            if (state.isFiltering) {
+                emptyIcon.setImageResource(R.drawable.ic_search)
+                emptyTitle.setText(R.string.empty_search_title)
+                emptyMessage.setText(R.string.no_notes_found)
+                emptyAction.isVisible = false
+            } else {
+                emptyIcon.setImageResource(R.drawable.ic_empty_notes)
+                emptyTitle.setText(R.string.no_notes_title)
+                emptyMessage.setText(R.string.no_notes_message)
+                emptyAction.setText(R.string.notes_new)
+                emptyAction.isVisible = true
             }
         }
     }
 
     private fun setupSwipeToDelete() {
-        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-        ) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean = false
-
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.bindingAdapterPosition
-                val note = notesAdapter.currentList[position]
-
+                val note = notesAdapter.currentList.getOrNull(viewHolder.bindingAdapterPosition) ?: return
                 viewModel.deleteNote(note)
-
-                Snackbar.make(binding.root, "Note deleted", Snackbar.LENGTH_LONG)
-                    .setAction("Undo") {
-                        viewModel.insertNote(note)
-                    }
+                Snackbar.make(binding.root, R.string.note_deleted, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.action_undo) { viewModel.restoreNote(note) }
+                    .setAnchorView(binding.fabAddNote)
                     .show()
             }
-        })
-
-        itemTouchHelper.attachToRecyclerView(binding.recyclerViewNotes)
+        }).attachToRecyclerView(binding.recyclerViewNotes)
     }
 
-    private fun updateEmptyState(isEmpty: Boolean) {
-        view?.findViewById<View>(R.id.emptyStateLayout)?.isVisible = isEmpty
-        binding.recyclerViewNotes.isVisible = !isEmpty
+    private fun openEditor(noteId: Long) {
+        findNavController().navigate(NotesFragmentDirections.actionNotesFragmentToAddEditNoteFragment(noteId))
+    }
+
+    override fun onReselected() {
+        _binding ?: return
+        binding.recyclerViewNotes.smoothScrollToPosition(0)
+        binding.appBar.setExpanded(true, true)
     }
 
     override fun onDestroyView() {

@@ -1,21 +1,23 @@
 package com.example.learnlog.ui.settings
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.content.pm.PackageManager
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import com.example.learnlog.databinding.SettingsNotificationsBinding
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.learnlog.R
+import com.example.learnlog.data.preferences.UserPreferences
+import com.example.learnlog.databinding.FragmentSettingsPageBinding
+import com.example.learnlog.timer.TimerAlerts
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,166 +25,99 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class NotificationsSettingsFragment : Fragment() {
-    private var _binding: SettingsNotificationsBinding? = null
-    private val binding get() = _binding!!
 
+    private var _binding: FragmentSettingsPageBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: SettingsViewModel by viewModels({ requireParentFragment() })
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            viewModel.updateNotificationsEnabled(true)
-            createNotificationChannel()
-            Snackbar.make(binding.root, "Notifications enabled", Snackbar.LENGTH_SHORT).show()
-        } else {
-            binding.switchNotificationsEnabled.isChecked = false
-            Snackbar.make(binding.root, "Notification permission denied", Snackbar.LENGTH_SHORT).show()
-        }
+    private lateinit var enabledRow: SettingsBuilder.Row
+    private lateinit var soundRow: SettingsBuilder.Row
+    private lateinit var vibrateRow: SettingsBuilder.Row
+    private lateinit var ongoingRow: SettingsBuilder.Row
+    private lateinit var blockedRow: SettingsBuilder.Row
+    private lateinit var blockedGroup: SettingsBuilder.Group
+
+    private val sounds = listOf(UserPreferences.SOUND_DEFAULT, UserPreferences.SOUND_ALARM, UserPreferences.SOUND_NONE)
+
+    private val requestPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        viewModel.setNotificationsEnabled(granted)
+        refreshBlocked()
+        if (!granted) Snackbar.make(binding.root, R.string.notif_permission_denied, Snackbar.LENGTH_LONG)
+            .setAction(R.string.notif_open_settings) { openSystemSettings() }.show()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = SettingsNotificationsBinding.inflate(inflater, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentSettingsPageBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupViews()
-        observeData()
-    }
+        val builder = SettingsBuilder(binding.pageContainer)
+        val labels = resources.getStringArray(R.array.sound_options)
 
-    private fun setupViews() {
-        binding.switchNotificationsEnabled.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                checkAndRequestNotificationPermission()
-            } else {
-                viewModel.updateNotificationsEnabled(false)
-            }
-        }
-
-        binding.soundContainer.setOnClickListener {
-            showSoundSelectionDialog()
-        }
-
-        binding.switchVibrate.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.updateNotificationVibrate(isChecked)
-        }
-
-        binding.switchOngoingNotification.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.updateShowOngoingNotification(isChecked)
-        }
-    }
-
-    private fun checkAndRequestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            when {
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED -> {
-                    viewModel.updateNotificationsEnabled(true)
-                    createNotificationChannel()
-                }
-                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Notification Permission")
-                        .setMessage("LearnLog needs notification permission to alert you when timers complete.")
-                        .setPositiveButton("Grant") { _, _ ->
-                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                        .setNegativeButton("Cancel") { _, _ ->
-                            binding.switchNotificationsEnabled.isChecked = false
-                        }
-                        .show()
-                }
-                else -> {
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        builder.group(getString(R.string.settings_notifications)) {
+            enabledRow = switch(R.drawable.ic_notifications, getString(R.string.notif_enabled), getString(R.string.notif_enabled_sub)) { on ->
+                if (on && !TimerAlerts.canPostNotifications(requireContext()) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    requestPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    viewModel.setNotificationsEnabled(on)
                 }
             }
-        } else {
-            // No runtime permission needed before Android 13
-            viewModel.updateNotificationsEnabled(true)
-            createNotificationChannel()
+            soundRow = row(R.drawable.ic_volume, getString(R.string.notif_sound)) {
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.notif_sound)
+                    .setSingleChoiceItems(labels, sounds.indexOf(currentSound).coerceAtLeast(0)) { d, which ->
+                        viewModel.setNotificationSound(sounds[which]); d.dismiss()
+                    }
+                    .show()
+            }
+            vibrateRow = switch(R.drawable.ic_vibration, getString(R.string.notif_vibrate)) { viewModel.setVibrate(it) }
+            ongoingRow = switch(R.drawable.ic_timelapse, getString(R.string.notif_ongoing), getString(R.string.notif_ongoing_sub)) { viewModel.setOngoing(it) }
+        }
+        blockedGroup = builder.group(null) {
+            blockedRow = row(R.drawable.ic_info, getString(R.string.notif_permission_denied), destructive = true) { openSystemSettings() }
+        }
+        refreshBlocked()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.notificationsEnabled.collect { on ->
+                        val effective = on && TimerAlerts.canPostNotifications(requireContext())
+                        enabledRow.checked = on
+                        soundRow.enabled = on
+                        vibrateRow.enabled = on
+                        refreshBlocked(on && !effective)
+                    }
+                }
+                launch {
+                    viewModel.notificationSound.collect {
+                        currentSound = it
+                        soundRow.value = labels[sounds.indexOf(it).coerceAtLeast(0)]
+                    }
+                }
+                launch { viewModel.vibrate.collect { vibrateRow.checked = it } }
+                launch { viewModel.ongoing.collect { ongoingRow.checked = it } }
+            }
         }
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Timer Notifications"
-            val descriptionText = "Notifications for timer completion and updates"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("learnlog_timer", name, importance).apply {
-                description = descriptionText
-            }
+    private var currentSound: String = UserPreferences.SOUND_DEFAULT
 
-            val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
+    override fun onResume() {
+        super.onResume()
+        if (::blockedGroup.isInitialized) refreshBlocked()
     }
 
-    private fun showSoundSelectionDialog() {
-        val sounds = arrayOf("Default", "Bell", "Chime", "Ding", "None")
-        var selectedIndex = 0
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.notificationSound.collect { currentSound ->
-                selectedIndex = sounds.indexOfFirst { it.lowercase() == currentSound.lowercase() }.coerceAtLeast(0)
-            }
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Notification Sound")
-            .setSingleChoiceItems(sounds, selectedIndex) { dialog, which ->
-                val selected = sounds[which].lowercase()
-                viewModel.updateNotificationSound(selected)
-                binding.notificationSoundValue.text = sounds[which]
-                dialog.dismiss()
-                Snackbar.make(binding.root, "Sound changed to ${sounds[which]}", Snackbar.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+    private fun refreshBlocked(show: Boolean = !TimerAlerts.canPostNotifications(requireContext())) {
+        blockedGroup.binding.root.visibility = if (show) View.VISIBLE else View.GONE
     }
 
-    private fun observeData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.notificationsEnabled.collect { enabled ->
-                if (binding.switchNotificationsEnabled.isChecked != enabled) {
-                    binding.switchNotificationsEnabled.isChecked = enabled
-                }
-
-                // Enable/disable other controls
-                binding.soundContainer.isEnabled = enabled
-                binding.switchVibrate.isEnabled = enabled
-                binding.switchOngoingNotification.isEnabled = enabled
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.notificationSound.collect { sound ->
-                binding.notificationSoundValue.text = sound.replaceFirstChar { it.uppercase() }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.notificationVibrate.collect { enabled ->
-                if (binding.switchVibrate.isChecked != enabled) {
-                    binding.switchVibrate.isChecked = enabled
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.showOngoingNotification.collect { enabled ->
-                if (binding.switchOngoingNotification.isChecked != enabled) {
-                    binding.switchOngoingNotification.isChecked = enabled
-                }
-            }
-        }
+    private fun openSystemSettings() {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
+        runCatching { startActivity(intent) }
     }
 
     override fun onDestroyView() {
@@ -190,4 +125,3 @@ class NotificationsSettingsFragment : Fragment() {
         _binding = null
     }
 }
-

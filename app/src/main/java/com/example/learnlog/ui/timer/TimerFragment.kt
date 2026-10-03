@@ -1,668 +1,385 @@
 package com.example.learnlog.ui.timer
 
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
-import android.media.Ringtone
-import android.media.RingtoneManager
-import android.os.Build
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
+import android.content.res.ColorStateList
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.os.IBinder
-import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.learnlog.R
-import com.example.learnlog.data.model.TimerPreset
 import com.example.learnlog.data.model.TimerPresets
-import com.example.learnlog.data.model.TimerState
-import com.example.learnlog.data.preferences.UserPreferences
-import com.example.learnlog.data.repository.SettingsRepository
 import com.example.learnlog.databinding.FragmentTimerBinding
-import com.example.learnlog.service.TimerService
+import com.example.learnlog.timer.FocusTimer
+import com.example.learnlog.timer.FocusTimerService
+import com.example.learnlog.timer.TimerAlerts
 import com.example.learnlog.ui.base.BaseFragment
+import com.example.learnlog.ui.common.Dialogs
+import com.example.learnlog.ui.common.Format
+import com.example.learnlog.ui.common.Motion
+import com.example.learnlog.ui.common.NotificationPermissionGate
+import com.example.learnlog.ui.common.Reselectable
+import com.example.learnlog.ui.timer.TimerViewModel.Companion.toLinked
+import com.google.android.material.chip.Chip
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.util.Locale
-import javax.inject.Inject
 
 @AndroidEntryPoint
-class TimerFragment : BaseFragment() {
+class TimerFragment : BaseFragment(), Reselectable {
+
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: TimerViewModel by viewModels()
 
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+    private val permissionGate = NotificationPermissionGate(
+        this,
+        shouldAsk = { viewModel.shouldAskNotificationPermission() },
+        markAsked = { viewModel.notificationPermissionAsked() }
+    )
 
-    @Inject
-    lateinit var userPreferences: UserPreferences
+    private var glowAnimator: ObjectAnimator? = null
+    private var lastPhase: FocusTimer.Phase? = null
+    private var keepScreenOnPref = false
+    private var renderedPresets: List<Int> = emptyList()
 
-    private var timerState = TimerState.IDLE
-    private var currentDurationMs = 25 * 60 * 1000L
-    private var remainingMillis = currentDurationMs
-    private var countDownTimer: CountDownTimer? = null
-    private var sessionStarted = false
-    private var selectedPresetIndex = 4 // Default to 25 minutes
-
-    private lateinit var notificationManager: TimerNotificationManager
-    private var vibrator: Vibrator? = null
-    private var ringtone: Ringtone? = null
-
-    private lateinit var presetAdapter: TimerPresetAdapter
-
-    // Timer service binding
-    private var timerService: TimerService? = null
-    private var isBound = false
-    private var useServiceMode = false
-
-    // Preferences
-    private var keepScreenOn = false
-    private var keepRunningInBackground = false
-
-    // Lifecycle observer for app foreground/background
-    private val appLifecycleObserver = object : DefaultLifecycleObserver {
-        override fun onStart(owner: LifecycleOwner) {
-            handleAppForegrounded()
-        }
-
-        override fun onStop(owner: LifecycleOwner) {
-            handleAppBackgrounded()
-        }
-    }
-
-    companion object {
-        private const val STATE_DURATION_MS = "duration_ms"
-        private const val STATE_REMAINING_MS = "remaining_ms"
-        private const val STATE_IS_RUNNING = "is_running"
-        private const val STATE_SESSION_STARTED = "session_started"
-        private const val STATE_SELECTED_PRESET = "selected_preset"
-    }
-
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as TimerService.TimerBinder
-            timerService = binder.getService()
-            isBound = true
-
-            // Sync with service state
-            lifecycleScope.launch {
-                timerService?.remainingMillis?.collect { millis ->
-                    if (useServiceMode) {
-                        remainingMillis = millis
-                        updateTimerDisplay()
-                    }
-                }
-            }
-        }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            timerService = null
-            isBound = false
-        }
-    }
-
-    private val timerCompleteReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.example.learnlog.TIMER_COMPLETE") {
-                onTimerComplete()
-            }
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-
-        // Register lifecycle observer
-        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
-
-        // Register broadcast receiver
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireContext().registerReceiver(
-                timerCompleteReceiver,
-                IntentFilter("com.example.learnlog.TIMER_COMPLETE"),
-                Context.RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            @Suppress("UnspecifiedRegisterReceiverFlag")
-            requireContext().registerReceiver(
-                timerCompleteReceiver,
-                IntentFilter("com.example.learnlog.TIMER_COMPLETE")
-            )
-        }
-
-        // Restore state
-        savedInstanceState?.let {
-            currentDurationMs = it.getLong(STATE_DURATION_MS, 25 * 60 * 1000L)
-            remainingMillis = it.getLong(STATE_REMAINING_MS, currentDurationMs)
-            sessionStarted = it.getBoolean(STATE_SESSION_STARTED, false)
-            selectedPresetIndex = it.getInt(STATE_SELECTED_PRESET, 4)
-
-            if (it.getBoolean(STATE_IS_RUNNING, false)) {
-                // Will resume in onViewCreated
-                timerState = TimerState.PAUSED
-            }
-        }
-
-        // Handle system back button
-        requireActivity().onBackPressedDispatcher.addCallback(this) {
-            handleBackPress()
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putLong(STATE_DURATION_MS, currentDurationMs)
-        outState.putLong(STATE_REMAINING_MS, remainingMillis)
-        outState.putBoolean(STATE_IS_RUNNING, timerState == TimerState.RUNNING)
-        outState.putBoolean(STATE_SESSION_STARTED, sessionStarted)
-        outState.putInt(STATE_SELECTED_PRESET, selectedPresetIndex)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        notificationManager = TimerNotificationManager(requireContext())
-        vibrator = requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        val notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        ringtone = RingtoneManager.getRingtone(requireContext(), notificationUri)
-
-        setupUI()
+        setupTopBar(binding.topBar.root, getString(R.string.page_timer_title), getString(R.string.timer_ready))
         setupControls()
-        setupPresets()
-        loadPreferences()
-        updateTimerDisplay()
+        observe()
     }
 
-    private fun loadPreferences() {
-        lifecycleScope.launch {
-            // Load keep screen on preference
-            userPreferences.keepScreenOn.collect { enabled ->
-                keepScreenOn = enabled
-                binding.switchKeepScreenOn.isChecked = enabled
-                applyKeepScreenOn()
+    private fun setupControls() = with(binding) {
+        btnStartPause.setOnClickListener {
+            val s = viewModel.state.value
+            if (s.phase == FocusTimer.Phase.RUNNING) viewModel.timer.pause()
+            else permissionGate.run {
+                viewModel.timer.start()
+                TimerAlerts.tick(requireContext())
             }
         }
-
-        lifecycleScope.launch {
-            // Load keep running in background preference
-            userPreferences.keepRunningInBackground.collect { enabled ->
-                keepRunningInBackground = enabled
-                binding.switchKeepRunningInBackground.isChecked = enabled
-            }
+        btnReset.setOnClickListener { confirmReset() }
+        btnFinish.setOnClickListener { confirmFinish() }
+        btnIncrease.setOnClickListener { viewModel.timer.addTime(5 * 60_000L) }
+        btnDecrease.setOnClickListener { viewModel.timer.addTime(-60_000L) }
+        taskCard.setOnClickListener { if (!viewModel.state.value.isActive) chooseTask() }
+        taskAction.setOnClickListener {
+            if (viewModel.state.value.task != null) viewModel.link(null) else chooseTask()
         }
-    }
-
-    private fun applyKeepScreenOn() {
-        if (keepScreenOn && (timerState == TimerState.RUNNING || timerState == TimerState.PAUSED)) {
-            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        } else {
-            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        switchKeepScreenOn.setOnCheckedChangeListener { button, checked ->
+            if (button.isPressed) viewModel.setKeepScreenOn(checked)
         }
-        updateLockIndicator()
-    }
-
-    private fun updateLockIndicator() {
-        // Show lock icon when Keep Screen On is enabled AND timer is active
-        val shouldShowLock = keepScreenOn && (timerState == TimerState.RUNNING || timerState == TimerState.PAUSED)
-        _binding?.screenLockIndicator?.isVisible = shouldShowLock
-    }
-
-    private fun setupUI() {
-        // Regular timer page title
-        binding.topBar.pageTitle.text = getString(R.string.page_timer_title)
-
-        // Hide task-specific UI (standalone timer mode)
-        binding.taskInfoContainer.isVisible = false
-        binding.btnMarkCompleted.isVisible = false
-        binding.btnAddNote.isVisible = false
-        binding.taskActionsContainer.visibility = View.GONE
-        binding.textPrompt.visibility = View.GONE
-
-        // Set up presets in 3-column grid (9 items: 8 presets + custom)
-        binding.presetsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
-    }
-
-    override fun onCreateOptionsMenu(menu: android.view.Menu, inflater: android.view.MenuInflater) {
-        inflater.inflate(R.menu.main_menu, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_settings -> {
-                findNavController().navigate(R.id.settingsFragment)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+        presetChips.setOnCheckedStateChangeListener { group, ids ->
+            val chip = ids.firstOrNull()?.let { group.findViewById<Chip>(it) } ?: return@setOnCheckedStateChangeListener
+            (chip.tag as? Int)?.let { viewModel.timer.setDuration(it) }
         }
     }
 
-    private fun setupPresets() {
-        presetAdapter = TimerPresetAdapter(
-            onPresetClick = { preset ->
-                if (timerState == TimerState.RUNNING) {
-                    Snackbar.make(binding.root, "Stop timer to change duration", Snackbar.LENGTH_SHORT).show()
-                    return@TimerPresetAdapter
-                }
-
-                if (preset.durationMinutes == 0) {
-                    showCustomDurationPicker()
-                } else {
-                    setDuration(preset.durationMinutes)
-                }
-            },
-            onPresetLongClick = { _ ->
-                Snackbar.make(binding.root, "Preset saved!", Snackbar.LENGTH_SHORT).show()
-                true
-            }
-        )
-
-        binding.presetsRecyclerView.adapter = presetAdapter
-
-        // Load presets from settings
+    private fun observe() {
         viewLifecycleOwner.lifecycleScope.launch {
-            settingsRepository.settingsFlow.collect { settings ->
-                val presets = settings.timerPresets.toMutableList()
-                presets.add(TimerPreset(0, "Custom"))
-                presetAdapter.submitList(presets)
-
-                // Set default preset on first load
-                if (timerState == TimerState.IDLE && !sessionStarted) {
-                    selectedPresetIndex = settings.defaultPresetIndex
-                    if (selectedPresetIndex < settings.timerPresets.size) {
-                        setDuration(settings.timerPresets[selectedPresetIndex].durationMinutes)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { viewModel.state.collect(::render) }
+                launch { viewModel.settings.collect { renderPresets(it.timerPresets.map { p -> p.durationMinutes }) } }
+                launch {
+                    viewModel.dailyGoal.collect { goal ->
+                        binding.goalText.text = getString(R.string.timer_goal_progress, Format.compact(goal.focusedMinutes), Format.compact(goal.goalMinutes))
+                        binding.goalProgress.setProgressCompat((goal.fraction * 1000).toInt(), true)
+                        binding.goalReached.isVisible = goal.reached
                     }
                 }
-                presetAdapter.setSelectedIndex(selectedPresetIndex)
-            }
-        }
-    }
-
-    private fun setupControls() {
-        // Start/Pause button
-        binding.btnStartPause.setOnClickListener {
-            when (timerState) {
-                TimerState.IDLE, TimerState.PAUSED -> startTimer()
-                TimerState.RUNNING -> pauseTimer()
-                else -> {}
-            }
-        }
-
-        // Reset button
-        binding.btnReset.setOnClickListener {
-            resetTimer()
-        }
-
-        // Settings button (hidden for now)
-        binding.btnSettings.setOnClickListener {
-            showTimerSettings()
-        }
-
-        // Time adjustment buttons
-        binding.btnIncrease.setOnClickListener {
-            adjustTime(5 * 60 * 1000L) // +5 minutes
-        }
-
-        binding.btnDecrease.setOnClickListener {
-            adjustTime(-1 * 60 * 1000L) // -1 minute
-        }
-
-        // Keep screen on toggle
-        binding.switchKeepScreenOn.setOnCheckedChangeListener { _, isChecked ->
-            keepScreenOn = isChecked
-            lifecycleScope.launch {
-                userPreferences.updateKeepScreenOn(isChecked)
-            }
-            applyKeepScreenOn()
-        }
-
-        // Keep running in background toggle
-        binding.switchKeepRunningInBackground.setOnCheckedChangeListener { _, isChecked ->
-            keepRunningInBackground = isChecked
-            lifecycleScope.launch {
-                userPreferences.updateKeepRunningInBackground(isChecked)
-            }
-        }
-    }
-
-    private fun startTimer() {
-        // Validate: prevent starting at 0:00
-        if (remainingMillis <= 0) {
-            Snackbar.make(binding.root, "Cannot start timer at 0:00", Snackbar.LENGTH_SHORT).show()
-            return
-        }
-
-        // Validate minimum duration
-        if (remainingMillis < 60 * 1000) {
-            Snackbar.make(binding.root, "Minimum duration is 1 minute", Snackbar.LENGTH_SHORT).show()
-            return
-        }
-
-        // Start session on first start (standalone, no task)
-        if (!sessionStarted && timerState == TimerState.IDLE) {
-            val durationMinutes = (currentDurationMs / 1000 / 60).toInt()
-            viewModel.startStandaloneSession(durationMinutes)
-            sessionStarted = true
-        }
-
-        timerState = TimerState.RUNNING
-        binding.btnStartPause.text = getString(R.string.pause_timer)
-        binding.btnStartPause.setIconResource(R.drawable.ic_pause)
-        binding.btnReset.visibility = View.VISIBLE
-        binding.presetsRecyclerView.isEnabled = false
-
-        // Restore full opacity (in case resuming from pause)
-        binding.progressCircle.alpha = 1.0f
-        binding.textCountdown.alpha = 1.0f
-
-        // Update lock indicator since timer is now running
-        updateLockIndicator()
-
-        // Show notification
-        notificationManager.showTimerNotification(remainingMillis)
-
-        countDownTimer = object : CountDownTimer(remainingMillis, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                remainingMillis = millisUntilFinished
-                updateTimerDisplay()
-
-                // Update notification every 10 seconds
-                if (millisUntilFinished % 10000 < 1000) {
-                    notificationManager.updateTimerNotification(millisUntilFinished)
+                launch {
+                    viewModel.keepScreenOn.collect {
+                        keepScreenOnPref = it
+                        binding.switchKeepScreenOn.isChecked = it
+                        applyKeepScreenOn(viewModel.state.value)
+                    }
+                }
+                launch {
+                    viewModel.events.collect { event ->
+                        when (event) {
+                            is FocusTimer.Event.Completed -> Motion.pop(binding.completeIcon)
+                            is FocusTimer.Event.Stopped -> snack(
+                                if (event.minutes > 0) getString(R.string.timer_saved, Format.minutes(requireContext(), event.minutes))
+                                else getString(R.string.timer_discarded)
+                            )
+                        }
+                    }
                 }
             }
+        }
+    }
 
-            override fun onFinish() {
-                timerState = TimerState.IDLE
-                remainingMillis = 0
-                updateTimerDisplay()
-                onTimerComplete()
+    private fun render(s: FocusTimer.State) = with(binding) {
+        val phase = s.phase
+        val phaseChanged = phase != lastPhase
+        val ctx = requireContext()
+
+        textCountdown.text = FocusTimerService.formatClock(if (phase == FocusTimer.Phase.IDLE) s.totalMs else s.remainingMs)
+        progressRing.setProgressCompat((s.progress * 1000).toInt(), phase != FocusTimer.Phase.RUNNING)
+
+        textFocused.text = when (phase) {
+            FocusTimer.Phase.IDLE -> Format.minutes(ctx, (s.totalMs / 60_000).toInt())
+            FocusTimer.Phase.FINISHED -> "+" + Format.minutes(ctx, s.lastSavedMinutes)
+            else -> Format.minutes(ctx, s.focusedMinutes) + " · " + Format.minutes(ctx, (s.totalMs / 60_000).toInt())
+        }
+
+        if (phaseChanged) {
+            val (labelRes, bgAttr, fgAttr) = when (phase) {
+                FocusTimer.Phase.IDLE -> Triple(R.string.timer_ready, com.google.android.material.R.attr.colorSurfaceContainerHigh, com.google.android.material.R.attr.colorOnSurfaceVariant)
+                FocusTimer.Phase.RUNNING -> Triple(R.string.timer_focusing, com.google.android.material.R.attr.colorPrimaryContainer, com.google.android.material.R.attr.colorOnPrimaryContainer)
+                FocusTimer.Phase.PAUSED -> Triple(R.string.timer_paused, com.google.android.material.R.attr.colorSecondaryContainer, com.google.android.material.R.attr.colorOnSecondaryContainer)
+                FocusTimer.Phase.FINISHED -> Triple(R.string.timer_complete, com.google.android.material.R.attr.colorTertiaryContainer, com.google.android.material.R.attr.colorOnTertiaryContainer)
             }
-        }.start()
-    }
+            stateLabel.setText(labelRes)
+            stateLabel.backgroundTintList = ColorStateList.valueOf(MaterialColors.getColor(stateLabel, bgAttr))
+            stateLabel.setTextColor(MaterialColors.getColor(stateLabel, fgAttr))
+            setTopBarSubtitle(topBar.root, getString(labelRes))
+            progressRing.setIndicatorColor(
+                MaterialColors.getColor(progressRing, if (phase == FocusTimer.Phase.PAUSED) com.google.android.material.R.attr.colorSecondary
+                else if (phase == FocusTimer.Phase.FINISHED) com.google.android.material.R.attr.colorTertiary
+                else com.google.android.material.R.attr.colorPrimary)
+            )
 
-    private fun setDuration(minutes: Int) {
-        if (timerState == TimerState.RUNNING) {
-            Snackbar.make(binding.root, "Stop timer to change duration", Snackbar.LENGTH_SHORT).show()
-            return
+            btnStartPause.setText(
+                when (phase) {
+                    FocusTimer.Phase.RUNNING -> R.string.pause
+                    FocusTimer.Phase.PAUSED -> R.string.resume
+                    else -> R.string.timer_start
+                }
+            )
+            btnStartPause.setIconResource(if (phase == FocusTimer.Phase.RUNNING) R.drawable.ic_pause else R.drawable.ic_play)
+            if (lastPhase != null) Motion.pop(btnStartPause)
+
+            fadeVisible(btnReset, s.isActive, animate = lastPhase != null)
+            fadeVisible(btnFinish, s.isActive, animate = lastPhase != null)
+            controls.isVisible = phase != FocusTimer.Phase.FINISHED
+            adjustRow.isVisible = phase != FocusTimer.Phase.FINISHED
+            presetsLabel.isVisible = phase == FocusTimer.Phase.IDLE
+            presetsScroll.isVisible = phase == FocusTimer.Phase.IDLE
+            renderCompletion(s)
+            setGlow(phase == FocusTimer.Phase.RUNNING)
+            applyKeepScreenOn(s)
+            lastPhase = phase
         }
-
-        currentDurationMs = minutes * 60 * 1000L
-        remainingMillis = currentDurationMs
-
-        // Update selected preset index
-        val presets = TimerPresets.DEFAULT_PRESETS
-        selectedPresetIndex = presets.indexOfFirst { it.durationMinutes == minutes }
-        if (selectedPresetIndex == -1) selectedPresetIndex = presets.size // Custom
-
-        presetAdapter.setSelectedIndex(selectedPresetIndex)
-        updateTimerDisplay()
+        renderTask(s)
+        if (phase == FocusTimer.Phase.IDLE) syncPresetSelection(s)
     }
 
-    private fun adjustTime(deltaMs: Long) {
-        if (timerState == TimerState.IDLE) {
-            // Adjust preset duration
-            val newDuration = (currentDurationMs + deltaMs).coerceIn(60 * 1000L, 180 * 60 * 1000L)
-            currentDurationMs = newDuration
-            remainingMillis = newDuration
-            selectedPresetIndex = -1 // Mark as custom
-        } else if (timerState == TimerState.RUNNING || timerState == TimerState.PAUSED) {
-            // Adjust remaining time live
-            val newRemaining = (remainingMillis + deltaMs).coerceIn(60 * 1000L, 180 * 60 * 1000L)
-            remainingMillis = newRemaining
-            currentDurationMs = remainingMillis // Update total duration too
+    private fun renderTask(s: FocusTimer.State) = with(binding) {
+        val task = s.task
+        taskCard.isVisible = task != null || !s.isActive
+        if (task != null) {
+            taskLabel.setText(R.string.timer_linked_task)
+            taskTitle.text = listOfNotNull(task.title, task.subject).joinToString(" · ")
+            taskTitle.setTextColor(MaterialColors.getColor(taskTitle, com.google.android.material.R.attr.colorOnSurface))
+            taskAction.setText(R.string.timer_unlink)
+        } else {
+            taskLabel.setText(R.string.timer_choose_task)
+            taskTitle.setText(R.string.timer_link_task)
+            taskTitle.setTextColor(MaterialColors.getColor(taskTitle, com.google.android.material.R.attr.colorPrimary))
+            taskAction.setText(R.string.action_change)
         }
-        updateTimerDisplay()
+        taskAction.isVisible = !s.isActive && s.phase != FocusTimer.Phase.FINISHED && task != null
     }
 
-    private fun showCustomDurationPicker() {
-        val picker = MaterialTimePicker.Builder()
-            .setTimeFormat(TimeFormat.CLOCK_24H)
-            .setHour(0)
-            .setMinute(25)
-            .setTitleText("Select Duration")
-            .build()
+    private fun renderCompletion(s: FocusTimer.State) = with(binding) {
+        val finished = s.phase == FocusTimer.Phase.FINISHED
+        if (finished && !completeCard.isVisible) Motion.staggerIn(listOf(completeCard))
+        completeCard.isVisible = finished
+        if (!finished) return@with
+        val minutes = Format.minutes(requireContext(), s.lastSavedMinutes)
+        val task = s.task
+        if (task != null) {
+            completeMessage.text = getString(R.string.timer_complete_message, minutes) + "\n" + getString(R.string.timer_complete_task, task.title)
+            completePrimary.setText(R.string.action_mark_done)
+            completeSecondary.setText(R.string.timer_keep_going)
+            completePrimary.setOnClickListener {
+                viewModel.markTaskDone(task.id)
+                TimerAlerts.tick(requireContext())
+                viewModel.timer.acknowledgeFinished()
+                snack(getString(R.string.task_completed_toast))
+            }
+            completeSecondary.setOnClickListener { viewModel.timer.acknowledgeFinished() }
+        } else {
+            completeMessage.text = getString(R.string.timer_complete_message, minutes)
+            completePrimary.setText(R.string.timer_new_session)
+            completeSecondary.setText(R.string.action_done)
+            completePrimary.setOnClickListener { viewModel.timer.acknowledgeFinished(); viewModel.timer.start() }
+            completeSecondary.setOnClickListener { viewModel.timer.acknowledgeFinished() }
+        }
+    }
 
-        picker.addOnPositiveButtonClickListener {
-            val hours = picker.hour
-            val minutes = picker.minute
-            val totalMinutes = hours * 60 + minutes
+    private fun renderPresets(minutes: List<Int>) {
+        if (minutes == renderedPresets) return
+        renderedPresets = minutes
+        val group = binding.presetChips
+        group.removeAllViews()
+        minutes.forEach { m ->
+            group.addView(newChip(Format.compact(m)).apply { tag = m; id = View.generateViewId() })
+        }
+        group.addView(newChip(getString(R.string.custom)).apply {
+            id = View.generateViewId()
+            isCheckable = false
+            setChipIconResource(R.drawable.ic_tune)
+            isChipIconVisible = true
+            chipIconSize = resources.displayMetrics.density * 18
+            setOnClickListener { askCustomDuration() }
+        })
+        syncPresetSelection(viewModel.state.value)
+    }
 
-            if (totalMinutes < TimerPresets.MIN_DURATION_MINUTES) {
-                Snackbar.make(binding.root, "Minimum duration is 1 minute", Snackbar.LENGTH_SHORT).show()
-            } else if (totalMinutes > TimerPresets.MAX_DURATION_MINUTES) {
-                Snackbar.make(binding.root, "Maximum duration is 3 hours", Snackbar.LENGTH_SHORT).show()
+    private fun syncPresetSelection(s: FocusTimer.State) {
+        val minutes = (s.totalMs / 60_000).toInt()
+        val group = binding.presetChips
+        for (i in 0 until group.childCount) {
+            val chip = group.getChildAt(i) as Chip
+            val shouldCheck = chip.tag == minutes
+            if (chip.isCheckable && chip.isChecked != shouldCheck) chip.isChecked = shouldCheck
+        }
+    }
+
+    private fun askCustomDuration() {
+        Dialogs.askMinutes(
+            requireContext(), getString(R.string.timer_custom_duration),
+            initial = (viewModel.state.value.totalMs / 60_000).toInt(),
+            min = TimerPresets.MIN_DURATION_MINUTES, max = TimerPresets.MAX_DURATION_MINUTES
+        ) { viewModel.timer.setDuration(it) }
+    }
+
+    private fun chooseTask() {
+        val tasks = viewModel.openTasks.value
+        if (tasks.isEmpty()) {
+            snack(getString(R.string.timer_no_open_tasks)); return
+        }
+        val labels = tasks.map { t -> listOfNotNull(t.title, t.subject).joinToString("  ·  ") }.toTypedArray()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.timer_choose_task)
+            .setItems(labels) { _, which ->
+                val task = tasks[which]
+                viewModel.link(task)
+                if (viewModel.state.value.phase == FocusTimer.Phase.IDLE) viewModel.timer.setDuration(task.durationMinutes.coerceIn(1, TimerPresets.MAX_DURATION_MINUTES))
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
+    }
+
+    private fun confirmFinish() {
+        val s = viewModel.state.value
+        viewLifecycleOwner.lifecycleScope.launch {
+            if (!viewModel.confirmOnStop() && s.focusedMs >= 60_000) {
+                viewModel.timer.stop(save = true); return@launch
+            }
+            val focused = Format.minutes(requireContext(), s.focusedMinutes.coerceAtLeast(1))
+            val builder = MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.timer_finish_title)
+            if (s.focusedMs < 60_000) {
+                builder.setMessage(R.string.timer_finish_too_short)
+                    .setNegativeButton(R.string.timer_keep_going, null)
+                    .setPositiveButton(R.string.timer_discard) { _, _ -> viewModel.timer.stop(save = false) }
             } else {
-                setDuration(totalMinutes)
+                builder.setMessage(getString(R.string.timer_finish_message, focused))
+                    .setNeutralButton(R.string.action_cancel, null)
+                    .setNegativeButton(R.string.timer_discard) { _, _ -> viewModel.timer.stop(save = false) }
+                    .setPositiveButton(R.string.timer_save) { _, _ -> viewModel.timer.stop(save = true) }
             }
+            builder.show()
         }
-
-        picker.show(childFragmentManager, "time_picker")
     }
 
-    private fun updateTimerDisplay() {
-        val minutes = remainingMillis / 1000 / 60
-        val seconds = remainingMillis / 1000 % 60
-        binding.textCountdown.text = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
-
-        // Update progress
-        val progress = if (currentDurationMs > 0) {
-            ((currentDurationMs - remainingMillis).toFloat() / currentDurationMs * 100).toInt()
-        } else 0
-        binding.progressCircle.progress = progress
-    }
-
-    private fun pauseTimer() {
-        timerState = TimerState.PAUSED
-        binding.btnStartPause.text = getString(R.string.resume_timer)
-        binding.btnStartPause.setIconResource(R.drawable.ic_play)
-        countDownTimer?.cancel()
-
-        // Dim the progress ring to indicate paused state
-        binding.progressCircle.alpha = 0.5f
-        binding.textCountdown.alpha = 0.7f
-
-        // Update lock indicator (should still show if keep screen on is enabled)
-        updateLockIndicator()
-
-        // Update notification to paused state
-        notificationManager.updateTimerNotification(remainingMillis, isPaused = true)
-    }
-
-    private fun resetTimer() {
-        timerState = TimerState.IDLE
-        countDownTimer?.cancel()
-        sessionStarted = false
-        remainingMillis = currentDurationMs
-        updateTimerDisplay()
-        binding.btnStartPause.text = getString(R.string.start_timer)
-        binding.btnStartPause.setIconResource(R.drawable.ic_play)
-        binding.btnReset.visibility = View.INVISIBLE
-        binding.presetsRecyclerView.isEnabled = true
-
-        // Update lock indicator (should hide since timer is idle)
-        updateLockIndicator()
-
-        // Cancel notification
-        notificationManager.cancelTimerNotification()
-    }
-
-    private fun onTimerComplete() {
-        lifecycleScope.launch {
-            val settings = settingsRepository.settingsFlow.first()
-
-            // Play sound if enabled
-            if (settings.soundEnabled) {
-                ringtone?.play()
-            }
-
-            // Vibrate if enabled
-            if (settings.vibrationEnabled) {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(500)
-            }
-
-            // Complete the standalone session
-            val actualDurationMinutes = (currentDurationMs / 1000 / 60).toInt()
-            viewModel.completeStandaloneSession(actualDurationMinutes)
+    private fun confirmReset() {
+        val s = viewModel.state.value
+        if (s.focusedMs < 60_000) {
+            viewModel.timer.stop(save = false); return
         }
-
-        // Cancel notification
-        notificationManager.cancelTimerNotification()
-
-        // Reset UI and show completion message
-        sessionStarted = false
-        resetTimer()
-        Snackbar.make(binding.root, "Session saved! Great focus session!", Snackbar.LENGTH_LONG).show()
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_LearnLog_AlertDialog_Destructive)
+            .setTitle(R.string.timer_reset)
+            .setMessage(getString(R.string.timer_finish_message, Format.minutes(requireContext(), s.focusedMinutes)))
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.timer_discard) { _, _ -> viewModel.timer.stop(save = false) }
+            .show()
     }
 
-    private fun showTimerSettings() {
-        // TODO: Show settings bottom sheet with sound, vibrate, keep screen on options
-        Snackbar.make(binding.root, "Settings coming soon", Snackbar.LENGTH_SHORT).show()
-    }
-
-    private fun handleBackPress() {
-        if (timerState == TimerState.RUNNING) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Timer is running")
-                .setMessage("Are you sure you want to go back? Your timer will be paused.")
-                .setPositiveButton("Go Back") { _, _ ->
-                    pauseTimer()
-                    findNavController().navigateUp()
-                }
-                .setNegativeButton("Stay", null)
-                .show()
+    private fun setGlow(on: Boolean) {
+        val glow = binding.ringGlow
+        if (on) {
+            if (glowAnimator?.isRunning == true) return
+            glow.alpha = 0f
+            glowAnimator = ObjectAnimator.ofPropertyValuesHolder(
+                glow,
+                PropertyValuesHolder.ofFloat(View.ALPHA, 0.15f, 0.55f),
+                PropertyValuesHolder.ofFloat(View.SCALE_X, 0.94f, 1.04f),
+                PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.94f, 1.04f)
+            ).apply {
+                duration = 1800
+                repeatMode = ValueAnimator.REVERSE
+                repeatCount = ValueAnimator.INFINITE
+                interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+                start()
+            }
         } else {
-            findNavController().navigateUp()
+            glowAnimator?.cancel()
+            glowAnimator = null
+            glow.animate().alpha(0f).scaleX(1f).scaleY(1f).setDuration(300).start()
         }
     }
 
-    private fun handleAppBackgrounded() {
-        if (timerState != TimerState.RUNNING && timerState != TimerState.PAUSED) {
+    private fun applyKeepScreenOn(s: FocusTimer.State) {
+        val window = activity?.window ?: return
+        if (keepScreenOnPref && s.isActive) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun fadeVisible(view: View, visible: Boolean, animate: Boolean) {
+        view.animate().cancel()
+        if (!animate) {
+            view.visibility = if (visible) View.VISIBLE else View.INVISIBLE
+            view.alpha = 1f; view.scaleX = 1f; view.scaleY = 1f
             return
         }
-
-        if (keepRunningInBackground) {
-            // Move to service mode - keep timer running in background
-            if (timerState == TimerState.RUNNING) {
-                countDownTimer?.cancel()
-                startTimerService()
-                Snackbar.make(binding.root, "Timer running in background", Snackbar.LENGTH_SHORT).show()
-            }
+        if (visible) {
+            view.isVisible = true
+            view.alpha = 0f; view.scaleX = 0.6f; view.scaleY = 0.6f
+            view.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(Motion.EMPHASIZED).start()
         } else {
-            // Auto-pause timer
-            if (timerState == TimerState.RUNNING) {
-                pauseTimer()
-                Snackbar.make(binding.root, "Timer paused in background", Snackbar.LENGTH_SHORT).show()
-            }
+            view.animate().alpha(0f).scaleX(0.6f).scaleY(0.6f).setDuration(160)
+                .withEndAction { view.visibility = View.INVISIBLE }.start()
         }
     }
 
-    private fun handleAppForegrounded() {
-        if (useServiceMode && isBound) {
-            // Return from service mode
-            timerService?.let { service ->
-                remainingMillis = service.remainingMillis.value
-                if (service.isRunning.value) {
-                    timerState = TimerState.RUNNING
-                } else {
-                    timerState = TimerState.PAUSED
-                }
-                updateTimerDisplay()
-            }
-            stopTimerService()
-            useServiceMode = false
+    private fun newChip(text: CharSequence) =
+        (layoutInflater.inflate(R.layout.view_choice_chip, binding.presetChips, false) as Chip).apply { this.text = text }
 
-            // Resume local timer if it was running
-            if (timerState == TimerState.RUNNING) {
-                startTimer()
-            }
-        }
+    private fun snack(message: String) {
+        val root = view ?: return
+        Snackbar.make(root, message, Snackbar.LENGTH_SHORT).apply {
+            activity?.findViewById<View>(R.id.bottom_nav_container)?.takeIf { it.isVisible }?.let { anchorView = it }
+        }.show()
     }
 
-    private fun startTimerService() {
-        useServiceMode = true
-        val serviceIntent = Intent(requireContext(), TimerService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            requireContext().startForegroundService(serviceIntent)
-        } else {
-            requireContext().startService(serviceIntent)
-        }
-        requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-
-        // Start the service timer
-        lifecycleScope.launch {
-            // Wait for binding
-            kotlinx.coroutines.delay(100)
-            timerService?.startTimer(remainingMillis)
-        }
-    }
-
-    private fun stopTimerService() {
-        if (isBound) {
-            requireContext().unbindService(serviceConnection)
-            isBound = false
-        }
-        timerService?.stopTimer()
-        timerService = null
+    override fun onReselected() {
+        _binding?.scroll?.smoothScrollTo(0, 0)
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
-        countDownTimer?.cancel()
-
-        // Clear keep screen on flag
+        glowAnimator?.cancel()
         activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        // Keep notification if timer is still running
-        if (timerState != TimerState.RUNNING) {
-            notificationManager.cancelTimerNotification()
-        }
-
+        super.onDestroyView()
         _binding = null
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
-        try {
-            requireContext().unregisterReceiver(timerCompleteReceiver)
-        } catch (e: IllegalArgumentException) {
-            // Receiver not registered
-        }
-        if (isBound) {
-            requireContext().unbindService(serviceConnection)
-        }
+        lastPhase = null
+        renderedPresets = emptyList()
     }
 }
-

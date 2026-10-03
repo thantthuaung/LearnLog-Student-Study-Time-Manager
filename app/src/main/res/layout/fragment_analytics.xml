@@ -1,296 +1,292 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/screen_bg">
+    android:background="?android:attr/colorBackground">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary_blue"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
-        app:layout_constraintTop_toTopOf="parent"
-        app:navigationIcon="@drawable/ic_arrow_back"
-        app:title="@string/page_analytics_title"
-        app:titleTextColor="@android:color/white" />
+        android:background="?android:attr/colorBackground"
+        app:liftOnScroll="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationContentDescription="@string/navigate_up"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:title="@string/page_analytics_title"
+            app:titleTextAppearance="?attr/textAppearanceTitleLarge" />
+    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
-        android:id="@+id/contentLayout"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingBottom="80dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        android:paddingBottom="32dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="vertical">
 
-            <!-- Filter Chips -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/range_chips"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                android:layout_marginStart="@dimen/page_gutter"
+                android:layout_marginTop="4dp"
+                app:checkedChip="@id/chip_last_7_days"
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
-                <com.google.android.material.chip.ChipGroup
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_last_7_days"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="12dp"
-                    app:chipSpacingHorizontal="8dp"
-                    app:singleSelection="true">
+                    android:checkable="true"
+                    android:text="@string/last_7_days" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipLast7Days"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
-                        android:text="@string/last_7_days" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_last_30_days"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="@string/last_30_days" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipLast30Days"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/last_30_days" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_last_90_days"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="@string/last_90_days" />
+            </com.google.android.material.chip.ChipGroup>
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipLast90Days"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/last_90_days" />
-                </com.google.android.material.chip.ChipGroup>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Summary Cards -->
             <LinearLayout
+                android:id="@+id/content_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="3">
+                android:orientation="vertical">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
+                <!-- Stat tiles -->
+                <LinearLayout
+                    android:id="@+id/tiles"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="2dp">
+                    android:layout_marginStart="@dimen/page_gutter"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="@dimen/page_gutter"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.LearnLog.Card.Static"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="14dp">
+
+                            <TextView
+                                android:id="@+id/tv_total_hours"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                tools:text="12h 30m" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/total_hours"
+                                android:textAppearance="?attr/textAppearanceBodySmall"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.LearnLog.Card.Static"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="14dp">
+
+                            <TextView
+                                android:id="@+id/tv_total_sessions"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                tools:text="24" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/total_sessions"
+                                android:textAppearance="?attr/textAppearanceBodySmall"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.LearnLog.Card.Static"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="14dp">
+
+                            <TextView
+                                android:id="@+id/tv_avg_session"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                tools:text="31m" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/avg_session_length"
+                                android:textAppearance="?attr/textAppearanceBodySmall"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+
+                <!-- Focus per day -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/daily_card"
+                    style="@style/Widget.LearnLog.Card.Static"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/page_gutter"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="@dimen/page_gutter">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="18dp">
 
                         <TextView
-                            android:id="@+id/tvTotalHours"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0h"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            style="@style/LearnLog.SectionLabel"
+                            android:text="@string/daily_minutes" />
 
                         <TextView
+                            android:id="@+id/tv_best_day"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/total_hours"
-                            android:textSize="12sp" />
+                            android:layout_marginTop="2dp"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            tools:text="Best day: Tue 7 Oct · 2h 10m" />
+
+                        <com.github.mikephil.charting.charts.BarChart
+                            android:id="@+id/weekly_chart"
+                            android:layout_width="match_parent"
+                            android:layout_height="200dp"
+                            android:layout_marginTop="12dp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- By subject -->
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
+                    android:id="@+id/subject_card"
+                    style="@style/Widget.LearnLog.Card.Static"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="2dp">
+                    android:layout_marginStart="@dimen/page_gutter"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="@dimen/page_gutter">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="18dp">
 
                         <TextView
-                            android:id="@+id/tvTotalSessions"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            style="@style/LearnLog.SectionLabel"
+                            android:text="@string/subject_breakdown" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:id="@+id/subject_rows"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/total_sessions"
-                            android:textSize="12sp" />
+                            android:layout_marginTop="8dp"
+                            android:orientation="vertical" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Top tasks -->
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
+                    android:id="@+id/top_tasks_card"
+                    style="@style/Widget.LearnLog.Card.Static"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="2dp">
+                    android:layout_marginStart="@dimen/page_gutter"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="@dimen/page_gutter">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:paddingTop="18dp"
+                        android:paddingBottom="10dp">
 
                         <TextView
-                            android:id="@+id/tvAvgSession"
-                            android:layout_width="wrap_content"
+                            style="@style/LearnLog.SectionLabel"
+                            android:layout_marginStart="18dp"
+                            android:text="@string/top_5_tasks" />
+
+                        <LinearLayout
+                            android:id="@+id/top_tasks_container"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="0 min"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:layout_marginTop="6dp"
+                            android:orientation="vertical" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:id="@+id/empty_top_tasks"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/avg_session_length"
-                            android:textSize="12sp" />
+                            android:layout_marginStart="18dp"
+                            android:layout_marginEnd="18dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="@string/empty_top_tasks"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:visibility="gone" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <!-- Weekly Chart -->
-            <com.google.android.material.card.MaterialCardView
+            <include
+                android:id="@+id/empty_state"
+                layout="@layout/view_empty_state"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/weekly_summary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <com.github.mikephil.charting.charts.BarChart
-                        android:id="@+id/weeklyChart"
-                        android:layout_width="match_parent"
-                        android:layout_height="200dp"
-                        android:layout_marginTop="8dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Subject Breakdown -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/subject_breakdown"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <com.github.mikephil.charting.charts.BarChart
-                        android:id="@+id/subjectChart"
-                        android:layout_width="match_parent"
-                        android:layout_height="200dp"
-                        android:layout_marginTop="8dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Top Tasks -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/top_5_tasks"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:id="@+id/topTasksContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="vertical" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
+                android:layout_marginTop="40dp"
+                android:visibility="gone" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!-- Empty State -->
-    <LinearLayout
-        android:id="@+id/emptyState"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/empty_analytics_title"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/empty_analytics_message"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

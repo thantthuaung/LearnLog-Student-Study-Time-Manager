@@ -1,113 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        app:liftOnScroll="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:menu="@menu/note_editor_menu"
+            app:navigationContentDescription="@string/navigate_up"
+            app:navigationIcon="@drawable/ic_arrow_back" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.notes.AddEditNoteFragment">
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingBottom="96dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.google.android.material.appbar.AppBarLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp">
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:navigationIcon="@drawable/ic_close"
-                app:title="@string/add_note" />
-
-        </com.google.android.material.appbar.AppBarLayout>
-
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-            <LinearLayout
+            <EditText
+                android:id="@+id/edit_text_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:background="@null"
+                android:hint="@string/note_title_hint"
+                android:importantForAutofill="no"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxLines="3"
+                android:paddingTop="8dp"
+                android:paddingBottom="4dp"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOutline" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/text_input_layout_title"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/title">
+            <TextView
+                android:id="@+id/text_meta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Edited 3 Oct · 120 words" />
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edit_text_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapWords" />
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:chipSpacingVertical="0dp">
 
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/text_input_layout_content"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="@string/content">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edit_text_content"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="top"
-                        android:inputType="textMultiLine"
-                        android:minLines="5" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Tags Section -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Tags"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:scrollbars="none">
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chipGroupTags"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:singleLine="true" />
-                </HorizontalScrollView>
-
-                <Button
-                    android:id="@+id/buttonAddTag"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_add_tag"
+                    style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="+ Add Tag"
-                    android:textColor="@color/nav_blue" />
+                    android:text="@string/note_add_tag"
+                    app:chipIcon="@drawable/ic_label"
+                    app:chipIconSize="16dp"
+                    app:chipIconTint="?attr/colorPrimary"
+                    app:chipStrokeColor="?attr/colorOutlineVariant" />
+            </com.google.android.material.chip.ChipGroup>
 
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/colorOutlineVariant" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_save_note"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:src="@drawable/ic_save"
-            app:tint="@android:color/white" />
+            <EditText
+                android:id="@+id/edit_text_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:gravity="top"
+                android:hint="@string/note_content_hint"
+                android:importantForAutofill="no"
+                android:inputType="textCapSentences|textMultiLine"
+                android:lineSpacingMultiplier="1.3"
+                android:minHeight="320dp"
+                android:paddingTop="16dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOutline" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
-</layout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_save_note"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="@string/action_save"
+        app:srcCompat="@drawable/ic_check" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

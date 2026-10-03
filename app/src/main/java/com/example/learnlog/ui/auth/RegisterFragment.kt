@@ -1,21 +1,21 @@
 package com.example.learnlog.ui.auth
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.learnlog.R
 import com.example.learnlog.databinding.FragmentRegisterBinding
-import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.example.learnlog.ui.common.Motion
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.common.api.ApiException
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -27,88 +27,75 @@ class RegisterFragment : Fragment() {
 
     private val viewModel: AuthViewModel by viewModels()
 
-    @Inject
-    lateinit var googleSignInClient: GoogleSignInClient
+    @Inject lateinit var googleSignInClient: GoogleSignInClient
 
-    private val googleSignInLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account?.let { viewModel.signInWithGoogle(it) }
-            } catch (e: ApiException) {
-                Toast.makeText(requireContext(), "Google sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
+    private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        AuthNavigation.handleGoogleResult(it, viewModel)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentRegisterBinding.inflate(inflater, container, false)
-        binding.viewModel = viewModel
-        binding.lifecycleOwner = viewLifecycleOwner
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupClickListeners()
         observeAuthState()
+        if (savedInstanceState == null) {
+            Motion.staggerIn(listOf(binding.formCard, binding.footer), startDelay = 120, step = 90)
+        }
     }
 
-    private fun setupClickListeners() {
-        binding.signUpBtn.setOnClickListener {
-            val name = binding.nameInput.text.toString().trim()
-            val email = binding.emailInput.text.toString().trim()
-            val password = binding.passwordInput.text.toString()
-            val confirmPassword = binding.confirmPasswordInput.text.toString()
-
-            viewModel.signUpWithEmail(name, email, password, confirmPassword)
+    private fun setupClickListeners() = with(binding) {
+        backBtn.setOnClickListener { findNavController().navigateUp() }
+        signInBtn.setOnClickListener { findNavController().navigateUp() }
+        signUpBtn.setOnClickListener { submit() }
+        confirmPasswordInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) { submit(); true } else false
         }
-
-        binding.googleSignInBtn.setOnClickListener {
-            signInWithGoogle()
+        nameInput.doAfterTextChanged { nameLayout.error = null }
+        emailInput.doAfterTextChanged { emailLayout.error = null }
+        passwordInput.doAfterTextChanged { passwordLayout.error = null }
+        confirmPasswordInput.doAfterTextChanged { confirmPasswordLayout.error = null }
+        googleSignInBtn.setOnClickListener {
+            googleSignInLauncher.launch(AuthNavigation.googleIntent(googleSignInClient))
         }
+    }
 
-        binding.signInBtn.setOnClickListener {
-            findNavController().navigateUp()
-        }
+    private fun submit() = with(binding) {
+        viewModel.signUpWithEmail(
+            nameInput.text.toString(),
+            emailInput.text.toString().trim(),
+            passwordInput.text.toString(),
+            confirmPasswordInput.text.toString()
+        )
     }
 
     private fun observeAuthState() {
         viewModel.authState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is AuthState.Success -> {
-                    Toast.makeText(requireContext(), "Account created successfully!", Toast.LENGTH_SHORT).show()
-                    // Navigate to main app
-                    findNavController().navigate(R.id.action_registerFragment_to_tasksFragment)
-                }
+                is AuthState.Success -> AuthNavigation.enterApp(this, state.user, R.id.action_registerFragment_to_tasksFragment)
                 is AuthState.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                    val message = if (state.messageRes != 0) getString(state.messageRes) else state.message.orEmpty()
+                    when (state.field) {
+                        AuthField.NAME -> binding.nameLayout.error = message
+                        AuthField.EMAIL -> binding.emailLayout.error = message
+                        AuthField.PASSWORD -> binding.passwordLayout.error = message
+                        AuthField.CONFIRM -> binding.confirmPasswordLayout.error = message
+                        AuthField.NONE -> Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+                    }
                     viewModel.resetAuthState()
                 }
-                else -> {
-                    // Idle or other states
-                }
+                else -> Unit
             }
         }
-
-        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            binding.signUpBtn.isEnabled = !isLoading
-            binding.googleSignInBtn.isEnabled = !isLoading
+        viewModel.loading.observe(viewLifecycleOwner) { loading ->
+            binding.progressBar.isVisible = loading
+            binding.signUpBtn.isEnabled = !loading
+            binding.signUpBtn.text = if (loading) "" else getString(R.string.auth_sign_up)
+            binding.googleSignInBtn.isEnabled = !loading
         }
-    }
-
-    private fun signInWithGoogle() {
-        val signInIntent = googleSignInClient.signInIntent
-        googleSignInLauncher.launch(signInIntent)
     }
 
     override fun onDestroyView() {
@@ -116,4 +103,3 @@ class RegisterFragment : Fragment() {
         _binding = null
     }
 }
-

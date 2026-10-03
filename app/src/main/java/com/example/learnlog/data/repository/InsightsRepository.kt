@@ -2,6 +2,7 @@ package com.example.learnlog.data.repository
 
 import com.example.learnlog.data.dao.SessionLogDao
 import com.example.learnlog.data.entity.SessionLogEntity
+import com.example.learnlog.data.model.Task
 import com.example.learnlog.data.model.TaskStatus
 import com.example.learnlog.ui.insights.DateRange
 import com.example.learnlog.ui.insights.InsightsData
@@ -11,7 +12,7 @@ import com.example.learnlog.util.DateTimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import org.threeten.bp.LocalDate
-import org.threeten.bp.ZoneId
+import org.threeten.bp.temporal.ChronoUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,165 +20,154 @@ import javax.inject.Singleton
 class InsightsRepository @Inject constructor(
     private val sessionLogDao: SessionLogDao,
     private val tasksRepository: TasksRepository,
-    private val plannerRepository: PlannerRepository,
     private val dateTimeProvider: DateTimeProvider
 ) {
 
-    fun getInsightsData(dateRange: DateRange, customStart: LocalDate? = null, customEnd: LocalDate? = null): Flow<InsightsData> {
+    fun getInsightsData(
+        dateRange: DateRange,
+        customStart: LocalDate? = null,
+        customEnd: LocalDate? = null
+    ): Flow<InsightsData> {
         val (startDate, endDate) = getDateRangeFor(dateRange, customStart, customEnd)
-
-        val startTimestamp = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val endTimestamp = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
         return combine(
             tasksRepository.getAllTasks(),
-            plannerRepository.getSessionsForWeek(startDate.atStartOfDay()),
-            sessionLogDao.getSessionsInTimeRange(startTimestamp, endTimestamp)
-        ) { tasks, plannedSessions, sessionEntities ->
+            sessionLogDao.getCompletedSessions()
+        ) { tasks, allSessions ->
+            val tasksById = tasks.associateBy { it.id }
+            val sessions = allSessions.filter { it.startTime.toLocalDate().inRange(startDate, endDate) }
 
-            val totalFocusMinutes = sessionEntities
-                .filter { it.isCompleted }
-                .sumOf { it.durationMinutes }
+            val totalFocusMinutes = sessions.sumOf { it.durationMinutes }
 
-            val timeBySubject = sessionEntities
-                .filter { it.isCompleted }
-                .groupBy { session ->
-                    session.taskId?.let { taskId ->
-                        tasks.find { it.id == taskId }?.subject
-                    } ?: session.subject ?: "General Study"
+            val timeBySubject = sessions
+                .groupBy { subjectOf(it, tasksById) }
+                .mapValues { (_, list) -> list.sumOf { it.durationMinutes } }
+                .filterValues { it > 0 }
+                .toList()
+                .sortedByDescending { it.second }
+                .let { sorted ->
+                    if (sorted.size <= MAX_SUBJECT_SLICES) sorted
+                    else sorted.take(MAX_SUBJECT_SLICES - 1) +
+                        (OTHER to sorted.drop(MAX_SUBJECT_SLICES - 1).sumOf { it.second })
                 }
-                .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
-                .filter { it.value > 0 }
 
-            val streak = calculateStreak(sessionEntities)
-
-            val filteredPlanned = plannedSessions.filter { session ->
-                val sessionDate = session.startTime.toLocalDate()
-                !sessionDate.isBefore(startDate) && !sessionDate.isAfter(endDate)
-            }
-
-            // Calculate planned time from both planner sessions AND task durations
-            val plannedFromSessions = filteredPlanned.sumOf { it.durationMinutes }
-            val tasksInRange = tasks.filter { task ->
-                task.dueDate?.let { dueDateTime ->
-                    val dueLocalDate = dueDateTime.toLocalDate()
-                    !dueLocalDate.isBefore(startDate) && !dueLocalDate.isAfter(endDate)
-                } ?: false
-            }
-            val plannedFromTasks = tasksInRange.sumOf { it.durationMinutes }
-            val totalPlanned = plannedFromSessions + plannedFromTasks
-            val totalActual = totalFocusMinutes
-
+            val tasksInRange = tasks.filter { it.dueDate?.toLocalDate()?.inRange(startDate, endDate) == true }
             val completedCount = tasksInRange.count { it.status == TaskStatus.COMPLETED }
-            val totalCount = tasksInRange.size
-            val completionRate = if (totalCount > 0) {
-                completedCount.toFloat() / totalCount.toFloat()
+            val plannedByDay = tasksInRange
+                .groupBy { it.dueDate!!.toLocalDate() }
+                .mapValues { (_, list) -> list.sumOf { it.durationMinutes } }
+            val actualByDay = sessions
+                .groupBy { it.startTime.toLocalDate() }
+                .mapValues { (_, list) -> list.sumOf { it.durationMinutes } }
+
+            val days = ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
+            val chartDates = if (days <= MAX_DENSE_DAYS) {
+                (0 until days).map { startDate.plusDays(it.toLong()) }
             } else {
-                0f
+                (plannedByDay.keys + actualByDay.keys).sorted()
             }
-
-            val plannedByDay = filteredPlanned
-                .groupBy { it.startTime.toLocalDate() }
-                .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
-
-            val actualByDay = sessionEntities
-                .filter { it.isCompleted }
-                .groupBy { it.startTime.toLocalDate() }
-                .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
-
-            val allDates = (plannedByDay.keys + actualByDay.keys).toSet()
-            val plannedVsActualByDay = allDates.associate { date ->
-                date to PlannedVsActual(
-                    plannedMinutes = plannedByDay[date] ?: 0,
-                    actualMinutes = actualByDay[date] ?: 0
-                )
+            val plannedVsActualByDay = chartDates.associateWith { date ->
+                PlannedVsActual(plannedByDay[date] ?: 0, actualByDay[date] ?: 0)
             }.toSortedMap()
 
-            val topTasks = sessionEntities
-                .filter { it.taskId != null && it.isCompleted }
-                .groupBy { it.taskId }
-                .mapNotNull { (taskId, taskSessions) ->
-                    val task = tasks.find { it.id == taskId }
-                    task?.let {
-                        TopTask(
-                            taskId = it.id,
-                            title = it.title,
-                            subject = it.subject ?: "",
-                            totalMinutes = taskSessions.sumOf { s -> s.durationMinutes }
-                        )
+            val topTasks = sessions
+                .filter { it.taskId != null }
+                .groupBy { it.taskId!! }
+                .mapNotNull { (taskId, list) ->
+                    tasksById[taskId]?.let { task ->
+                        TopTask(task.id, task.title, task.subject, list.sumOf { it.durationMinutes })
                     }
                 }
                 .sortedByDescending { it.totalMinutes }
                 .take(5)
 
-            val completedSessions = sessionEntities.filter { it.isCompleted }
-            val totalInterruptions = 0
-            val avgSessionMinutes = if (completedSessions.isNotEmpty())
-                completedSessions.sumOf { it.durationMinutes } / completedSessions.size
-            else 0
+            val (current, best) = calculateStreaks(allSessions)
 
             InsightsData(
                 totalFocusMinutes = totalFocusMinutes,
+                sessionCount = sessions.size,
+                avgSessionMinutes = if (sessions.isNotEmpty()) totalFocusMinutes / sessions.size else 0,
                 timeBySubject = timeBySubject,
-                currentStreak = streak,
-                plannedMinutes = totalPlanned,
-                actualMinutes = totalActual,
-                completionRate = completionRate,
-                totalTasks = totalCount,
+                currentStreak = current,
+                bestStreak = best,
+                plannedMinutes = plannedByDay.values.sum(),
+                actualMinutes = totalFocusMinutes,
+                completionRate = if (tasksInRange.isNotEmpty()) completedCount.toFloat() / tasksInRange.size else 0f,
+                totalTasks = tasksInRange.size,
                 completedTasks = completedCount,
                 plannedVsActualByDay = plannedVsActualByDay,
                 topTasks = topTasks,
-                totalInterruptions = totalInterruptions,
-                avgSessionMinutes = avgSessionMinutes,
-                dateRange = dateRange
+                dateRange = dateRange,
+                rangeStart = startDate,
+                rangeEnd = endDate,
+                isLoaded = true
             )
         }
     }
 
-    private fun getDateRangeFor(dateRange: DateRange, customStart: LocalDate?, customEnd: LocalDate?): Pair<LocalDate, LocalDate> {
-        val now = dateTimeProvider.now()
+    private fun subjectOf(session: SessionLogEntity, tasksById: Map<Long, Task>): String =
+        session.taskId?.let { tasksById[it]?.subject }?.takeIf { it.isNotBlank() }
+            ?: session.subject?.takeIf { it.isNotBlank() && it != LEGACY_STANDALONE_LABEL }
+            ?: GENERAL
+
+    private fun LocalDate.inRange(start: LocalDate, end: LocalDate) = !isBefore(start) && !isAfter(end)
+
+    private fun getDateRangeFor(
+        dateRange: DateRange,
+        customStart: LocalDate?,
+        customEnd: LocalDate?
+    ): Pair<LocalDate, LocalDate> {
+        val today = dateTimeProvider.now().toLocalDate()
         return when (dateRange) {
-            DateRange.TODAY -> {
-                val today = now.toLocalDate()
-                today to today
-            }
+            DateRange.TODAY -> today to today
             DateRange.WEEK -> {
-                val today = now.toLocalDate()
                 val startOfWeek = today.minusDays(today.dayOfWeek.value.toLong() - 1)
                 startOfWeek to startOfWeek.plusDays(6)
             }
-            DateRange.MONTH -> {
-                val today = now.toLocalDate()
-                val startOfMonth = today.withDayOfMonth(1)
-                val endOfMonth = today.withDayOfMonth(today.lengthOfMonth())
-                startOfMonth to endOfMonth
-            }
+            DateRange.MONTH -> today.withDayOfMonth(1) to today.withDayOfMonth(today.lengthOfMonth())
             DateRange.CUSTOM -> {
-                (customStart ?: now.toLocalDate()) to (customEnd ?: now.toLocalDate())
+                val start = customStart ?: today
+                val end = customEnd ?: today
+                if (end.isBefore(start)) end to start else start to end
             }
         }
     }
 
-    private fun calculateStreak(sessions: List<SessionLogEntity>): Int {
-        if (sessions.isEmpty()) return 0
+    /**
+     * Streaks are computed over all history, independent of the selected range. The current
+     * streak stays alive through today until midnight if yesterday had a session.
+     */
+    private fun calculateStreaks(sessions: List<SessionLogEntity>): Pair<Int, Int> {
+        val studyDays = sessions
+            .filter { it.durationMinutes > 0 }
+            .map { it.startTime.toLocalDate() }
+            .toSortedSet()
+        if (studyDays.isEmpty()) return 0 to 0
 
         val today = dateTimeProvider.now().toLocalDate()
-
-        val sessionsByDate = sessions
-            .filter { it.isCompleted }
-            .groupBy { it.startTime.toLocalDate() }
-            .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
-            .filterValues { it > 0 }
-
-        var streak = 0
-        var currentDate = today
-
-        while (sessionsByDate.containsKey(currentDate)) {
-            streak++
-            currentDate = currentDate.minusDays(1)
+        var cursor = if (today in studyDays) today else today.minusDays(1)
+        var current = 0
+        while (cursor in studyDays) {
+            current++
+            cursor = cursor.minusDays(1)
         }
 
-        return streak
+        var best = 0
+        var run = 0
+        var previous: LocalDate? = null
+        for (day in studyDays) {
+            run = if (previous != null && previous.plusDays(1) == day) run + 1 else 1
+            best = maxOf(best, run)
+            previous = day
+        }
+        return current to best
+    }
+
+    companion object {
+        const val GENERAL = "General"
+        const val OTHER = "Other"
+        private const val LEGACY_STANDALONE_LABEL = "Focus Session"
+        private const val MAX_SUBJECT_SLICES = 6
+        private const val MAX_DENSE_DAYS = 31
     }
 }
-

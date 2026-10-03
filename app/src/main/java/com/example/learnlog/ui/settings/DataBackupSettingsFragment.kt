@@ -1,6 +1,5 @@
 package com.example.learnlog.ui.settings
 
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,210 +8,151 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.learnlog.R
 import com.example.learnlog.data.export.DataExporter
 import com.example.learnlog.data.export.DataImporter
+import com.example.learnlog.data.export.ExportResult
 import com.example.learnlog.data.export.ImportMode
 import com.example.learnlog.data.export.ImportResult
-import com.example.learnlog.databinding.SettingsDataBackupBinding
+import com.example.learnlog.databinding.FragmentSettingsPageBinding
+import com.example.learnlog.databinding.SettingsDataOverviewBinding
+import com.example.learnlog.ui.common.Motion
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class DataBackupSettingsFragment : Fragment() {
-    private var _binding: SettingsDataBackupBinding? = null
+
+    private var _binding: FragmentSettingsPageBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: SettingsViewModel by viewModels({ requireParentFragment() })
 
-    private val viewModel: DataBackupViewModel by viewModels()
+    @Inject lateinit var dataExporter: DataExporter
+    @Inject lateinit var dataImporter: DataImporter
 
-    @Inject
-    lateinit var dataExporter: DataExporter
+    private var pendingImportMode = ImportMode.MERGE
+    private var busy = false
 
-    @Inject
-    lateinit var dataImporter: DataImporter
-
-    private var pendingImportMode: ImportMode = ImportMode.MERGE
-
-    private val createJsonDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
-        uri?.let { exportToJson(it) }
+    private val createJson = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri?.let { export { dataExporter.exportToJson(it) } }
+    }
+    private val createZip = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        uri?.let { export { dataExporter.exportToCsvZip(it) } }
+    }
+    private val pickBackup = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { import(it, pendingImportMode) }
     }
 
-    private val createCsvDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri: Uri? ->
-        uri?.let { exportToCsv(it) }
-    }
-
-    private val pickDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        uri?.let { importData(it, pendingImportMode) }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = SettingsDataBackupBinding.inflate(inflater, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentSettingsPageBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupViews()
-        observeData()
-    }
+        val builder = SettingsBuilder(binding.pageContainer)
 
-    private fun setupViews() {
-        binding.btnExportJson.setOnClickListener {
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            createJsonDocument.launch("learnlog_backup_$timestamp.json")
+        val overview = SettingsDataOverviewBinding.inflate(layoutInflater, binding.pageContainer, false)
+        builder.custom(overview.root)
+
+        builder.group(getString(R.string.data_backup)) {
+            row(R.drawable.ic_download, getString(R.string.data_export_json), getString(R.string.data_export_json_sub)) {
+                if (!busy) createJson.launch("learnlog_backup_${stamp()}.json")
+            }
+            row(R.drawable.ic_layers, getString(R.string.data_export_csv), getString(R.string.data_export_csv_sub)) {
+                if (!busy) createZip.launch("learnlog_spreadsheets_${stamp()}.zip")
+            }
         }
-
-        binding.btnExportCsv.setOnClickListener {
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            createCsvDocument.launch("learnlog_backup_$timestamp.csv")
-        }
-
-        binding.btnImportMerge.setOnClickListener {
-            pendingImportMode = ImportMode.MERGE
-            pickDocument.launch(arrayOf("application/json", "text/csv"))
-        }
-
-        binding.btnImportReplace.setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Replace All Data?")
-                .setMessage("This will delete all existing data and replace it with the imported data. This cannot be undone.")
-                .setPositiveButton("Replace All") { _, _ ->
-                    pendingImportMode = ImportMode.REPLACE
-                    pickDocument.launch(arrayOf("application/json", "text/csv"))
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-    }
-
-    private fun exportToJson(uri: Uri) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                binding.btnExportJson.isEnabled = false
-                binding.btnExportCsv.isEnabled = false
-
-                withContext(Dispatchers.IO) {
-                    dataExporter.exportToJson(uri)
-                }
-
-                Snackbar.make(binding.root, "Data exported successfully", Snackbar.LENGTH_LONG)
-                    .setAction("Open") {
-                        openFile(uri)
+        builder.group(getString(R.string.data_restore)) {
+            row(R.drawable.ic_upload, getString(R.string.data_import_merge), getString(R.string.data_import_merge_sub)) {
+                pendingImportMode = ImportMode.MERGE
+                if (!busy) pickBackup.launch(MIME_TYPES)
+            }
+            row(R.drawable.ic_restart, getString(R.string.data_import_replace), getString(R.string.data_import_replace_sub)) {
+                MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_LearnLog_AlertDialog_Destructive)
+                    .setTitle(R.string.data_replace_title)
+                    .setMessage(R.string.data_replace_message)
+                    .setNegativeButton(R.string.action_cancel, null)
+                    .setPositiveButton(R.string.data_replace_confirm) { _, _ ->
+                        pendingImportMode = ImportMode.REPLACE
+                        pickBackup.launch(MIME_TYPES)
                     }
                     .show()
-            } catch (e: Exception) {
-                Snackbar.make(binding.root, "Export failed: ${e.message}", Snackbar.LENGTH_LONG).show()
-            } finally {
-                binding.btnExportJson.isEnabled = true
-                binding.btnExportCsv.isEnabled = true
             }
         }
-    }
+        builder.group(getString(R.string.data_danger)) {
+            row(R.drawable.ic_delete_forever, getString(R.string.data_reset), getString(R.string.data_reset_sub), destructive = true) {
+                confirmReset()
+            }
+        }
 
-    private fun exportToCsv(uri: Uri) {
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                binding.btnExportJson.isEnabled = false
-                binding.btnExportCsv.isEnabled = false
-
-                withContext(Dispatchers.IO) {
-                    dataExporter.exportToCsv(uri)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.counts.collect { c ->
+                    Motion.countTo(overview.tvTaskCount, c.tasks) { it.toString() }
+                    Motion.countTo(overview.tvSessionCount, c.sessions) { it.toString() }
+                    Motion.countTo(overview.tvNoteCount, c.notes) { it.toString() }
                 }
-
-                Snackbar.make(binding.root, "Data exported successfully", Snackbar.LENGTH_LONG)
-                    .setAction("Open") {
-                        openFile(uri)
-                    }
-                    .show()
-            } catch (e: Exception) {
-                Snackbar.make(binding.root, "Export failed: ${e.message}", Snackbar.LENGTH_LONG).show()
-            } finally {
-                binding.btnExportJson.isEnabled = true
-                binding.btnExportCsv.isEnabled = true
             }
         }
     }
 
-    private fun importData(uri: Uri, mode: ImportMode) {
+    private fun export(block: suspend () -> ExportResult) {
+        busy = true
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                binding.btnImportMerge.isEnabled = false
-                binding.btnImportReplace.isEnabled = false
+            when (val result = block()) {
+                is ExportResult.Success -> snack(getString(R.string.data_exported, result.taskCount, result.sessionCount, result.noteCount))
+                is ExportResult.Error -> snack(getString(R.string.data_export_failed, result.message))
+            }
+            busy = false
+        }
+    }
 
-                val result = withContext(Dispatchers.IO) {
-                    dataImporter.importData(uri, mode)
+    private fun import(uri: Uri, mode: ImportMode) {
+        busy = true
+        viewLifecycleOwner.lifecycleScope.launch {
+            when (val result = dataImporter.importData(uri, mode)) {
+                is ImportResult.Success -> snack(getString(R.string.data_imported, result.taskCount, result.sessionCount, result.noteCount))
+                is ImportResult.Error -> snack(getString(R.string.data_import_failed, result.message))
+            }
+            busy = false
+        }
+    }
+
+    private fun confirmReset() {
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_LearnLog_AlertDialog_Destructive)
+            .setIcon(R.drawable.ic_delete_forever)
+            .setTitle(R.string.data_reset_title)
+            .setMessage(R.string.data_reset_message)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.data_reset_confirm) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.resetAllData()
+                    snack(getString(R.string.data_reset_done))
                 }
-
-                when (result) {
-                    is ImportResult.Success -> {
-                        Snackbar.make(
-                            binding.root,
-                            "Imported ${result.taskCount} tasks, ${result.sessionCount} sessions",
-                            Snackbar.LENGTH_LONG
-                        ).show()
-
-                        // Refresh counts
-                        viewModel.refreshCounts()
-                    }
-                    is ImportResult.Error -> {
-                        Snackbar.make(binding.root, "Import failed: ${result.message}", Snackbar.LENGTH_LONG).show()
-                    }
-                }
-            } catch (e: Exception) {
-                Snackbar.make(binding.root, "Import failed: ${e.message}", Snackbar.LENGTH_LONG).show()
-            } finally {
-                binding.btnImportMerge.isEnabled = true
-                binding.btnImportReplace.isEnabled = true
             }
-        }
+            .show()
     }
 
-    private fun openFile(uri: Uri) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, requireContext().contentResolver.getType(uri))
-                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            }
-            startActivity(Intent.createChooser(intent, "Open with"))
-        } catch (_: Exception) {
-            // No app to open file
-        }
-    }
+    private fun stamp() = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
 
-    private fun observeData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.taskCount.collect { count ->
-                binding.tvTaskCount.text = count.toString()
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.sessionCount.collect { count ->
-                binding.tvSessionCount.text = count.toString()
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.plannerCount.collect { count ->
-                binding.tvPlannerCount.text = count.toString()
-            }
-        }
-    }
+    private fun snack(message: String) = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-}
 
+    companion object {
+        private val MIME_TYPES = arrayOf("application/json", "application/zip", "application/octet-stream", "text/plain")
+    }
+}

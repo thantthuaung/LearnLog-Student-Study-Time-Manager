@@ -2,71 +2,40 @@ package com.example.learnlog.ui.insights
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.learnlog.databinding.ItemTopTaskBinding
+import com.example.learnlog.ui.common.Format
 
+/** Ranked list of the tasks with the most focus time; bars are relative to the leader. */
 class TopTasksAdapter(
     private val onTaskClick: (TopTask) -> Unit
-) : ListAdapter<TopTask, TopTasksAdapter.ViewHolder>(TopTaskDiffCallback()) {
+) : ListAdapter<TopTask, TopTasksAdapter.ViewHolder>(Diff) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemTopTaskBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return ViewHolder(binding, onTaskClick)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        ViewHolder(ItemTopTaskBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val max = currentList.maxOfOrNull { it.totalMinutes } ?: 0
+        holder.bind(getItem(position), position + 1, max)
     }
 
-    class ViewHolder(
-        private val binding: ItemTopTaskBinding,
-        private val onTaskClick: (TopTask) -> Unit
-    ) : RecyclerView.ViewHolder(binding.root) {
-
-        fun bind(topTask: TopTask) {
-            binding.taskTitle.text = topTask.title
-            binding.subjectChip.text = topTask.subject ?: "General"
-
-            val hours = topTask.totalMinutes / 60
-            val mins = topTask.totalMinutes % 60
-            binding.timeSpent.text = if (hours > 0) {
-                "${hours}h ${mins}m"
-            } else {
-                "${mins}m"
-            }
-
-            // Progress is relative to the max in the list
-            // The adapter will be told the max via another method
-            binding.timeProgress.progress = 0
-
-            binding.root.setOnClickListener {
-                onTaskClick(topTask)
-            }
-        }
-
-        fun bindWithMax(topTask: TopTask, maxMinutes: Int) {
-            bind(topTask)
-            val progress = if (maxMinutes > 0) {
-                ((topTask.totalMinutes.toFloat() / maxMinutes) * 100).toInt()
-            } else 0
-            binding.timeProgress.progress = progress
+    inner class ViewHolder(private val b: ItemTopTaskBinding) : RecyclerView.ViewHolder(b.root) {
+        fun bind(task: TopTask, rank: Int, maxMinutes: Int) {
+            b.rank.text = rank.toString()
+            b.taskTitle.text = task.title
+            b.subjectChip.isVisible = !task.subject.isNullOrBlank()
+            b.subjectChip.text = task.subject
+            b.timeSpent.text = Format.compact(task.totalMinutes)
+            b.timeProgress.setProgressCompat(if (maxMinutes > 0) task.totalMinutes * 100 / maxMinutes else 0, true)
+            b.root.setOnClickListener { onTaskClick(task) }
         }
     }
 
-    private class TopTaskDiffCallback : DiffUtil.ItemCallback<TopTask>() {
-        override fun areItemsTheSame(oldItem: TopTask, newItem: TopTask): Boolean {
-            return oldItem.taskId == newItem.taskId
-        }
-
-        override fun areContentsTheSame(oldItem: TopTask, newItem: TopTask): Boolean {
-            return oldItem == newItem
-        }
+    private object Diff : DiffUtil.ItemCallback<TopTask>() {
+        override fun areItemsTheSame(oldItem: TopTask, newItem: TopTask) = oldItem.taskId == newItem.taskId
+        override fun areContentsTheSame(oldItem: TopTask, newItem: TopTask) = oldItem == newItem
     }
 }
-

@@ -1,111 +1,280 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- Premium Component Styles - LearnLog 2.0                     -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
 
-    <!-- Header Capsule - Blue pill with white text -->
-    <style name="Widget.LearnLog.Header.Capsule" parent="android:Widget.TextView">
-        <item name="android:background">@drawable/rounded_capsule_header</item>
-        <item name="android:paddingLeft">@dimen/capsule_padding_horizontal</item>
-        <item name="android:paddingRight">@dimen/capsule_padding_horizontal</item>
-        <item name="android:paddingTop">@dimen/capsule_padding_vertical</item>
-        <item name="android:paddingBottom">@dimen/capsule_padding_vertical</item>
-        <item name="android:textAppearance">@style/TextAppearance.LearnLog.TitleMedium</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:gravity">center</item>
-        <item name="android:letterSpacing">0.02</item>
+    <!-- ═════════════ Cards ═════════════ -->
+    <!-- Default card: flat surface + hairline outline, large radius -->
+    <style name="Widget.LearnLog.Card" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardBackgroundColor">@color/ll_surface</item>
+        <item name="strokeColor">@color/ll_outline_variant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.LearnLog.Large</item>
+        <item name="android:stateListAnimator">@animator/press_scale</item>
     </style>
-
-    <!-- Search Field - Full-width pill with subtle shadow -->
-    <style name="Widget.LearnLog.SearchField" parent="Widget.Material3.TextInputLayout.OutlinedBox">
-        <item name="boxBackgroundColor">@color/colorSurfaceContainer</item>
-        <item name="boxCornerRadiusTopStart">@dimen/radius_lg</item>
-        <item name="boxCornerRadiusTopEnd">@dimen/radius_lg</item>
-        <item name="boxCornerRadiusBottomStart">@dimen/radius_lg</item>
-        <item name="boxCornerRadiusBottomEnd">@dimen/radius_lg</item>
-        <item name="boxStrokeWidth">0dp</item>
-        <item name="boxStrokeWidthFocused">0dp</item>
-        <item name="android:elevation">@dimen/elevation_subtle</item>
-        <item name="hintTextColor">@color/text_hint</item>
+    <!-- Tonal card for secondary info blocks -->
+    <style name="Widget.LearnLog.Card.Tonal">
+        <item name="cardBackgroundColor">@color/ll_surface_container</item>
+        <item name="strokeWidth">0dp</item>
     </style>
-
-    <!-- Primary Button - Large pill with primary color -->
-    <style name="Widget.LearnLog.Button.Primary" parent="Widget.Material3.Button">
-        <item name="android:backgroundTint">@color/colorPrimary</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="cornerRadius">@dimen/radius_lg</item>
-        <item name="android:minHeight">@dimen/button_height</item>
-        <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
-        <item name="elevation">0dp</item>
+    <!-- Static card (no press animation) for containers that hold controls -->
+    <style name="Widget.LearnLog.Card.Static">
         <item name="android:stateListAnimator">@null</item>
     </style>
 
-    <!-- Outline Button - Ghost style with primary border -->
-    <style name="Widget.LearnLog.Button.Outline" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="strokeColor">@color/colorPrimary</item>
-        <item name="android:textColor">@color/colorPrimary</item>
-        <item name="cornerRadius">@dimen/radius_lg</item>
-        <item name="android:minHeight">@dimen/button_height</item>
+    <!-- ═════════════ Buttons ═════════════ -->
+    <style name="Widget.LearnLog.Button" parent="Widget.Material3.Button">
+        <item name="android:minHeight">54dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.LearnLog.Medium</item>
         <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
-        <item name="strokeWidth">1dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">8dp</item>
+        <item name="android:stateListAnimator">@animator/press_scale</item>
     </style>
-
-    <!-- Text Button - No background, primary text -->
+    <style name="Widget.LearnLog.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:minHeight">54dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.LearnLog.Medium</item>
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
+        <item name="android:textSize">15sp</item>
+        <item name="backgroundTint">@color/ll_primary_container</item>
+        <item name="android:textColor">@color/ll_on_primary_container</item>
+        <item name="iconTint">@color/ll_on_primary_container</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">8dp</item>
+        <item name="android:stateListAnimator">@animator/press_scale</item>
+    </style>
+    <style name="Widget.LearnLog.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">54dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.LearnLog.Medium</item>
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="iconTint">?attr/colorOnSurface</item>
+        <item name="strokeColor">@color/ll_outline</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">10dp</item>
+        <item name="android:stateListAnimator">@animator/press_scale</item>
+    </style>
     <style name="Widget.LearnLog.Button.Text" parent="Widget.Material3.Button.TextButton">
-        <item name="android:textColor">@color/colorPrimary</item>
-        <item name="android:minHeight">@dimen/button_height</item>
         <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
-        <item name="rippleColor">@color/ripple_white</item>
+    </style>
+    <style name="Widget.LearnLog.Button.Text.Dialog" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
+    </style>
+    <style name="Widget.LearnLog.Button.Text.Dialog.Destructive">
+        <item name="android:textColor">@color/ll_error</item>
+    </style>
+    <!-- Round icon button (e.g. top bar actions) -->
+    <style name="Widget.LearnLog.IconButton" parent="Widget.Material3.Button.IconButton">
+        <item name="iconTint">?attr/colorOnSurface</item>
+        <item name="iconSize">22dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+    <style name="Widget.LearnLog.IconButton.Tonal" parent="Widget.Material3.Button.IconButton.Filled.Tonal">
+        <item name="iconTint">?attr/colorOnSurface</item>
+        <item name="backgroundTint">@color/ll_surface_container</item>
+        <item name="iconSize">22dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
     </style>
 
-    <!-- Floating Bottom Nav - Pill shape -->
-    <style name="Widget.LearnLog.BottomNav.Container">
-        <item name="android:layout_marginStart">@dimen/bottom_nav_inset_horizontal</item>
-        <item name="android:layout_marginEnd">@dimen/bottom_nav_inset_horizontal</item>
-        <item name="android:layout_marginBottom">@dimen/bottom_nav_inset_bottom</item>
-        <item name="android:elevation">@dimen/elevation_nav</item>
+    <!-- ═════════════ Chips ═════════════ -->
+    <style name="Widget.LearnLog.Chip.Filter" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_bg</item>
+        <item name="android:textColor">@color/chip_text</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="chipMinHeight">38dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.LearnLog.Pill</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipIconTint">@color/chip_text</item>
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
+        <item name="chipStartPadding">6dp</item>
+        <item name="chipEndPadding">6dp</item>
+        <item name="ensureMinTouchTargetSize">true</item>
+    </style>
+    <style name="Widget.LearnLog.Chip.Choice" parent="Widget.LearnLog.Chip.Filter" />
+    <!-- Tiny info pill used inside cards (subject, due date, duration) -->
+    <style name="Widget.LearnLog.Pill" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:drawablePadding">5dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- Circle Avatar -->
-    <style name="Widget.LearnLog.Avatar.Circle">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">50%</item>
+    <!-- ═════════════ Inputs ═════════════ -->
+    <style name="Widget.LearnLog.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeColor">@color/input_stroke</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxBackgroundColor">@color/ll_surface</item>
+        <item name="startIconTint">?attr/colorOnSurfaceVariant</item>
+        <item name="endIconTint">?attr/colorOnSurfaceVariant</item>
+        <item name="hintTextAppearance">@style/TextAppearance.LearnLog.LabelMedium</item>
+        <item name="android:textColorHint">?attr/colorOnSurfaceVariant</item>
+    </style>
+    <style name="Widget.LearnLog.TextInput.Dropdown" parent="Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeColor">@color/input_stroke</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxBackgroundColor">@color/ll_surface</item>
+        <item name="hintTextAppearance">@style/TextAppearance.LearnLog.LabelMedium</item>
+    </style>
+    <!-- Search bar: filled pill, no outline -->
+    <style name="Widget.LearnLog.TextInput.Search" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">28dp</item>
+        <item name="boxCornerRadiusTopEnd">28dp</item>
+        <item name="boxCornerRadiusBottomStart">28dp</item>
+        <item name="boxCornerRadiusBottomEnd">28dp</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">0dp</item>
+        <item name="boxBackgroundColor">@color/ll_surface_container</item>
+        <item name="startIconDrawable">@drawable/ic_search</item>
+        <item name="startIconTint">?attr/colorOnSurfaceVariant</item>
+        <item name="endIconMode">clear_text</item>
+        <item name="hintEnabled">false</item>
     </style>
 
-    <!-- Drawer Item Style -->
-    <style name="Widget.LearnLog.Drawer.Item">
-        <item name="android:minHeight">@dimen/drawer_item_height</item>
-        <item name="android:paddingStart">@dimen/page_gutter</item>
-        <item name="android:paddingEnd">@dimen/page_gutter</item>
+    <!-- ═════════════ Navigation ═════════════ -->
+    <style name="Widget.LearnLog.BottomNav" parent="Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="itemIconTint">@color/nav_item</item>
+        <item name="itemTextColor">@color/nav_item</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.LearnLog.BottomNav.Indicator</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.LearnLog.LabelMedium</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.LearnLog.LabelMedium</item>
+        <item name="itemIconSize">22dp</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemPaddingTop">10dp</item>
+        <item name="itemPaddingBottom">10dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+    <style name="Widget.LearnLog.BottomNav.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/ll_primary_container</item>
+        <item name="android:width">56dp</item>
+        <item name="android:height">32dp</item>
+    </style>
+    <style name="Widget.LearnLog.NavigationView" parent="Widget.Material3.NavigationView">
+        <item name="itemShapeFillColor">@color/drawer_item_bg</item>
+        <item name="itemIconTint">@color/drawer_item_fg</item>
+        <item name="itemTextColor">@color/drawer_item_fg</item>
+        <item name="itemTextAppearance">@style/TextAppearance.LearnLog.TitleSmall</item>
+        <item name="itemShapeInsetStart">12dp</item>
+        <item name="itemShapeInsetEnd">12dp</item>
+        <item name="itemHorizontalPadding">20dp</item>
+        <item name="itemIconPadding">16dp</item>
+        <item name="itemVerticalPadding">14dp</item>
+        <item name="drawerLayoutCornerSize">28dp</item>
+        <item name="backgroundTint">@color/ll_surface</item>
+    </style>
+    <style name="Widget.LearnLog.PopupMenu" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup</item>
+    </style>
+
+    <!-- ═════════════ FAB ═════════════ -->
+    <style name="Widget.LearnLog.Fab" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">@color/ll_primary</item>
+        <item name="tint">@color/ll_on_primary</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.LearnLog.Large</item>
+    </style>
+    <style name="Widget.LearnLog.ExtendedFab" parent="Widget.Material3.ExtendedFloatingActionButton.Icon.Primary">
+        <item name="backgroundTint">@color/ll_primary</item>
+        <item name="android:textColor">@color/ll_on_primary</item>
+        <item name="iconTint">@color/ll_on_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.LabelLarge</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.LearnLog.Large</item>
+        <item name="android:minHeight">58dp</item>
+    </style>
+
+    <!-- ═════════════ Toggles & progress ═════════════ -->
+    <style name="Widget.LearnLog.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch" />
+    <style name="Widget.LearnLog.CheckBox" parent="Widget.Material3.CompoundButton.CheckBox" />
+    <!-- Round "complete task" checkbox -->
+    <style name="Widget.LearnLog.CheckCircle" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="android:button">@drawable/check_circle_selector</item>
+        <item name="buttonTint">@null</item>
+        <item name="android:minWidth">40dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+    </style>
+    <style name="Widget.LearnLog.CircularProgress" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="trackColor">@color/ll_surface_container</item>
+        <item name="trackCornerRadius">8dp</item>
+    </style>
+    <style name="Widget.LearnLog.LinearProgress" parent="Widget.Material3.LinearProgressIndicator">
+        <item name="trackColor">@color/ll_surface_container</item>
+        <item name="trackCornerRadius">4dp</item>
+        <item name="trackThickness">6dp</item>
+    </style>
+
+    <!-- ═════════════ Snackbar ═════════════ -->
+    <style name="Widget.LearnLog.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="shapeAppearance">@style/ShapeAppearance.LearnLog.Medium</item>
+        <item name="android:layout_margin">12dp</item>
+    </style>
+    <style name="Widget.LearnLog.Snackbar.Text" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.BodyMedium</item>
+    </style>
+
+    <!-- ═════════════ Screen chrome ═════════════ -->
+    <!-- Section label above groups of cards -->
+    <style name="LearnLog.SectionLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.TitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+    <style name="LearnLog.Caption" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.BodySmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+    <!-- Tappable row inside bottom sheets -->
+    <style name="LearnLog.SheetRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:drawablePadding">18dp</item>
         <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.TitleSmall</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="drawableTint">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- Backward Compatibility Aliases                              -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-
-    <!-- Legacy style aliases for backward compatibility -->
-    <style name="CircleImageView" parent="Widget.LearnLog.Avatar.Circle"/>
-    <style name="Widget.LearnLog.TasksHeader" parent="Widget.LearnLog.Header.Capsule"/>
-    <style name="Widget.LearnLog.Avatar" parent="Widget.LearnLog.Avatar.Circle"/>
-    <style name="Widget.LearnLog.Drawer" parent="Widget.LearnLog.Drawer.Item"/>
-
-    <!-- Old chip style names for backward compatibility -->
-    <style name="Widget.LearnLog.Chip" parent="Widget.LearnLog.Chip.Filter"/>
-    <style name="Widget.LearnLog.Chip.Subject" parent="Widget.LearnLog.Chip.Assist"/>
-
-    <!-- Old bottom nav style for backward compatibility -->
-    <style name="BottomNavigationStyle" parent="Widget.LearnLog.BottomNav"/>
-
-    <style name="BottomNav">
-        <item name="android:background">@color/white</item>
-        <item name="android:padding">@dimen/spacing_xs</item>
-        <item name="android:layout_margin">@dimen/spacing_xs</item>
+    <!-- Settings row text -->
+    <style name="LearnLog.RowTitle" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.TitleSmall</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
-
-    <style name="BottomNav.WhitePill" parent="BottomNav">
-        <item name="android:background">@drawable/bg_bottom_nav_cyan</item>
+    <style name="LearnLog.RowSubtitle" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.LearnLog.BodySmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
-
 </resources>

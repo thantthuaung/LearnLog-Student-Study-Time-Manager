@@ -1,21 +1,21 @@
 package com.example.learnlog.ui.auth
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.learnlog.R
 import com.example.learnlog.databinding.FragmentLoginBinding
-import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.example.learnlog.ui.common.Motion
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.common.api.ApiException
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -27,98 +27,78 @@ class LoginFragment : Fragment() {
 
     private val viewModel: AuthViewModel by viewModels()
 
-    @Inject
-    lateinit var googleSignInClient: GoogleSignInClient
+    @Inject lateinit var googleSignInClient: GoogleSignInClient
 
-    private val googleSignInLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account?.let { viewModel.signInWithGoogle(it) }
-            } catch (e: ApiException) {
-                Toast.makeText(requireContext(), "Google sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
+    private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        AuthNavigation.handleGoogleResult(it, viewModel)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
-        binding.viewModel = viewModel
-        binding.lifecycleOwner = viewLifecycleOwner
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupClickListeners()
         observeAuthState()
+        if (savedInstanceState == null) {
+            Motion.staggerIn(listOf(binding.logo, binding.formCard, binding.footer), startDelay = 80, step = 90)
+        }
     }
 
-    private fun setupClickListeners() {
-        binding.signInBtn.setOnClickListener {
-            val email = binding.emailInput.text.toString().trim()
-            val password = binding.passwordInput.text.toString()
-            viewModel.signInWithEmail(email, password)
+    private fun setupClickListeners() = with(binding) {
+        signInBtn.setOnClickListener { submit() }
+        passwordInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) { submit(); true } else false
         }
+        emailInput.doAfterTextChanged { emailLayout.error = null }
+        passwordInput.doAfterTextChanged { passwordLayout.error = null }
 
-        binding.googleSignInBtn.setOnClickListener {
-            signInWithGoogle()
+        googleSignInBtn.setOnClickListener {
+            googleSignInLauncher.launch(AuthNavigation.googleIntent(googleSignInClient))
         }
-
-        binding.signUpBtn.setOnClickListener {
+        signUpBtn.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
-
-        binding.forgotPasswordBtn.setOnClickListener {
-            val email = binding.emailInput.text.toString().trim()
-            if (email.isNotEmpty()) {
-                viewModel.sendPasswordResetEmail(email)
-            } else {
-                Toast.makeText(requireContext(), "Please enter your email", Toast.LENGTH_SHORT).show()
-            }
+        forgotPasswordBtn.setOnClickListener {
+            viewModel.sendPasswordResetEmail(emailInput.text.toString().trim())
         }
+    }
+
+    private fun submit() {
+        viewModel.signInWithEmail(
+            binding.emailInput.text.toString().trim(),
+            binding.passwordInput.text.toString()
+        )
     }
 
     private fun observeAuthState() {
         viewModel.authState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is AuthState.Success -> {
-                    Toast.makeText(requireContext(), "Welcome back!", Toast.LENGTH_SHORT).show()
-                    // Navigate to main app
-                    findNavController().navigate(R.id.action_loginFragment_to_tasksFragment)
-                }
+                is AuthState.Success -> AuthNavigation.enterApp(this, state.user, R.id.action_loginFragment_to_tasksFragment)
                 is AuthState.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                    val message = if (state.messageRes != 0) getString(state.messageRes) else state.message.orEmpty()
+                    when (state.field) {
+                        AuthField.EMAIL -> binding.emailLayout.error = message
+                        AuthField.PASSWORD -> binding.passwordLayout.error = message
+                        else -> Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+                    }
                     viewModel.resetAuthState()
                 }
                 is AuthState.PasswordResetSent -> {
-                    Toast.makeText(requireContext(), "Password reset email sent!", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, R.string.auth_reset_sent, Snackbar.LENGTH_LONG).show()
                     viewModel.resetAuthState()
                 }
-                else -> {
-                    // Idle or other states
-                }
+                else -> Unit
             }
         }
-
-        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            binding.signInBtn.isEnabled = !isLoading
-            binding.googleSignInBtn.isEnabled = !isLoading
+        viewModel.loading.observe(viewLifecycleOwner) { loading ->
+            binding.progressBar.isVisible = loading
+            binding.signInBtn.isEnabled = !loading
+            binding.signInBtn.text = if (loading) "" else getString(R.string.auth_sign_in)
+            binding.googleSignInBtn.isEnabled = !loading
         }
-    }
-
-    private fun signInWithGoogle() {
-        val signInIntent = googleSignInClient.signInIntent
-        googleSignInLauncher.launch(signInIntent)
     }
 
     override fun onDestroyView() {
@@ -126,4 +106,3 @@ class LoginFragment : Fragment() {
         _binding = null
     }
 }
-

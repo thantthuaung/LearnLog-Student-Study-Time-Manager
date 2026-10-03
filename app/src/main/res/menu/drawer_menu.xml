@@ -1,39 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <item
-        android:id="@+id/nav_account"
-        android:icon="@drawable/ic_person"
-        android:title="Account &amp; Profile" />
-
-    <item
-        android:id="@+id/nav_preferences"
-        android:icon="@drawable/ic_settings"
-        android:title="Preferences" />
-
-    <item
-        android:id="@+id/nav_notifications"
-        android:icon="@drawable/ic_notifications"
-        android:title="Notifications" />
-
-    <item
-        android:id="@+id/nav_data_backup"
-        android:icon="@drawable/ic_backup"
-        android:title="Data &amp; Backup" />
-
-    <item
-        android:id="@+id/nav_help"
-        android:icon="@drawable/ic_help"
-        android:title="Help &amp; About" />
-
-    <item android:title="">
-        <menu>
-            <item
-                android:id="@+id/nav_sign_out"
-                android:icon="@drawable/ic_logout"
-                android:title="Sign Out" />
-        </menu>
-    </item>
-
+    <group android:id="@+id/group_main" android:checkableBehavior="none">
+        <item android:id="@+id/nav_analytics" android:icon="@drawable/ic_analytics" android:title="@string/drawer_analytics" />
+    </group>
+    <group android:id="@+id/group_settings" android:checkableBehavior="none">
+        <item android:id="@+id/nav_account" android:icon="@drawable/ic_person" android:title="@string/drawer_account" />
+        <item android:id="@+id/nav_preferences" android:icon="@drawable/ic_tune" android:title="@string/drawer_preferences" />
+        <item android:id="@+id/nav_notifications" android:icon="@drawable/ic_notifications" android:title="@string/drawer_notifications" />
+        <item android:id="@+id/nav_data_backup" android:icon="@drawable/ic_backup" android:title="@string/drawer_data" />
+        <item android:id="@+id/nav_help" android:icon="@drawable/ic_info" android:title="@string/drawer_help" />
+    </group>
+    <group android:id="@+id/group_session" android:checkableBehavior="none">
+        <item android:id="@+id/nav_sign_out" android:icon="@drawable/ic_logout" android:title="@string/drawer_sign_out" />
+    </group>
 </menu>
-

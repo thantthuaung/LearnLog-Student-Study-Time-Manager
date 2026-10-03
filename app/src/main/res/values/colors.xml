@@ -1,90 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- Premium Design Tokens - LearnLog 2.0                        -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- LearnLog design tokens (light). Dark values live in values-night/colors.xml. -->
 
-    <!-- Primary Brand Color - Sky Blue -->
-    <color name="colorPrimary">#38A3F1</color>
-    <color name="colorOnPrimary">#FFFFFF</color>
-    <color name="primaryColor">#38A3F1</color>
-    <color name="nav_blue">#38A3F1</color>
-    <color name="primary_light_blue">#38A3F1</color>
-    <color name="sky_blue">#38A3F1</color>
-    <color name="primary_blue">#38A3F1</color>
-    <color name="blue">#38A3F1</color>
+    <!-- Brand -->
+    <color name="ll_primary">#5552E8</color>
+    <color name="ll_on_primary">#FFFFFF</color>
+    <color name="ll_primary_container">#E7E6FF</color>
+    <color name="ll_on_primary_container">#23207A</color>
 
-    <!-- Surface Colors - Clean & Bright -->
-    <color name="colorSurface">#F7F9FC</color>
-    <color name="colorSurfaceContainer">#FFFFFF</color>
-    <color name="colorOnSurface">#24313F</color>
-    <color name="screen_bg">#F7F9FC</color>
-    <color name="background_color">#F7F9FC</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="surface_container">#FFFFFF</color>
+    <color name="ll_secondary">#FF7A45</color>
+    <color name="ll_on_secondary">#FFFFFF</color>
+    <color name="ll_secondary_container">#FFE8DE</color>
+    <color name="ll_on_secondary_container">#7A2A08</color>
+
+    <color name="ll_tertiary">#12A979</color>
+    <color name="ll_on_tertiary">#FFFFFF</color>
+    <color name="ll_tertiary_container">#D4F5EA</color>
+    <color name="ll_on_tertiary_container">#05402D</color>
+
+    <color name="ll_error">#E5484D</color>
+    <color name="ll_on_error">#FFFFFF</color>
+    <color name="ll_error_container">#FFE3E4</color>
+    <color name="ll_on_error_container">#6E0F13</color>
+
+    <color name="ll_warning">#E89A0C</color>
+    <color name="ll_warning_container">#FFF1D6</color>
+    <color name="ll_on_warning_container">#5C3B00</color>
+
+    <!-- Surfaces -->
+    <color name="ll_background">#F5F5FA</color>
+    <color name="ll_on_background">#15152B</color>
+    <color name="ll_surface">#FFFFFF</color>
+    <color name="ll_surface_lowest">#FFFFFF</color>
+    <color name="ll_surface_low">#FAFAFD</color>
+    <color name="ll_surface_container">#F0F0F7</color>
+    <color name="ll_surface_high">#E9E9F3</color>
+    <color name="ll_surface_highest">#E2E2EE</color>
+    <color name="ll_on_surface">#15152B</color>
+    <color name="ll_on_surface_variant">#676785</color>
+    <color name="ll_outline">#D6D6E6</color>
+    <color name="ll_outline_variant">#E9E9F2</color>
+    <color name="ll_inverse_surface">#2A2A40</color>
+    <color name="ll_inverse_on_surface">#F2F2FA</color>
+    <color name="ll_inverse_primary">#A5A4FF</color>
+    <color name="ll_scrim">#66000000</color>
+
+    <color name="ll_primary_splash">#5552E8</color>
+
+    <!-- Hero gradient -->
+    <color name="ll_gradient_start">#5552E8</color>
+    <color name="ll_gradient_end">#8B5CF6</color>
+
+    <!-- Priority -->
+    <color name="priority_low">#12A979</color>
+    <color name="priority_medium">#E89A0C</color>
+    <color name="priority_high">#E5484D</color>
+
+    <!-- Chart palette: fixed categorical order, validated (CVD + lightness) on #FFFFFF.
+         Light-mode slots 3-5 sit under 3:1, so charts always carry text labels/legend rows. -->
+    <color name="chart_1">#5552E8</color>
+    <color name="chart_2">#EB6834</color>
+    <color name="chart_3">#1BAF7A</color>
+    <color name="chart_4">#EDA100</color>
+    <color name="chart_5">#E87BA4</color>
+    <color name="chart_6">#008300</color>
+    <color name="chart_other">#9A9AB0</color>
+    <color name="chart_grid">#ECECF4</color>
+    <color name="chart_axis">#8A8AA3</color>
+
+    <!-- Fixed -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-
-    <!-- Outline & Dividers -->
-    <color name="colorOutline">#E3E8EF</color>
-    <color name="outline">#E3E8EF</color>
-    <color name="divider_color">#E3E8EF</color>
-    <color name="divider_light">#E3E8EF</color>
-    <color name="chip_stroke">#E3E8EF</color>
-
-    <!-- Text Colors -->
-    <color name="text_primary">#24313F</color>
-    <color name="on_surface">#24313F</color>
-    <color name="text_secondary">#7A8A99</color>
-    <color name="on_surface_variant">#7A8A99</color>
-    <color name="text_hint">#B0BEC5</color>
-    <color name="ink">#24313F</color>
-
-    <!-- Accent Colors - Success, Warning, Danger, Info -->
-    <color name="success">#25C18A</color>
-    <color name="success_green">#25C18A</color>
-    <color name="green">#25C18A</color>
-    <color name="low_priority">#25C18A</color>
-
-    <color name="warning">#FFB020</color>
-    <color name="amber">#FFB020</color>
-    <color name="medium_priority">#FFB020</color>
-    <color name="priority_medium">#FFB020</color>
-
-    <color name="danger">#F04438</color>
-    <color name="danger_light">#FFEBEE</color>
-    <color name="error_red">#F04438</color>
-    <color name="red">#F04438</color>
-    <color name="high_priority">#F04438</color>
-    <color name="rose">#F04438</color>
-
-    <color name="info">#7A8DFF</color>
-
-    <!-- Status Dot Colors -->
-    <color name="status_pending">#38A3F1</color>
-    <color name="status_in_progress">#FFB020</color>
-    <color name="status_completed">#E3E8EF</color>
-    <color name="status_overdue">#F04438</color>
-
-    <!-- Progress Track -->
-    <color name="progress_track">#D8DEE6</color>
-
-    <!-- Timer/Pomodoro Colors -->
-    <color name="pomodoroFocus">#38A3F1</color>
-    <color name="pomodoroShortBreak">#25C18A</color>
-    <color name="pomodoroLongBreak">#FFB020</color>
-
-    <!-- Chip Colors -->
-    <color name="chip_background_light">#F7F9FC</color>
-    <color name="chip_background_selected">#38A3F1</color>
-    <color name="chip_text_light">#24313F</color>
-    <color name="chip_text_selected">#FFFFFF</color>
-
-    <!-- Legacy/Misc -->
-    <color name="secondaryColor">#38A3F1</color>
-    <color name="surface_variant">#F7F9FC</color>
-    <color name="light_blue_background">#E3F2FD</color>
-    <color name="ripple_white">#80FFFFFF</color>
-    <color name="dark_slate">#2F4F4F</color>
-    <color name="gray">#9E9E9E</color>
-    <color name="light_gray">#E3E8EF</color>
+    <color name="white_80">#CCFFFFFF</color>
+    <color name="white_20">#33FFFFFF</color>
+    <color name="white_12">#1FFFFFFF</color>
 </resources>

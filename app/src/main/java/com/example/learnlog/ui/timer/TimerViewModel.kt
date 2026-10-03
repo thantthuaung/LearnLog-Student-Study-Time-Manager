@@ -1,154 +1,77 @@
 package com.example.learnlog.ui.timer
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.learnlog.data.dao.SessionLogDao
-import com.example.learnlog.data.entity.SessionLogEntity
 import com.example.learnlog.data.entity.TaskEntity
+import com.example.learnlog.data.model.AppSettings
+import com.example.learnlog.data.preferences.UserPreferences
+import com.example.learnlog.data.repository.SettingsRepository
 import com.example.learnlog.data.repository.TaskRepository
+import com.example.learnlog.timer.FocusTimer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.threeten.bp.LocalDateTime
+import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
-@HiltViewModel
-class TimerViewModel @Inject constructor(
-    private val taskRepository: TaskRepository,
-    private val sessionLogDao: SessionLogDao
-) : ViewModel() {
-
-    private val _timerFinishedEvent = MutableLiveData<TimerFinishData>()
-    val timerFinishedEvent: LiveData<TimerFinishData> = _timerFinishedEvent
-
-    private val _currentTask = MutableLiveData<TaskEntity?>()
-    val currentTask: LiveData<TaskEntity?> = _currentTask
-
-    private var currentSessionId: Long = 0
-
-    fun loadTask(taskId: Long) {
-        if (taskId == -1L) return
-        viewModelScope.launch {
-            val task = withContext(Dispatchers.IO) {
-                taskRepository.getTaskById(taskId)
-            }
-            _currentTask.value = task
-        }
-    }
-
-    fun startTimerSession(taskId: Long?, taskTitle: String?, durationMinutes: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val startTime = LocalDateTime.now()
-            val session = SessionLogEntity(
-                taskId = taskId,
-                subject = taskTitle,
-                startTime = startTime,
-                endTime = startTime.plusMinutes(durationMinutes.toLong()),
-                durationMinutes = durationMinutes,
-                type = "FOCUS",
-                isCompleted = false
-            )
-
-            currentSessionId = sessionLogDao.insertSession(session)
-
-            // Mark task as IN_PROGRESS
-            if (taskId != null && taskId != -1L) {
-                val task = taskRepository.getTaskById(taskId)
-                task?.let {
-                    taskRepository.updateTask(it.copy(status = "IN_PROGRESS"))
-                }
-            }
-        }
-    }
-
-    fun completeTimerSession(actualDurationMinutes: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (currentSessionId != 0L) {
-                // Retrieve the existing session
-                val existingSession = sessionLogDao.getSessionById(currentSessionId)
-                existingSession?.let { session ->
-                    // Update session with actual end time
-                    val endTime = LocalDateTime.now()
-                    val updatedSession = session.copy(
-                        endTime = endTime,
-                        durationMinutes = actualDurationMinutes,
-                        isCompleted = true
-                    )
-                    sessionLogDao.updateSession(updatedSession)
-
-                    // Emit event to show completion dialog
-                    withContext(Dispatchers.Main) {
-                        _timerFinishedEvent.value = TimerFinishData(
-                            taskId = _currentTask.value?.id,
-                            sessionId = currentSessionId,
-                            durationMinutes = actualDurationMinutes
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun markTaskCompleted(taskId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val task = taskRepository.getTaskById(taskId)
-            task?.let {
-                taskRepository.updateTask(it.copy(status = "COMPLETED", completed = true))
-            }
-        }
-    }
-
-    fun keepTaskInProgress(taskId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val task = taskRepository.getTaskById(taskId)
-            task?.let {
-                taskRepository.updateTask(it.copy(status = "IN_PROGRESS"))
-            }
-        }
-    }
-
-    // Standalone session methods (no task)
-    fun startStandaloneSession(durationMinutes: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val startTime = LocalDateTime.now()
-            val session = SessionLogEntity(
-                taskId = null, // No task linked
-                subject = "Focus Session",
-                startTime = startTime,
-                endTime = startTime.plusMinutes(durationMinutes.toLong()),
-                durationMinutes = durationMinutes,
-                type = "FOCUS",
-                isCompleted = false
-            )
-            currentSessionId = sessionLogDao.insertSession(session)
-        }
-    }
-
-    suspend fun completeStandaloneSession(actualDurationMinutes: Int) {
-        withContext(Dispatchers.IO) {
-            if (currentSessionId != 0L) {
-                val existingSession = sessionLogDao.getSessionById(currentSessionId)
-                existingSession?.let { session ->
-                    val endTime = LocalDateTime.now()
-                    val updatedSession = session.copy(
-                        endTime = endTime,
-                        durationMinutes = actualDurationMinutes,
-                        isCompleted = true
-                    )
-                    sessionLogDao.updateSession(updatedSession)
-                }
-            }
-            // Reset for next session
-            currentSessionId = 0
-        }
-    }
+data class DailyGoal(val focusedMinutes: Int, val goalMinutes: Int) {
+    val fraction: Float get() = if (goalMinutes > 0) (focusedMinutes.toFloat() / goalMinutes).coerceIn(0f, 1f) else 0f
+    val reached: Boolean get() = goalMinutes in 1..focusedMinutes
 }
 
-data class TimerFinishData(
-    val taskId: Long?,
-    val sessionId: Long,
-    val durationMinutes: Int
-)
+/** Thin UI layer over the app-wide [FocusTimer]. */
+@HiltViewModel
+class TimerViewModel @Inject constructor(
+    val timer: FocusTimer,
+    private val taskRepository: TaskRepository,
+    settingsRepository: SettingsRepository,
+    sessionLogDao: SessionLogDao,
+    private val userPreferences: UserPreferences
+) : ViewModel() {
+
+    val state: StateFlow<FocusTimer.State> = timer.state
+    val events = timer.events
+
+    val settings: StateFlow<AppSettings> = settingsRepository.settingsFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
+
+    val openTasks: StateFlow<List<TaskEntity>> = taskRepository.getTasks()
+        .map { tasks ->
+            tasks.filter { !it.completed }
+                .sortedWith(compareBy<TaskEntity> { it.dueAt == null }.thenBy { it.dueAt?.toString() ?: "" })
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val dailyGoal: StateFlow<DailyGoal> = combine(
+        sessionLogDao.getCompletedSessions().map { sessions ->
+            val today = LocalDate.now()
+            sessions.filter { it.startTime.toLocalDate() == today }.sumOf { it.durationMinutes }
+        },
+        userPreferences.dailyGoalMinutes
+    ) { focused, goal -> DailyGoal(focused, goal) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DailyGoal(0, UserPreferences.DEFAULT_DAILY_GOAL))
+
+    val keepScreenOn: Flow<Boolean> = userPreferences.keepScreenOn
+
+    fun setKeepScreenOn(enabled: Boolean) = viewModelScope.launch { userPreferences.updateKeepScreenOn(enabled) }
+
+    suspend fun confirmOnStop(): Boolean = userPreferences.confirmOnStop.first()
+
+    fun link(task: TaskEntity?) = timer.linkTask(task?.toLinked())
+
+    fun markTaskDone(taskId: Long) = viewModelScope.launch { taskRepository.setCompleted(taskId, true) }
+
+    suspend fun shouldAskNotificationPermission(): Boolean = !userPreferences.hasAskedNotificationPermission()
+    fun notificationPermissionAsked() = viewModelScope.launch { userPreferences.setAskedNotificationPermission() }
+
+    companion object {
+        fun TaskEntity.toLinked() = FocusTimer.LinkedTask(id, title, subject)
+    }
+}

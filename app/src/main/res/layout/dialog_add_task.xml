@@ -1,145 +1,237 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
-
-    <TextView
-        android:id="@+id/dialog_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp"
-        android:text="Add Task"
-        android:textAppearance="?attr/textAppearanceTitleLarge" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Title *">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/titleInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="Subject">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/subjectInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </com.google.android.material.textfield.TextInputLayout>
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:paddingStart="@dimen/page_gutter"
+        android:paddingEnd="@dimen/page_gutter"
+        android:paddingBottom="24dp">
+
+        <com.google.android.material.bottomsheet.BottomSheetDragHandleView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/dialog_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                tools:text="New task" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_delete"
+                style="@style/Widget.LearnLog.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/action_delete"
+                android:visibility="gone"
+                app:icon="@drawable/ic_delete"
+                app:iconTint="?attr/colorError"
+                tools:visibility="visible" />
+        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="0dp"
+            android:id="@+id/title_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Date">
+            android:layout_marginTop="12dp"
+            android:hint="@string/task_title_hint">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/dateInput"
+                android:id="@+id/title_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="false"
-                android:clickable="true"/>
+                android:imeOptions="actionNext"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxLines="3"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="0dp"
+            android:id="@+id/subject_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:hint="Time">
+            android:layout_marginTop="12dp"
+            android:hint="@string/task_subject_hint"
+            app:startIconDrawable="@drawable/ic_subject">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/timeInput"
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/subject_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="false"
-                android:clickable="true"/>
+                android:completionThreshold="1"
+                android:imeOptions="actionDone"
+                android:inputType="textCapWords"
+                android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Due -->
+        <TextView
+            style="@style/LearnLog.SectionLabel"
+            android:layout_marginTop="20dp"
+            android:text="@string/task_due"
+            android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_date"
+                style="@style/Widget.LearnLog.Button.Outlined"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.3"
+                android:minHeight="48dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                app:icon="@drawable/ic_event"
+                tools:text="Fri, 3 Oct" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_time"
+                style="@style/Widget.LearnLog.Button.Outlined"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:minHeight="48dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                app:icon="@drawable/ic_schedule"
+                tools:text="11:59 PM" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_clear_due"
+                style="@style/Widget.LearnLog.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:contentDescription="@string/no_due_date"
+                app:icon="@drawable/ic_close" />
+        </LinearLayout>
+
+        <!-- Priority -->
+        <TextView
+            style="@style/LearnLog.SectionLabel"
+            android:layout_marginTop="20dp"
+            android:text="@string/task_priority"
+            android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/priority_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_priority_low"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="Low"
+                app:chipIcon="@drawable/bg_dot"
+                app:chipIconSize="10dp"
+                app:chipIconTint="@color/priority_low"
+                app:iconStartPadding="6dp"
+                tools:ignore="HardcodedText" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_priority_medium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="Medium"
+                app:chipIcon="@drawable/bg_dot"
+                app:chipIconSize="10dp"
+                app:chipIconTint="@color/priority_medium"
+                app:iconStartPadding="6dp"
+                tools:ignore="HardcodedText" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_priority_high"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="High"
+                app:chipIcon="@drawable/bg_dot"
+                app:chipIconSize="10dp"
+                app:chipIconTint="@color/priority_high"
+                app:iconStartPadding="6dp"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Type -->
+        <TextView
+            style="@style/LearnLog.SectionLabel"
+            android:layout_marginTop="14dp"
+            android:text="@string/task_type"
+            android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/type_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:selectionRequired="true"
+            app:singleSelection="true" />
+
+        <!-- Planned time -->
+        <TextView
+            style="@style/LearnLog.SectionLabel"
+            android:layout_marginTop="14dp"
+            android:text="@string/task_planned_time"
+            android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/duration_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            app:selectionRequired="true"
+            app:singleSelection="true" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/notes_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:hint="@string/task_notes_hint">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/notes_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:inputType="textCapSentences|textMultiLine"
+                android:minLines="2"
+                android:maxLines="6" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:icon="@drawable/ic_check"
+            tools:text="Add task" />
     </LinearLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="Priority">
-
-        <AutoCompleteTextView
-            android:id="@+id/priorityInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="none" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="Type">
-
-        <AutoCompleteTextView
-            android:id="@+id/typeInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="none" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="Estimated Duration (minutes)">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/durationInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="Description">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/descriptionInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:minLines="3" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.switchmaterial.SwitchMaterial
-        android:id="@+id/notificationSwitch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Enable Notifications" />
-
-    <Button
-        android:id="@+id/btn_save"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Save Task" />
-
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>

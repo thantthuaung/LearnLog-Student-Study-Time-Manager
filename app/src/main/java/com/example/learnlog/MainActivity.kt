@@ -1,220 +1,225 @@
 package com.example.learnlog
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
-import android.widget.ImageView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
-import com.bumptech.glide.Glide
 import com.example.learnlog.auth.AuthManager
+import com.example.learnlog.data.preferences.UserPreferences
 import com.example.learnlog.databinding.ActivityMainBinding
+import com.example.learnlog.databinding.NavHeaderBinding
+import com.example.learnlog.timer.FocusTimer
+import com.example.learnlog.ui.common.ProfileAvatar
+import com.example.learnlog.ui.common.Reselectable
+import com.example.learnlog.util.AppRestarter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityMainBinding
-    private lateinit var appBarConfiguration: AppBarConfiguration
+    private lateinit var navController: NavController
+    private lateinit var header: NavHeaderBinding
 
-    @Inject
-    lateinit var authManager: AuthManager
+    @Inject lateinit var authManager: AuthManager
+    @Inject lateinit var focusTimer: FocusTimer
+    @Inject lateinit var userPreferences: UserPreferences
 
+    private var bottomNavShown = true
+    private var keyboardVisible = false
+    private var destinationWantsNav = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Install splash screen before super.onCreate
         installSplashScreen()
-
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        header = NavHeaderBinding.bind(binding.navView.getHeaderView(0))
 
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-
-        // Check if user is logged in and set start destination accordingly
-        val startDestination = if (authManager.isUserLoggedIn) {
-            R.id.tasksFragment
-        } else {
-            R.id.loginFragment
+        val navHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHost.navController
+        if (savedInstanceState == null) {
+            val graph = navController.navInflater.inflate(R.navigation.nav_graph)
+            graph.setStartDestination(if (authManager.isUserLoggedIn) R.id.tasksFragment else R.id.loginFragment)
+            navController.graph = graph
         }
 
-        // Update navigation graph if needed
-        val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
-        navGraph.setStartDestination(startDestination)
-        navController.graph = navGraph
+        setupBottomNav()
+        setupDrawer()
+        setupBackHandling()
+        watchKeyboard()
 
-        // Configure AppBarConfiguration with ONLY top-level destinations (bottom nav tabs)
-        // Settings is NOT a top-level destination, so it will show back arrow
-        appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.tasksFragment,
-                R.id.plannerFragment,
-                R.id.timerFragment,
-                R.id.insightsFragment,
-                R.id.notesFragment,
-                R.id.loginFragment,
-                R.id.registerFragment
-            ),
-            binding.drawerLayout
-        )
-
-        // Set up Bottom Navigation
-        binding.bottomNavigation.apply {
-            setupWithNavController(navController)
-            setOnItemReselectedListener { /* Prevent reselection reload */ }
-        }
-
-        // Set up Navigation Drawer
-        binding.navView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_account, R.id.nav_preferences, R.id.nav_notifications,
-                R.id.nav_data_backup, R.id.nav_help -> {
-                    // Navigate to settings with specific section
-                    val section = when (menuItem.itemId) {
-                        R.id.nav_account -> 0
-                        R.id.nav_preferences -> 1
-                        R.id.nav_notifications -> 2
-                        R.id.nav_data_backup -> 3
-                        R.id.nav_help -> 4
-                        else -> 0
-                    }
-                    val bundle = Bundle().apply {
-                        putInt("section", section)
-                    }
-                    navController.navigate(R.id.settingsFragment, bundle)
-                    binding.drawerLayout.closeDrawer(GravityCompat.START)
-                    true
-                }
-                R.id.nav_sign_out -> {
-                    // Handle sign out
-                    androidx.appcompat.app.AlertDialog.Builder(this)
-                        .setTitle("Sign Out")
-                        .setMessage("Are you sure you want to sign out?")
-                        .setPositiveButton("Sign Out") { _, _ ->
-                            authManager.signOut()
-                            navController.navigate(R.id.loginFragment)
-                            binding.drawerLayout.closeDrawer(GravityCompat.START)
-                        }
-                        .setNegativeButton("Cancel", null)
-                        .show()
-                    true
-                }
-                else -> false
-            }
-        }
-
-        // Setup drawer header profile updates
-        setupDrawerHeader()
-
-        // Handle navigation destination changes
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            when (destination.id) {
-                R.id.loginFragment, R.id.registerFragment -> {
-                    // Hide bottom nav and lock drawer on auth screens
-                    binding.bottomNavigation.visibility = View.GONE
-                    binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
-                }
-                R.id.settingsFragment -> {
-                    // Lock drawer on Settings (so back arrow works, not hamburger)
-                    binding.bottomNavigation.visibility = View.VISIBLE
-                    binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
-                }
-                else -> {
-                    // Normal screens: show bottom nav and unlock drawer
-                    binding.bottomNavigation.visibility = View.VISIBLE
-                    binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED)
-                    // Refresh drawer header when navigating to main screens (after login/register)
-                    setupDrawerHeader()
-                }
-            }
+            destinationWantsNav = destination.id in TOP_LEVEL
+            updateBottomNavVisibility(animate = true)
+            binding.drawerLayout.setDrawerLockMode(
+                if (destinationWantsNav) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED
+            )
+            if (destinationWantsNav) refreshDrawerHeader()
         }
 
-        // Handle notification intent to open Timer tab
-        handleNotificationIntent()
+        handleIntent(intent)
     }
 
-    private fun setupDrawerHeader() {
-        val headerView = binding.navView.getHeaderView(0)
-        val avatarImageView = headerView.findViewById<ImageView>(R.id.drawer_avatar)
-        val displayNameTextView = headerView.findViewById<TextView>(R.id.drawer_display_name)
-        val emailTextView = headerView.findViewById<TextView>(R.id.drawer_email)
-
-        // Get user info from Firebase Auth
-        val currentUser = authManager.currentUser
-
-        // Set display name from Firebase Auth
-        val displayName = currentUser?.displayName
-        displayNameTextView.text = displayName?.takeIf { it.isNotEmpty() } ?: "User"
-
-        // Set email from Firebase Auth
-        val email = currentUser?.email
-        emailTextView.text = email?.takeIf { it.isNotEmpty() } ?: "No email"
-
-        // Set profile photo from Firebase Auth or use default
-        val photoUrl = currentUser?.photoUrl
-        if (photoUrl != null) {
-            Glide.with(this)
-                .load(photoUrl)
-                .placeholder(R.drawable.ic_person)
-                .error(R.drawable.ic_person)
-                .circleCrop()
-                .into(avatarImageView)
-        } else {
-            avatarImageView.setImageResource(R.drawable.ic_person)
+    private fun setupBottomNav() {
+        binding.bottomNavigation.setupWithNavController(navController)
+        binding.bottomNavigation.setOnItemReselectedListener {
+            val current = (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment)
+                .childFragmentManager.primaryNavigationFragment
+            (current as? Reselectable)?.onReselected()
         }
+    }
+
+    private fun setupDrawer() {
+        binding.navView.setNavigationItemSelectedListener { item ->
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            when (item.itemId) {
+                R.id.nav_analytics -> navController.navigate(R.id.action_global_analytics)
+                R.id.nav_account -> openSettings(SECTION_ACCOUNT)
+                R.id.nav_preferences -> openSettings(SECTION_PREFERENCES)
+                R.id.nav_notifications -> openSettings(SECTION_ALERTS)
+                R.id.nav_data_backup -> openSettings(SECTION_DATA)
+                R.id.nav_help -> openSettings(SECTION_ABOUT)
+                R.id.nav_sign_out -> confirmSignOut()
+            }
+            true
+        }
+    }
+
+    fun openSettings(section: Int) {
+        navController.navigate(R.id.action_global_settings, bundleOf("section" to section))
     }
 
     fun openDrawer() {
-        // Open drawer immediately without checking if it's already open
         if (!binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.openDrawer(GravityCompat.START, true)
+            binding.drawerLayout.openDrawer(GravityCompat.START)
         }
     }
 
-    fun getNavController() = (supportFragmentManager
-        .findFragmentById(R.id.nav_host_fragment) as NavHostFragment).navController
+    fun confirmSignOut() {
+        MaterialAlertDialogBuilder(this)
+            .setIcon(R.drawable.ic_logout)
+            .setTitle(R.string.sign_out_title)
+            .setMessage(R.string.sign_out_message)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.drawer_sign_out) { _, _ ->
+                // Keep any focus time already earned, then rebuild everything for the next account
+                focusTimer.stop(save = true)
+                authManager.signOut()
+                window.decorView.postDelayed({ AppRestarter.restart(this) }, 250)
+            }
+            .show()
+    }
+
+    private fun setupBackHandling() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
+    }
+
+    private fun watchKeyboard() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val visible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            if (visible != keyboardVisible) {
+                keyboardVisible = visible
+                updateBottomNavVisibility(animate = !visible)
+            }
+            insets
+        }
+    }
+
+    private fun updateBottomNavVisibility(animate: Boolean) {
+        val show = destinationWantsNav && !keyboardVisible
+        if (show == bottomNavShown && binding.bottomNavContainer.isVisible == show) return
+        bottomNavShown = show
+        val nav = binding.bottomNavContainer
+        nav.animate().cancel()
+        if (show) {
+            nav.visibility = View.VISIBLE
+            if (animate) {
+                nav.translationY = nav.height.toFloat() + 80f
+                nav.animate().translationY(0f).alpha(1f).setDuration(320)
+                    .setInterpolator(android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f)).start()
+            } else {
+                nav.translationY = 0f
+                nav.alpha = 1f
+            }
+        } else if (animate && nav.isVisible) {
+            nav.animate().translationY(nav.height.toFloat() + 80f).alpha(0f).setDuration(200)
+                .withEndAction { nav.visibility = View.GONE }.start()
+        } else {
+            nav.visibility = View.GONE
+        }
+    }
+
+    private val View.isVisible get() = visibility == View.VISIBLE
+
+    private fun refreshDrawerHeader() {
+        val user = authManager.currentUser
+        val name = user?.displayName?.takeIf { it.isNotBlank() } ?: getString(R.string.guest_name)
+        header.drawerDisplayName.text = name
+        header.drawerEmail.text = user?.email.orEmpty()
+        lifecycleScope.launch {
+            val local = userPreferences.avatarUri.first()
+            ProfileAvatar.bind(header.drawerInitials, header.drawerAvatar, name, local ?: user?.photoUrl?.toString())
+        }
+    }
 
     override fun onResume() {
         super.onResume()
-        // Refresh drawer header when activity resumes to show updated user info
-        setupDrawerHeader()
+        if (::header.isInitialized && authManager.isUserLoggedIn) refreshDrawerHeader()
     }
 
-    private fun handleNotificationIntent() {
-        if (intent?.getBooleanExtra("open_timer_tab", false) == true) {
-            // Navigate to Timer tab
-            val navHostFragment = supportFragmentManager
-                .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-            val navController = navHostFragment.navController
-            navController.navigate(R.id.timerFragment)
-        }
-    }
-
-    override fun onNewIntent(intent: android.content.Intent) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleNotificationIntent()
+        handleIntent(intent)
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-        return navController.navigateUp() || super.onSupportNavigateUp()
-    }
-
-    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
-    override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_OPEN_TIMER, false) == true && authManager.isUserLoggedIn) {
+            intent.removeExtra(EXTRA_OPEN_TIMER)
+            binding.root.post { binding.bottomNavigation.selectedItemId = R.id.timerFragment }
         }
+    }
+
+    override fun onSupportNavigateUp(): Boolean = navController.navigateUp() || super.onSupportNavigateUp()
+
+    companion object {
+        const val EXTRA_OPEN_TIMER = "open_timer_tab"
+
+        const val SECTION_ACCOUNT = 0
+        const val SECTION_PREFERENCES = 1
+        const val SECTION_ALERTS = 2
+        const val SECTION_DATA = 3
+        const val SECTION_ABOUT = 4
+
+        val TOP_LEVEL = setOf(
+            R.id.tasksFragment, R.id.plannerFragment, R.id.timerFragment,
+            R.id.insightsFragment, R.id.notesFragment
+        )
     }
 }

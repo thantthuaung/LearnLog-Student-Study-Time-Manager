@@ -1,196 +1,226 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="24dp"
-    android:background="@color/screen_bg">
+    android:layout_height="wrap_content">
 
-    <!-- Header: LEARNLOG label -->
-    <TextView
-        android:id="@+id/labelLearnlog"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textAppearance="?attr/textAppearanceLabelSmall"
-        android:textColor="@color/nav_blue"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Task Title + Subject Chip -->
     <LinearLayout
-        android:id="@+id/taskInfoRow"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/labelLearnlog">
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/page_gutter"
+        android:paddingEnd="@dimen/page_gutter"
+        android:paddingBottom="24dp">
+
+        <com.google.android.material.bottomsheet.BottomSheetDragHandleView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <TextView
-            android:id="@+id/textTaskTitle"
-            android:layout_width="0dp"
+            android:id="@+id/text_task_title"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:ellipsize="end"
+            android:gravity="center"
             android:maxLines="2"
-            android:textAlignment="center"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textStyle="bold"
-            tools:text="Complete Math Assignment" />
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            tools:text="Calculus problem set" />
+
+        <TextView
+            android:id="@+id/text_subject"
+            style="@style/Widget.LearnLog.Pill"
+            android:layout_marginTop="8dp"
+            app:drawableStartCompat="@drawable/ic_subject"
+            app:drawableTint="?attr/colorOnSurfaceVariant"
+            tools:text="Mathematics" />
+
+        <!-- Shown when a different session is already running -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/busy_card"
+            style="@style/Widget.LearnLog.Card.Static"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSecondaryContainer"
+            app:strokeWidth="0dp"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/busy_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSecondaryContainer"
+                    tools:text="A session for “Essay draft” is running." />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_open_timer"
+                        style="@style/Widget.LearnLog.Button.Outlined"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="46dp"
+                        android:text="@string/timer_open" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_switch"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:minHeight="46dp"
+                        android:text="@string/timer_switch" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <FrameLayout
+            android:id="@+id/ring_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progress_ring"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:max="1000"
+                app:indicatorColor="?attr/colorPrimary"
+                app:indicatorSize="208dp"
+                app:trackColor="?attr/colorSurfaceContainerHigh"
+                app:trackCornerRadius="8dp"
+                app:trackThickness="12dp"
+                tools:progress="400" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_countdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:textAppearance="@style/TextAppearance.LearnLog.Numeric"
+                    android:textSize="44sp"
+                    tools:text="25:00" />
+
+                <TextView
+                    android:id="@+id/text_state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Ready to focus" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/durations_scroll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/duration_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true"
+                app:singleSelection="true" />
+        </HorizontalScrollView>
+
+        <LinearLayout
+            android:id="@+id/controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_finish"
+                style="@style/Widget.LearnLog.IconButton.Tonal"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@string/finish"
+                android:visibility="gone"
+                app:icon="@drawable/ic_check"
+                tools:visibility="visible" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_start_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:minWidth="160dp"
+                app:icon="@drawable/ic_play"
+                app:iconSize="24dp"
+                app:shapeAppearance="@style/ShapeAppearance.LearnLog.Pill"
+                tools:text="Start" />
+        </LinearLayout>
+
+        <!-- Completion -->
+        <LinearLayout
+            android:id="@+id/complete_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/complete_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                tools:text="25 min of focus added. Is this task finished?" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_keep_going"
+                    style="@style/Widget.LearnLog.Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/timer_keep_going" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_mark_done"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="@string/action_mark_done"
+                    app:backgroundTint="?attr/colorTertiary" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-
-    <com.google.android.material.chip.Chip
-        android:id="@+id/chipSubject"
-        style="@style/Widget.LearnLog.Chip.Assist"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        app:chipIcon="@drawable/ic_calendar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/taskInfoRow"
-        tools:text="Mathematics" />
-
-    <!-- Circular Progress with Countdown -->
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/progressCircle"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:layout_marginTop="24dp"
-        android:indeterminate="false"
-        android:progress="0"
-        app:indicatorColor="@color/nav_blue"
-        app:indicatorSize="220dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/chipSubject"
-        app:trackColor="@color/light_gray"
-        app:trackThickness="8dp" />
-
-    <TextView
-        android:id="@+id/textCountdown"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="sans-serif-light"
-        android:text="25:00"
-        android:textSize="48sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/progressCircle"
-        app:layout_constraintEnd_toEndOf="@id/progressCircle"
-        app:layout_constraintStart_toStartOf="@id/progressCircle"
-        app:layout_constraintTop_toTopOf="@id/progressCircle" />
-
-    <!-- Time Adjustment Controls -->
-    <LinearLayout
-        android:id="@+id/timeControlsRow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressCircle">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDecrease"
-            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:text="-1m"
-            android:textSize="12sp"
-            app:icon="@drawable/ic_close"
-            app:iconGravity="textStart"
-            app:iconPadding="2dp"
-            app:iconSize="16dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnIncrease"
-            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="+5m"
-            android:textSize="12sp"
-            app:icon="@drawable/ic_add"
-            app:iconGravity="textStart"
-            app:iconPadding="2dp"
-            app:iconSize="16dp" />
-    </LinearLayout>
-
-    <!-- Main Control Button (Start/Pause/Resume) -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/btnStartPause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/start_timer"
-        app:icon="@drawable/ic_play"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/timeControlsRow" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnStop"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"
-        android:visibility="gone"
-        app:icon="@drawable/ic_stop"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnStartPause"
-        tools:visibility="visible" />
-
-    <!-- Toggle Controls -->
-    <LinearLayout
-        android:id="@+id/toggleRow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnStop">
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchSound"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:checked="true"
-            android:text="Sound"
-            android:textSize="12sp" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchKeepScreenOn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="Keep Screen On"
-            android:textSize="12sp" />
-    </LinearLayout>
-
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/switchBackgroundMode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:checked="false"
-        android:text="Keep running in background"
-        android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toggleRow" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-
+</androidx.core.widget.NestedScrollView>

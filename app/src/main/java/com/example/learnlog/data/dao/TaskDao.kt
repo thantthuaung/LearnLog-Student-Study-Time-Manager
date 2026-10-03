@@ -1,7 +1,6 @@
 package com.example.learnlog.data.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -14,17 +13,29 @@ interface TaskDao {
     @Query("SELECT * FROM tasks")
     fun getAll(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks")
+    suspend fun getAllOnce(): List<TaskEntity>
+
     @Query("SELECT * FROM tasks WHERE id = :id")
     suspend fun getById(id: Long): TaskEntity?
 
+    @Query("SELECT DISTINCT subject FROM tasks WHERE subject IS NOT NULL AND subject != '' ORDER BY subject COLLATE NOCASE")
+    fun getSubjects(): Flow<List<String>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(task: TaskEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(tasks: List<TaskEntity>)
 
     @Update
     suspend fun update(task: TaskEntity)
 
     @Query("DELETE FROM tasks WHERE id = :taskId")
     suspend fun deleteById(taskId: Long)
+
+    @Query("DELETE FROM tasks")
+    suspend fun deleteAll()
 
     @Query("SELECT * FROM tasks WHERE title LIKE '%' || :query || '%' OR subject LIKE '%' || :query || '%'")
     fun searchTasks(query: String): Flow<List<TaskEntity>>

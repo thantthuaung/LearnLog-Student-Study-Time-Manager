@@ -5,24 +5,17 @@ import com.squareup.moshi.JsonClass
 import retrofit2.http.GET
 
 /**
- * API Service for fetching motivational quotes
- * Uses quotable.io - a free quote API
+ * Quote of the day from ZenQuotes (https://zenquotes.io). The previous provider,
+ * api.quotable.io, no longer accepts connections.
  */
 interface QuoteApiService {
 
-    @GET("random?tags=inspirational")
-    suspend fun getRandomQuote(): QuoteResponse
+    @GET("today")
+    suspend fun getQuoteOfTheDay(): List<QuoteResponse>
 }
 
 @JsonClass(generateAdapter = true)
 data class QuoteResponse(
-    @Json(name = "_id")
-    val id: String,
-    @Json(name = "content")
-    val content: String,
-    @Json(name = "author")
-    val author: String,
-    @Json(name = "tags")
-    val tags: List<String>
+    @Json(name = "q") val content: String,
+    @Json(name = "a") val author: String
 )
-

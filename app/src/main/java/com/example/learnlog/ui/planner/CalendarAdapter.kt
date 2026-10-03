@@ -1,149 +1,75 @@
 package com.example.learnlog.ui.planner
 
-import android.graphics.Typeface
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.learnlog.R
-import com.google.android.material.card.MaterialCardView
+import com.example.learnlog.databinding.ItemCalendarDayBinding
+import com.google.android.material.color.MaterialColors
+import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.format.FormatStyle
 
 class CalendarAdapter(
     private val onDateClick: (CalendarDay) -> Unit
-) : ListAdapter<CalendarDay, CalendarAdapter.CalendarViewHolder>(CalendarDayDiffCallback()) {
+) : ListAdapter<CalendarDay, CalendarAdapter.DayVH>(Diff) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CalendarViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_calendar_day, parent, false)
-        return CalendarViewHolder(view)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        DayVH(ItemCalendarDayBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-    override fun onBindViewHolder(holder: CalendarViewHolder, position: Int) {
-        holder.bind(getItem(position))
-    }
+    override fun onBindViewHolder(holder: DayVH, position: Int) = holder.bind(getItem(position))
 
-    inner class CalendarViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val cardDayCell: MaterialCardView = itemView.findViewById(R.id.cardDayCell)
-        private val textDayNumber: TextView = itemView.findViewById(R.id.textDayNumber)
-        private val taskIndicatorDots: LinearLayout = itemView.findViewById(R.id.taskIndicatorDots)
-        private val overdueIndicator: View = itemView.findViewById(R.id.overdueIndicator)
-
+    inner class DayVH(private val b: ItemCalendarDayBinding) : RecyclerView.ViewHolder(b.root) {
         fun bind(day: CalendarDay) {
-            textDayNumber.text = day.date.dayOfMonth.toString()
+            val ctx = b.root.context
+            val number = b.textDayNumber
+            number.text = day.date.dayOfMonth.toString()
 
-            // Set text color based on month
-            if (!day.isCurrentMonth) {
-                textDayNumber.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_hint))
-                textDayNumber.alpha = 0.4f
-            } else {
-                textDayNumber.setTextColor(ContextCompat.getColor(itemView.context, R.color.text_primary))
-                textDayNumber.alpha = 1f
-            }
-
-            // Highlight today with prominent ring and blue fill
-            if (day.isToday) {
-                textDayNumber.setTypeface(null, Typeface.BOLD)
-                textDayNumber.setTextColor(ContextCompat.getColor(itemView.context, R.color.nav_blue))
-                cardDayCell.setCardBackgroundColor(
-                    ContextCompat.getColor(itemView.context, R.color.light_blue_background)
-                )
-                cardDayCell.strokeWidth = 4
-                cardDayCell.strokeColor = ContextCompat.getColor(itemView.context, R.color.nav_blue)
-            } else {
-                textDayNumber.setTypeface(null, Typeface.NORMAL)
-                cardDayCell.setCardBackgroundColor(
-                    ContextCompat.getColor(itemView.context, android.R.color.transparent)
-                )
-                cardDayCell.strokeWidth = 0
-            }
-
-            // Highlight selected date (override today if selected)
-            if (day.isSelected && !day.isToday) {
-                cardDayCell.strokeWidth = 3
-                cardDayCell.strokeColor = ContextCompat.getColor(itemView.context, R.color.nav_blue)
-                textDayNumber.setTextColor(ContextCompat.getColor(itemView.context, R.color.nav_blue))
-                textDayNumber.setTypeface(null, Typeface.BOLD)
-            }
-
-            // Show task indicator dots with status-based colors
-            taskIndicatorDots.removeAllViews()
-            if (day.taskCount > 0) {
-                val statusCounts = mapOf(
-                    "OVERDUE" to day.overdueCount,
-                    "IN_PROGRESS" to day.inProgressCount,
-                    "COMPLETED" to day.completedCount,
-                    "PENDING" to (day.taskCount - day.overdueCount - day.inProgressCount - day.completedCount)
-                )
-
-                // Show up to 3 dots representing different statuses
-                var dotsAdded = 0
-                val maxDots = 3
-
-                // Priority: Overdue > In Progress > Pending > Completed
-                if (statusCounts["OVERDUE"]!! > 0 && dotsAdded < maxDots) {
-                    addStatusDot(R.drawable.status_dot_overdue)
-                    dotsAdded++
+            when {
+                day.isSelected -> {
+                    number.setBackgroundResource(R.drawable.bg_calendar_selected)
+                    number.setTextColor(ContextCompat.getColor(ctx, R.color.ll_on_primary))
                 }
-                if (statusCounts["IN_PROGRESS"]!! > 0 && dotsAdded < maxDots) {
-                    addStatusDot(R.drawable.status_dot_in_progress)
-                    dotsAdded++
+                day.isToday -> {
+                    number.setBackgroundResource(R.drawable.bg_calendar_today)
+                    number.setTextColor(ContextCompat.getColor(ctx, R.color.ll_primary))
                 }
-                if (statusCounts["PENDING"]!! > 0 && dotsAdded < maxDots) {
-                    addStatusDot(R.drawable.status_dot_pending)
-                    dotsAdded++
-                }
-                if (statusCounts["COMPLETED"]!! > 0 && dotsAdded < maxDots) {
-                    addStatusDot(R.drawable.status_dot_completed)
-                    dotsAdded++
+                else -> {
+                    number.background = null
+                    number.setTextColor(MaterialColors.getColor(number,
+                        if (day.isCurrentMonth) com.google.android.material.R.attr.colorOnSurface
+                        else com.google.android.material.R.attr.colorOutline))
                 }
             }
 
-            // Show overdue indicator
-            overdueIndicator.visibility = if (day.overdueCount > 0) View.VISIBLE else View.GONE
-
-            // Click listener
-            cardDayCell.setOnClickListener {
-                onDateClick(day)
+            // Up to three dots: overdue, open, done
+            val colors = buildList {
+                if (day.overdueCount > 0) add(R.color.ll_error)
+                if (day.taskCount - day.overdueCount - day.completedCount > 0) add(R.color.ll_primary)
+                if (day.completedCount > 0) add(R.color.ll_tertiary)
             }
+            listOf(b.dot1, b.dot2, b.dot3).forEachIndexed { i, dot ->
+                val color = colors.getOrNull(i)
+                dot.visibility = if (color != null) View.VISIBLE else View.GONE
+                if (color != null) dot.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(ctx, color))
+            }
+            b.dots.alpha = if (day.isCurrentMonth) 1f else 0.4f
 
-            // Accessibility
-            cardDayCell.contentDescription = buildContentDescription(day)
-        }
-
-        private fun addStatusDot(drawableRes: Int) {
-            val dot = View(itemView.context)
-            val size = 8 // 8dp
-            val sizeInPx = (size * itemView.context.resources.displayMetrics.density).toInt()
-            val params = LinearLayout.LayoutParams(sizeInPx, sizeInPx)
-            params.setMargins(2, 0, 2, 0)
-            dot.layoutParams = params
-            dot.setBackgroundResource(drawableRes)
-            taskIndicatorDots.addView(dot)
-        }
-
-        private fun buildContentDescription(day: CalendarDay): String {
-            val dateStr = day.date.toString()
-            return when {
-                day.taskCount == 0 -> "$dateStr, no tasks"
-                day.overdueCount > 0 -> "$dateStr, ${day.taskCount} tasks, ${day.overdueCount} overdue"
-                else -> "$dateStr, ${day.taskCount} tasks"
+            b.dayCell.setOnClickListener { onDateClick(day) }
+            b.dayCell.contentDescription = buildString {
+                append(day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)))
+                if (day.taskCount > 0) append(", ").append(ctx.resources.getQuantityString(R.plurals.tasks_count, day.taskCount, day.taskCount))
+                if (day.overdueCount > 0) append(", ").append(day.overdueCount).append(' ').append(ctx.getString(R.string.section_overdue).lowercase())
             }
         }
     }
 
-    class CalendarDayDiffCallback : DiffUtil.ItemCallback<CalendarDay>() {
-        override fun areItemsTheSame(oldItem: CalendarDay, newItem: CalendarDay): Boolean {
-            return oldItem.date == newItem.date
-        }
-
-        override fun areContentsTheSame(oldItem: CalendarDay, newItem: CalendarDay): Boolean {
-            return oldItem == newItem
-        }
+    private object Diff : DiffUtil.ItemCallback<CalendarDay>() {
+        override fun areItemsTheSame(oldItem: CalendarDay, newItem: CalendarDay) = oldItem.date == newItem.date
+        override fun areContentsTheSame(oldItem: CalendarDay, newItem: CalendarDay) = oldItem == newItem
     }
 }
-

@@ -1,144 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/screen_bg"
-    tools:context=".ui.notes.NotesFragment">
+    android:background="?android:attr/colorBackground">
 
-    <include
-        android:id="@+id/top_bar"
-        layout="@layout/top_bar"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Search Bar -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/searchCard"
-        android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="16dp"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="20dp"
-        app:layout_constraintTop_toBottomOf="@id/top_bar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.85"
-        app:contentPadding="0dp">
-
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/searchView"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:minHeight="40dp"
-            app:iconifiedByDefault="false"
-            app:queryHint="Search notes..."
-            app:queryBackground="@android:color/transparent" />
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- Filter Chips -->
-    <HorizontalScrollView
-        android:id="@+id/filterChipsContainer"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@id/searchCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:background="?android:attr/colorBackground"
+        app:elevation="0dp">
 
-        <com.google.android.material.chip.ChipGroup
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:singleLine="true">
+            android:orientation="vertical"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipPinnedOnly"
-                style="@style/Widget.LearnLog.Chip.Filter"
-                android:layout_width="wrap_content"
+            <include
+                android:id="@+id/top_bar"
+                layout="@layout/top_bar" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/pinned_only"
-                app:chipIcon="@drawable/ic_pin_outlined" />
+                android:layout_marginStart="@dimen/page_gutter"
+                android:layout_marginEnd="@dimen/page_gutter"
+                android:layout_marginBottom="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipClearFilters"
-                style="@style/Widget.LearnLog.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/clear_filters"
-                android:visibility="gone"
-                tools:visibility="visible" />
-        </com.google.android.material.chip.ChipGroup>
-    </HorizontalScrollView>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/search_layout"
+                    style="@style/Widget.LearnLog.TextInput.Search"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
 
-    <!-- Notes RecyclerView -->
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/search_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/notes_search_hint"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_pinned_only"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:checkable="true"
+                    android:text="@string/pinned_only"
+                    app:chipIcon="@drawable/ic_pin_filled"
+                    app:chipIconSize="16dp"
+                    app:chipIconVisible="true" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_notes"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:padding="16dp"
-        android:paddingBottom="100dp"
-        app:layout_constraintTop_toBottomOf="@id/filterChipsContainer"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layoutAnimation="@anim/layout_rise_in"
+        android:paddingStart="15dp"
+        android:paddingTop="2dp"
+        android:paddingEnd="15dp"
+        android:paddingBottom="@dimen/bottom_nav_clearance"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:listitem="@layout/item_note" />
 
-    <!-- Empty State -->
-    <LinearLayout
-        android:id="@+id/emptyStateLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/empty_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:paddingBottom="@dimen/bottom_nav_clearance"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:visibility="visible">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@drawable/ic_note"
-            android:alpha="0.3"
-            android:contentDescription="@string/no_notes_icon_desc" />
+        <include
+            android:id="@+id/empty_state"
+            layout="@layout/view_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </androidx.core.widget.NestedScrollView>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/no_notes_title"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginTop="16dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/no_notes_message"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginTop="8dp" />
-    </LinearLayout>
-
-    <!-- FAB -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabAddNote"
+        android:id="@+id/fab_add_note"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="100dp"
-        android:text="@string/add_note"
-        android:textColor="@color/white"
-        app:icon="@drawable/ic_add"
-        app:iconTint="@color/white"
-        app:backgroundTint="@color/nav_blue"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/page_gutter"
+        android:layout_marginBottom="@dimen/fab_bottom_margin"
+        android:text="@string/notes_new"
+        app:icon="@drawable/ic_edit" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

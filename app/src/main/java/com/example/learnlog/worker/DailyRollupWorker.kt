@@ -7,76 +7,60 @@ import androidx.work.WorkerParameters
 import com.example.learnlog.data.dao.DailyRollupDao
 import com.example.learnlog.data.dao.SessionLogDao
 import com.example.learnlog.data.entity.DailyRollupEntity
+import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
+import dagger.Lazy
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
+import org.threeten.bp.LocalDate
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.LocalTime
+import org.threeten.bp.ZoneId
 
 /**
- * Background worker to compute daily rollups for performance optimization.
- * Runs nightly to precompute totals per day.
+ * Nightly job that stores per-day totals of completed focus sessions (last 90 days) and
+ * prunes rollups older than 180 days.
  */
 @HiltWorker
 class DailyRollupWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val sessionLogDao: SessionLogDao,
-    private val dailyRollupDao: DailyRollupDao
+    // Lazy: the per-account database must not be opened before someone has signed in
+    private val sessionLogDao: Lazy<SessionLogDao>,
+    private val dailyRollupDao: Lazy<DailyRollupDao>
 ) : CoroutineWorker(context, params) {
 
     private val gson = Gson()
 
     override suspend fun doWork(): Result {
+        if (FirebaseAuth.getInstance().currentUser == null) return Result.success()
         return try {
-            // Compute rollups for the last 90 days
-            val today = org.threeten.bp.LocalDate.now()
-            val startDateLocal = today.minusDays(90)
-
-            val startDateTime = org.threeten.bp.LocalDateTime.of(startDateLocal, org.threeten.bp.LocalTime.MIN)
-            val endDateTime = org.threeten.bp.LocalDateTime.now()
-
-            // Get all sessions in range
-            val sessions = sessionLogDao.getSessionsInTimeRange(
-                startDateTime.atZone(org.threeten.bp.ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                endDateTime.atZone(org.threeten.bp.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val zone = ZoneId.systemDefault()
+            val start = LocalDateTime.of(LocalDate.now().minusDays(90), LocalTime.MIN)
+            val sessions = sessionLogDao.get().getCompletedInRange(
+                start.atZone(zone).toInstant().toEpochMilli(),
+                LocalDateTime.now().atZone(zone).toInstant().toEpochMilli()
             ).first()
 
-            // Group by date
-            val sessionsByDate = sessions.groupBy { session ->
-                session.startTime.toLocalDate().toString()
-            }
-
-            // Compute rollup for each day
-            sessionsByDate.forEach { (date, daySessions) ->
-                val totalMinutes = daySessions.sumOf { it.durationMinutes }
-                val sessionCount = daySessions.size
-
-                // Group by subject
-                val subjectBreakdown = daySessions
-                    .filter { !it.subject.isNullOrEmpty() }
-                    .groupBy { it.subject!! }
-                    .mapValues { (_, sessions) -> sessions.sumOf { it.durationMinutes } }
-
-                val rollup = DailyRollupEntity(
-                    date = date,
-                    totalMinutes = totalMinutes,
-                    sessionCount = sessionCount,
-                    subjectBreakdown = gson.toJson(subjectBreakdown),
-                    lastUpdated = System.currentTimeMillis()
+            sessions.groupBy { it.startTime.toLocalDate().toString() }.forEach { (date, daySessions) ->
+                val breakdown = daySessions
+                    .groupBy { it.subject?.takeIf { s -> s.isNotBlank() } ?: "General" }
+                    .mapValues { (_, list) -> list.sumOf { it.durationMinutes } }
+                dailyRollupDao.get().insertOrUpdate(
+                    DailyRollupEntity(
+                        date = date,
+                        totalMinutes = daySessions.sumOf { it.durationMinutes },
+                        sessionCount = daySessions.size,
+                        subjectBreakdown = gson.toJson(breakdown),
+                        lastUpdated = System.currentTimeMillis()
+                    )
                 )
-
-                dailyRollupDao.insertOrUpdate(rollup)
             }
-
-            // Clean up old rollups (older than 180 days)
-            val cutoffDate = org.threeten.bp.LocalDate.now().minusDays(180).toString()
-            dailyRollupDao.deleteOldRollups(cutoffDate)
-
+            dailyRollupDao.get().deleteOldRollups(LocalDate.now().minusDays(180).toString())
             Result.success()
         } catch (e: Exception) {
-            e.printStackTrace()
             Result.retry()
         }
     }
 }
-

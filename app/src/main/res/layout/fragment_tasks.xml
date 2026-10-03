@@ -1,113 +1,227 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/screen_bg"
-    tools:context=".ui.tasks.TasksFragment">
+    android:background="?android:attr/colorBackground">
 
-    <include
-        android:id="@+id/top_bar"
-        layout="@layout/top_bar"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:background="?android:attr/colorBackground"
+        app:elevation="0dp"
+        app:liftOnScroll="false">
 
-    <!-- Search Bar -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/searchCard"
-        android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="16dp"
-        app:cardElevation="2dp"
-        app:cardCornerRadius="20dp"
-        app:layout_constraintTop_toBottomOf="@id/top_bar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.85"
-        app:contentPadding="0dp">
-
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/searchView"
+        <!-- Scrolls away -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:minHeight="40dp"
-            app:iconifiedByDefault="false"
-            app:queryHint="Search tasks..."
-            app:queryBackground="@android:color/transparent" />
-    </com.google.android.material.card.MaterialCardView>
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
+
+            <include
+                android:id="@+id/top_bar"
+                layout="@layout/top_bar" />
+
+            <!-- Today summary -->
+            <LinearLayout
+                android:id="@+id/hero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/page_gutter"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="@dimen/page_gutter"
+                android:background="@drawable/bg_hero_gradient"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/hero_greeting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="@color/white_80"
+                        tools:text="Good morning, Thant" />
+
+                    <TextView
+                        android:id="@+id/hero_progress_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                        android:textColor="@color/white"
+                        tools:text="2 of 5 done today" />
+
+                    <TextView
+                        android:id="@+id/hero_focus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_pill"
+                        android:backgroundTint="@color/white_20"
+                        android:drawablePadding="6dp"
+                        android:paddingStart="10dp"
+                        android:paddingTop="5dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="5dp"
+                        android:textAppearance="?attr/textAppearanceLabelMedium"
+                        android:textColor="@color/white"
+                        app:drawableStartCompat="@drawable/ic_bolt"
+                        app:drawableTint="@color/white"
+                        tools:text="45 min focused today" />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="76dp"
+                    android:layout_height="76dp"
+                    android:layout_marginStart="12dp">
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/hero_ring"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:indicatorColor="@color/white"
+                        app:indicatorSize="76dp"
+                        app:trackColor="@color/white_20"
+                        app:trackCornerRadius="8dp"
+                        app:trackThickness="8dp"
+                        tools:progress="40" />
+
+                    <TextView
+                        android:id="@+id/hero_percent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="@color/white"
+                        tools:text="40%" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/search_layout"
+                style="@style/Widget.LearnLog.TextInput.Search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/page_gutter"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="@dimen/page_gutter">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/search_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/tasks_search_hint"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Stays pinned -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/page_gutter"
+            android:paddingTop="10dp"
+            android:paddingEnd="@dimen/page_gutter"
+            android:paddingBottom="4dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/filter_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:checkedChip="@id/chip_all"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="@string/filter_all" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_today"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="@string/filter_today" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_upcoming"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="@string/filter_upcoming" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_overdue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="@string/filter_overdue" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_done"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="@string/filter_done" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_tasks"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingBottom="100dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/searchCard"
+        android:layoutAnimation="@anim/layout_rise_in"
+        android:paddingTop="4dp"
+        android:paddingBottom="@dimen/bottom_nav_clearance"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:listitem="@layout/item_task" />
 
-    <LinearLayout
-        android:id="@+id/empty_state"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/empty_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:paddingBottom="@dimen/bottom_nav_clearance"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@drawable/ic_empty_tasks"
-            android:contentDescription="@string/no_notes_icon_desc" />
-
-        <TextView
-            android:layout_width="wrap_content"
+        <include
+            android:id="@+id/empty_state"
+            layout="@layout/view_empty_state"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/no_notes_title"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:layout_gravity="center" />
+    </androidx.core.widget.NestedScrollView>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/add_task_hint"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_empty_add_task"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/add_task"
-            app:icon="@drawable/ic_add" />
-
-    </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_add_task"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="96dp"
-        android:contentDescription="@string/add_task"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_add"
-        app:tint="@android:color/white"
-        app:backgroundTint="@color/nav_blue" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/page_gutter"
+        android:layout_marginBottom="@dimen/fab_bottom_margin"
+        android:text="@string/tasks_new"
+        app:icon="@drawable/ic_add" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

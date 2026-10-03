@@ -5,4 +5,3 @@ enum class TaskSort {
     PRIORITY,
     TITLE
 }
-

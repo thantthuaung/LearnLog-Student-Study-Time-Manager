@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:background="@drawable/bg_hero_gradient"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <FrameLayout
+        android:id="@+id/avatar_container"
+        android:layout_width="@dimen/avatar_lg"
+        android:layout_height="@dimen/avatar_lg"
+        android:background="@drawable/bg_dot"
+        android:backgroundTint="@color/white_20"
+        android:clickable="true"
+        android:contentDescription="@string/account_change_photo"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless">
+
+        <TextView
+            android:id="@+id/avatar_initials"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="@color/white"
+            tools:text="TA" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/avatar_photo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:shapeAppearance="@style/ShapeAppearance.LearnLog.Pill"
+            app:strokeColor="@color/white_80"
+            app:strokeWidth="2dp" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/header_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:textColor="@color/white"
+        tools:text="Thant Thu Aung" />
+
+    <TextView
+        android:id="@+id/header_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="@color/white_80"
+        tools:text="student@example.com" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_change_photo"
+        style="@style/Widget.LearnLog.Button.Tonal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:minHeight="42dp"
+        android:text="@string/account_change_photo"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/white_20"
+        app:icon="@drawable/ic_edit"
+        app:iconTint="@color/white" />
+</LinearLayout>

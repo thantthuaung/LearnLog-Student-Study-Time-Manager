@@ -1,282 +1,220 @@
 package com.example.learnlog.ui.timer
 
-import android.content.Context
-import android.media.Ringtone
-import android.media.RingtoneManager
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
+import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.learnlog.MainActivity
 import com.example.learnlog.R
+import com.example.learnlog.data.entity.TaskEntity
+import com.example.learnlog.data.model.TimerPresets
 import com.example.learnlog.databinding.BottomSheetTaskTimerBinding
+import com.example.learnlog.timer.FocusTimer
+import com.example.learnlog.timer.FocusTimerService
+import com.example.learnlog.timer.TimerAlerts
+import com.example.learnlog.ui.common.Format
+import com.example.learnlog.ui.common.Motion
+import com.example.learnlog.ui.common.NotificationPermissionGate
+import com.example.learnlog.ui.timer.TimerViewModel.Companion.toLinked
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.chip.Chip
+import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Locale
+import kotlinx.coroutines.launch
 
+/**
+ * Quick focus session for one task. It is only a view onto the app-wide FocusTimer, so
+ * closing the sheet never stops the session – it keeps running on the Focus tab.
+ */
 @AndroidEntryPoint
 class TaskTimerBottomSheet : BottomSheetDialogFragment() {
+
     private var _binding: BottomSheetTaskTimerBinding? = null
     private val binding get() = _binding!!
     private val viewModel: TimerViewModel by viewModels()
+    private lateinit var task: TaskEntity
+    private var chosenMinutes = 25
 
-    private var taskId: Long = -1L
-    private var taskTitle: String = ""
-    private var taskSubject: String? = null
-    private var initialDurationMinutes: Int = 25
-
-    private var currentDurationMs = 25 * 60 * 1000L
-    private var remainingMillis = currentDurationMs
-    private var countDownTimer: CountDownTimer? = null
-    private var actualStartTimeMillis: Long = 0 // Track actual wall-clock start time
-    private var sessionStarted = false
-    private var isRunning = false
-
-    private var vibrator: Vibrator? = null
-    private var ringtone: Ringtone? = null
-
-    companion object {
-        private const val ARG_TASK_ID = "taskId"
-        private const val ARG_TASK_TITLE = "taskTitle"
-        private const val ARG_TASK_SUBJECT = "taskSubject"
-        private const val ARG_DURATION_MINUTES = "durationMinutes"
-
-        fun newInstance(
-            taskId: Long,
-            taskTitle: String,
-            taskSubject: String?,
-            durationMinutes: Int = 25
-        ): TaskTimerBottomSheet {
-            return TaskTimerBottomSheet().apply {
-                arguments = Bundle().apply {
-                    putLong(ARG_TASK_ID, taskId)
-                    putString(ARG_TASK_TITLE, taskTitle)
-                    putString(ARG_TASK_SUBJECT, taskSubject)
-                    putInt(ARG_DURATION_MINUTES, durationMinutes)
-                }
-            }
-        }
-    }
+    private val permissionGate = NotificationPermissionGate(
+        this,
+        shouldAsk = { viewModel.shouldAskNotificationPermission() },
+        markAsked = { viewModel.notificationPermissionAsked() }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            taskId = it.getLong(ARG_TASK_ID, -1L)
-            taskTitle = it.getString(ARG_TASK_TITLE, "Focus Session")
-            taskSubject = it.getString(ARG_TASK_SUBJECT)
-            initialDurationMinutes = it.getInt(ARG_DURATION_MINUTES, 25)
-        }
-
-        currentDurationMs = initialDurationMinutes * 60 * 1000L
-        remainingMillis = currentDurationMs
+        @Suppress("DEPRECATION")
+        task = requireArguments().getParcelable(ARG_TASK)!!
+        chosenMinutes = savedInstanceState?.getInt(STATE_MINUTES)
+            ?: task.durationMinutes.coerceIn(TimerPresets.MIN_DURATION_MINUTES, TimerPresets.MAX_DURATION_MINUTES)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = BottomSheetTaskTimerBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    override fun onStart() {
+        super.onStart()
+        (dialog as? BottomSheetDialog)?.behavior?.apply {
+            state = BottomSheetBehavior.STATE_EXPANDED
+            skipCollapsed = true
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.textTaskTitle.text = task.title
+        binding.textSubject.isVisible = !task.subject.isNullOrBlank()
+        binding.textSubject.text = task.subject
 
-        vibrator = requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        val notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        ringtone = RingtoneManager.getRingtone(requireContext(), notificationUri)
-
-        setupUI()
-        setupControls()
-        updateDisplay()
-    }
-
-    private fun setupUI() {
-        binding.textTaskTitle.text = taskTitle
-
-        if (taskSubject.isNullOrBlank()) {
-            binding.chipSubject.visibility = View.GONE
-        } else {
-            binding.chipSubject.visibility = View.VISIBLE
-            binding.chipSubject.text = taskSubject
+        setupDurations()
+        binding.btnStartPause.setOnClickListener { onPrimary() }
+        binding.btnFinish.setOnClickListener { viewModel.timer.stop(save = true) }
+        binding.btnOpenTimer.setOnClickListener { openTimerTab() }
+        binding.btnSwitch.setOnClickListener {
+            viewModel.timer.stop(save = true)
+            viewModel.timer.acknowledgeFinished()
+            startForThisTask()
         }
-    }
-
-    private fun setupControls() {
-        // Start/Pause button
-        binding.btnStartPause.setOnClickListener {
-            if (isRunning) {
-                pauseTimer()
-            } else {
-                startTimer()
-            }
+        binding.btnMarkDone.setOnClickListener {
+            viewModel.markTaskDone(task.id)
+            TimerAlerts.tick(requireContext())
+            viewModel.timer.acknowledgeFinished()
+            dismiss()
+        }
+        binding.btnKeepGoing.setOnClickListener {
+            viewModel.timer.acknowledgeFinished()
+            dismiss()
         }
 
-        // Stop button
-        binding.btnStop.setOnClickListener {
-            stopTimer()
-        }
-
-        // Time adjustment
-        binding.btnIncrease.setOnClickListener {
-            if (!isRunning) {
-                adjustTime(5 * 60 * 1000L) // +5 minutes
-            }
-        }
-
-        binding.btnDecrease.setOnClickListener {
-            if (!isRunning) {
-                adjustTime(-1 * 60 * 1000L) // -1 minute
-            }
-        }
-
-        // Keep screen on toggle
-        binding.switchKeepScreenOn.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            } else {
-                dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collect(::render)
             }
         }
     }
 
-    private fun startTimer() {
-        // Start session on first start
-        if (!sessionStarted) {
-            val durationMinutes = (currentDurationMs / 1000 / 60).toInt()
-            viewModel.startTimerSession(taskId, taskTitle, durationMinutes)
-            sessionStarted = true
-        }
-            actualStartTimeMillis = System.currentTimeMillis() // Record actual start time
-        isRunning = true
-        binding.btnStartPause.text = "Pause"
-        binding.btnStartPause.setIconResource(R.drawable.ic_pause)
-        binding.btnStop.visibility = View.VISIBLE
-        binding.btnIncrease.isEnabled = false
-        binding.btnDecrease.isEnabled = false
+    private fun isMine(s: FocusTimer.State) = s.task?.id == task.id
 
-        countDownTimer = object : CountDownTimer(remainingMillis, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                remainingMillis = millisUntilFinished
-                updateDisplay()
+    private fun onPrimary() {
+        val s = viewModel.state.value
+        when {
+            isMine(s) && s.phase == FocusTimer.Phase.RUNNING -> viewModel.timer.pause()
+            isMine(s) && s.phase == FocusTimer.Phase.PAUSED -> viewModel.timer.start()
+            else -> startForThisTask()
+        }
+    }
+
+    private fun startForThisTask() {
+        viewModel.timer.prepare(task.toLinked(), chosenMinutes)
+        permissionGate.run {
+            viewModel.timer.start()
+            TimerAlerts.tick(requireContext())
+        }
+    }
+
+    private fun setupDurations() {
+        val options = (listOf(15, 25, 45, 60) + chosenMinutes).distinct().sorted()
+        options.forEach { minutes ->
+            val chip = (layoutInflater.inflate(R.layout.view_choice_chip, binding.durationChips, false) as Chip).apply {
+                id = View.generateViewId()
+                text = Format.compact(minutes)
+                tag = minutes
+                isChecked = minutes == chosenMinutes
             }
-
-            override fun onFinish() {
-                onTimerComplete()
+            binding.durationChips.addView(chip)
+        }
+        binding.durationChips.setOnCheckedStateChangeListener { group, ids ->
+            (ids.firstOrNull()?.let { group.findViewById<Chip>(it) }?.tag as? Int)?.let {
+                chosenMinutes = it
+                render(viewModel.state.value)
             }
-        }.start()
+        }
     }
 
-    private fun pauseTimer() {
-        isRunning = false
-        binding.btnStartPause.text = "Resume"
-        binding.btnStartPause.setIconResource(R.drawable.ic_play)
-        countDownTimer?.cancel()
-    }
+    private fun render(s: FocusTimer.State) {
+        val b = _binding ?: return
+        val mine = isMine(s)
+        val busyElsewhere = s.isActive && !mine
+        b.busyCard.isVisible = busyElsewhere
+        if (busyElsewhere) {
+            b.busyText.text = s.task?.let { getString(R.string.timer_running_elsewhere, it.title) }
+                ?: getString(R.string.timer_running_free)
+        }
 
-    private fun stopTimer() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Stop Timer?")
-            .setMessage("Are you sure you want to stop this timer session?")
-            .setPositiveButton("Stop") { _, _ ->
-                completeSession(false)
+        val phase = if (mine) s.phase else FocusTimer.Phase.IDLE
+        val totalMs = if (mine) s.totalMs else chosenMinutes * 60_000L
+        val remaining = if (mine && phase != FocusTimer.Phase.IDLE) s.remainingMs else totalMs
+        b.textCountdown.text = FocusTimerService.formatClock(remaining)
+        b.progressRing.setProgressCompat(if (mine) (s.progress * 1000).toInt() else 0, phase != FocusTimer.Phase.RUNNING)
+        b.progressRing.setIndicatorColor(MaterialColors.getColor(b.progressRing,
+            when (phase) {
+                FocusTimer.Phase.PAUSED -> com.google.android.material.R.attr.colorSecondary
+                FocusTimer.Phase.FINISHED -> com.google.android.material.R.attr.colorTertiary
+                else -> com.google.android.material.R.attr.colorPrimary
+            }))
+        b.textState.setText(
+            when (phase) {
+                FocusTimer.Phase.RUNNING -> R.string.timer_focusing
+                FocusTimer.Phase.PAUSED -> R.string.timer_paused
+                FocusTimer.Phase.FINISHED -> R.string.timer_complete
+                FocusTimer.Phase.IDLE -> R.string.timer_ready
             }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
+        )
 
-    private fun adjustTime(deltaMs: Long) {
-        val newDuration = (currentDurationMs + deltaMs).coerceIn(60 * 1000L, 180 * 60 * 1000L)
-        currentDurationMs = newDuration
-        remainingMillis = newDuration
-        updateDisplay()
-    }
-
-    private fun updateDisplay() {
-        val minutes = remainingMillis / 1000 / 60
-        val seconds = remainingMillis / 1000 % 60
-        binding.textCountdown.text = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
-
-        // Update progress
-        val progress = if (currentDurationMs > 0) {
-            ((currentDurationMs - remainingMillis).toFloat() / currentDurationMs * 100).toInt()
-        } else 0
-        binding.progressCircle.progress = progress
-    }
-
-    private fun onTimerComplete() {
-        isRunning = false
-        remainingMillis = 0
-        updateDisplay()
-
-        // Play sound and vibrate
-        if (binding.switchSound.isChecked) {
-            ringtone?.play()
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(500)
-        }
-
-        // Show completion dialog
-        showCompletionDialog()
-    }
-
-    private fun showCompletionDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Great Work!")
-            .setMessage("You've completed your focus session. Would you like to mark this task as completed?")
-            .setPositiveButton("Mark Completed") { _, _ ->
-                completeSession(true)
+        b.durationsScroll.isVisible = phase == FocusTimer.Phase.IDLE && !busyElsewhere
+        b.controls.isVisible = phase != FocusTimer.Phase.FINISHED && !busyElsewhere
+        b.btnFinish.isVisible = mine && s.isActive
+        b.btnStartPause.setText(
+            when (phase) {
+                FocusTimer.Phase.RUNNING -> R.string.pause
+                FocusTimer.Phase.PAUSED -> R.string.resume
+                else -> R.string.action_start_focus
             }
-            .setNegativeButton("Keep In Progress") { _, _ ->
-                completeSession(false)
-            }
-            .setCancelable(false)
-            .show()
+        )
+        b.btnStartPause.setIconResource(if (phase == FocusTimer.Phase.RUNNING) R.drawable.ic_pause else R.drawable.ic_play)
+
+        val finished = mine && s.phase == FocusTimer.Phase.FINISHED
+        if (finished && !b.completePanel.isVisible) Motion.staggerIn(listOf(b.completePanel))
+        b.completePanel.isVisible = finished
+        if (finished) {
+            b.completeMessage.text = getString(R.string.timer_complete_message, Format.minutes(requireContext(), s.lastSavedMinutes)) +
+                "\n" + getString(R.string.timer_complete_task, task.title)
+        }
     }
 
-    private fun completeSession(markTaskCompleted: Boolean) {
-        // Calculate actual elapsed time from wall-clock, not countdown timer
-        val actualElapsedMs = if (actualStartTimeMillis > 0) {
-            System.currentTimeMillis() - actualStartTimeMillis
-        } else {
-            // Fallback to countdown calculation if start time wasn't set
-            currentDurationMs - remainingMillis
-        }
-        val actualDurationMinutes = (actualElapsedMs / 1000 / 60).toInt().coerceAtLeast(1)
-
-        viewModel.completeTimerSession(actualDurationMinutes)
-
-        if (markTaskCompleted) {
-            viewModel.markTaskCompleted(taskId)
-        }
-
-        val message = if (markTaskCompleted) {
-            "Task completed! Session saved."
-        } else {
-            "Session saved"
-        }
-
-        activity?.findViewById<View>(android.R.id.content)?.let { rootView ->
-            Snackbar.make(rootView, message, Snackbar.LENGTH_SHORT).show()
-        }
-
+    private fun openTimerTab() {
         dismiss()
+        (activity as? MainActivity)?.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
+            ?.selectedItemId = R.id.timerFragment
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(STATE_MINUTES, chosenMinutes)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        countDownTimer?.cancel()
-
-        // Clean up screen on flag
-        dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
         _binding = null
     }
-}
 
+    companion object {
+        const val TAG = "TaskTimerSheet"
+        private const val ARG_TASK = "task"
+        private const val STATE_MINUTES = "minutes"
+
+        fun newInstance(task: TaskEntity) = TaskTimerBottomSheet().apply {
+            arguments = bundleOf(ARG_TASK to task)
+        }
+    }
+}
