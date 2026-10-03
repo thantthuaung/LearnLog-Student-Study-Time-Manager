@@ -77,6 +77,7 @@ class NotesFragment : BaseFragment(), Reselectable {
         val empty = state.notes.isEmpty()
         binding.emptyContainer.isVisible = empty
         binding.recyclerViewNotes.isVisible = !empty
+        if (empty && !state.isFiltering) binding.fabAddNote.hide() else binding.fabAddNote.show()
         if (empty) with(binding.emptyState) {
             if (state.isFiltering) {
                 emptyIcon.setImageResource(R.drawable.ic_search)

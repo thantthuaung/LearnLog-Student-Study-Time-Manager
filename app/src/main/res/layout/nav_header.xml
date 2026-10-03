@@ -80,7 +80,7 @@
             android:text="@string/app_tagline"
             android:textAppearance="?attr/textAppearanceLabelMedium"
             android:textColor="@color/white"
-            app:drawableStartCompat="@drawable/ic_school"
+            app:drawableStartCompat="@drawable/pill_ic_school"
             app:drawableTint="@color/white" />
     </LinearLayout>
 </LinearLayout>

@@ -58,6 +58,8 @@ object Charts {
                 textSize = 10f
                 typeface = tf
                 setLabelCount(4, false)
+                granularity = 1f
+                isGranularityEnabled = true
                 valueFormatter = object : ValueFormatter() {
                     override fun getFormattedValue(value: Float) = Format.compact(value.toInt())
                 }

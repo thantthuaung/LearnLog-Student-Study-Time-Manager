@@ -151,6 +151,7 @@
                 app:chipIcon="@drawable/bg_dot"
                 app:chipIconSize="10dp"
                 app:chipIconTint="@color/priority_low"
+                app:chipIconVisible="true"
                 app:iconStartPadding="6dp"
                 tools:ignore="HardcodedText" />
 
@@ -163,6 +164,7 @@
                 app:chipIcon="@drawable/bg_dot"
                 app:chipIconSize="10dp"
                 app:chipIconTint="@color/priority_medium"
+                app:chipIconVisible="true"
                 app:iconStartPadding="6dp"
                 tools:ignore="HardcodedText" />
 
@@ -175,6 +177,7 @@
                 app:chipIcon="@drawable/bg_dot"
                 app:chipIconSize="10dp"
                 app:chipIconTint="@color/priority_high"
+                app:chipIconVisible="true"
                 app:iconStartPadding="6dp"
                 tools:ignore="HardcodedText" />
         </com.google.android.material.chip.ChipGroup>

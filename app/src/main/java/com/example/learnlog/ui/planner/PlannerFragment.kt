@@ -162,7 +162,6 @@ class PlannerFragment : BaseFragment(), Reselectable {
                 launch {
                     viewModel.currentMonth.collect { month ->
                         binding.textMonthYear.text = month.format(monthFormat)
-                        setTopBarSubtitle(binding.topBar.root, month.format(monthFormat))
                     }
                 }
                 launch {
@@ -186,12 +185,13 @@ class PlannerFragment : BaseFragment(), Reselectable {
                         }
                         binding.textDaySummary.text = if (plan.taskCount == 0) getString(R.string.planner_day_empty)
                         else getString(
-                            R.string.planner_day_summary, plan.taskCount, Format.minutes(requireContext(), plan.plannedMinutes)
+                            R.string.planner_day_summary, resources.getQuantityString(R.plurals.tasks_count, plan.taskCount, plan.taskCount), Format.minutes(requireContext(), plan.plannedMinutes)
                         )
                         tasksAdapter.submitList(plan.rows)
                         val empty = plan.rows.isEmpty()
                         binding.emptyContainer.isVisible = empty
                         binding.dayTasksRecyclerView.isVisible = !empty
+                        if (empty && plan.taskCount == 0) binding.fabAddTask.hide() else binding.fabAddTask.show()
                         if (empty) with(binding.emptyState) {
                             emptyIcon.setImageResource(R.drawable.ic_empty_calendar)
                             emptyTitle.setText(R.string.planner_empty_title)

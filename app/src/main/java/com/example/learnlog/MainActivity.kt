@@ -53,11 +53,11 @@ class MainActivity : AppCompatActivity() {
 
         val navHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHost.navController
-        if (savedInstanceState == null) {
-            val graph = navController.navInflater.inflate(R.navigation.nav_graph)
-            graph.setStartDestination(if (authManager.isUserLoggedIn) R.id.tasksFragment else R.id.loginFragment)
-            navController.graph = graph
-        }
+        // The graph is set here (not in XML) so the start destination depends on sign-in state;
+        // on re-creation NavController restores the saved back stack onto this graph.
+        val graph = navController.navInflater.inflate(R.navigation.nav_graph)
+        graph.setStartDestination(if (authManager.isUserLoggedIn) R.id.tasksFragment else R.id.loginFragment)
+        navController.graph = graph
 
         setupBottomNav()
         setupDrawer()

@@ -135,7 +135,7 @@ class TimerFragment : BaseFragment(), Reselectable {
         textFocused.text = when (phase) {
             FocusTimer.Phase.IDLE -> Format.minutes(ctx, (s.totalMs / 60_000).toInt())
             FocusTimer.Phase.FINISHED -> "+" + Format.minutes(ctx, s.lastSavedMinutes)
-            else -> Format.minutes(ctx, s.focusedMinutes) + " · " + Format.minutes(ctx, (s.totalMs / 60_000).toInt())
+            else -> Format.minutes(ctx, (s.focusedMs / 60_000).toInt()) + " · " + Format.minutes(ctx, (s.totalMs / 60_000).toInt())
         }
 
         if (phaseChanged) {

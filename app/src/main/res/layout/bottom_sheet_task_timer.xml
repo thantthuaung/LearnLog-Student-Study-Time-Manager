@@ -32,7 +32,7 @@
             android:id="@+id/text_subject"
             style="@style/Widget.LearnLog.Pill"
             android:layout_marginTop="8dp"
-            app:drawableStartCompat="@drawable/ic_subject"
+            app:drawableStartCompat="@drawable/pill_ic_subject"
             app:drawableTint="?attr/colorOnSurfaceVariant"
             tools:text="Mathematics" />
 

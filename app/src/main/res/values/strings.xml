@@ -175,7 +175,7 @@
     <string name="previous_month">Previous month</string>
     <string name="next_month">Next month</string>
     <string name="today">Today</string>
-    <string name="planner_day_summary">%1$d tasks · %2$s planned</string>
+    <string name="planner_day_summary">%1$s · %2$s planned</string>
     <string name="planner_day_empty">Free day – nothing due</string>
     <string name="planner_empty_title">Nothing due</string>
     <string name="planner_empty_message">Tap + to plan something for this day.</string>
@@ -252,7 +252,6 @@
     <string name="sessions">Sessions</string>
     <string name="avg_session">Avg session</string>
     <string name="current_streak">Day streak</string>
-    <string name="best_streak">Best: %1$d days</string>
     <string name="streak_days">%1$d</string>
     <string name="time_by_subject">Time by subject</string>
     <string name="planned_vs_actual">Planned vs actual</string>

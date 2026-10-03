@@ -174,7 +174,7 @@ class InsightsFragment : BaseFragment(), Reselectable {
 
         // Tiles
         Motion.countTo(binding.streakText, data.currentStreak) { it.toString() }
-        binding.bestStreakText.text = getString(R.string.best_streak, data.bestStreak)
+        binding.bestStreakText.text = resources.getQuantityString(R.plurals.best_streak, data.bestStreak, data.bestStreak)
         Motion.countTo(binding.completionRateText, (data.completionRate * 100).toInt()) { "$it%" }
         binding.completionDetailsText.text = if (data.totalTasks > 0) getString(R.string.completion_detail, data.completedTasks, data.totalTasks)
         else getString(R.string.completion_none)

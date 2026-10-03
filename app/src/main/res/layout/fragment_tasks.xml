@@ -75,7 +75,7 @@
                         android:paddingBottom="5dp"
                         android:textAppearance="?attr/textAppearanceLabelMedium"
                         android:textColor="@color/white"
-                        app:drawableStartCompat="@drawable/ic_bolt"
+                        app:drawableStartCompat="@drawable/pill_ic_bolt"
                         app:drawableTint="@color/white"
                         tools:text="45 min focused today" />
                 </LinearLayout>

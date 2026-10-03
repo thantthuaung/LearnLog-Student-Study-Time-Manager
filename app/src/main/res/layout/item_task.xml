@@ -67,7 +67,7 @@
                 <TextView
                     android:id="@+id/text_due"
                     style="@style/Widget.LearnLog.Pill"
-                    app:drawableStartCompat="@drawable/ic_schedule"
+                    app:drawableStartCompat="@drawable/pill_ic_schedule"
                     app:drawableTint="?attr/colorOnSurfaceVariant"
                     tools:text="Today · 5:00 PM" />
 
@@ -75,14 +75,14 @@
                     android:id="@+id/text_subject"
                     style="@style/Widget.LearnLog.Pill"
                     android:maxWidth="160dp"
-                    app:drawableStartCompat="@drawable/ic_subject"
+                    app:drawableStartCompat="@drawable/pill_ic_subject"
                     app:drawableTint="?attr/colorOnSurfaceVariant"
                     tools:text="Mathematics" />
 
                 <TextView
                     android:id="@+id/text_duration"
                     style="@style/Widget.LearnLog.Pill"
-                    app:drawableStartCompat="@drawable/ic_hourglass"
+                    app:drawableStartCompat="@drawable/pill_ic_hourglass"
                     app:drawableTint="?attr/colorOnSurfaceVariant"
                     tools:text="45 min" />
 
@@ -100,8 +100,8 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_start_timer"
             style="@style/Widget.LearnLog.IconButton.Tonal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:contentDescription="@string/action_start_focus"
             app:backgroundTint="?attr/colorPrimaryContainer"
             app:icon="@drawable/ic_play"

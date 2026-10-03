@@ -152,6 +152,7 @@ class TasksFragment : BaseFragment(), Reselectable {
         val empty = state.rows.isEmpty()
         binding.emptyContainer.isVisible = empty
         binding.recyclerViewTasks.isVisible = !empty
+        if (empty && !state.hasAnyTasks) binding.fabAddTask.hide() else binding.fabAddTask.show()
         if (empty) {
             val es = binding.emptyState
             when {
