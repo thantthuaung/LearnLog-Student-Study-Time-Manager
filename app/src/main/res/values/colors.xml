@@ -28,18 +28,18 @@
     <color name="ll_on_warning_container">#5C3B00</color>
 
     <!-- Surfaces -->
-    <color name="ll_background">#F5F5FA</color>
+    <color name="ll_background">#FFFFFF</color>
     <color name="ll_on_background">#15152B</color>
     <color name="ll_surface">#FFFFFF</color>
     <color name="ll_surface_lowest">#FFFFFF</color>
-    <color name="ll_surface_low">#FAFAFD</color>
-    <color name="ll_surface_container">#F0F0F7</color>
+    <color name="ll_surface_low">#F8F8FC</color>
+    <color name="ll_surface_container">#F2F2F8</color>
     <color name="ll_surface_high">#E9E9F3</color>
     <color name="ll_surface_highest">#E2E2EE</color>
     <color name="ll_on_surface">#15152B</color>
     <color name="ll_on_surface_variant">#676785</color>
     <color name="ll_outline">#D6D6E6</color>
-    <color name="ll_outline_variant">#E9E9F2</color>
+    <color name="ll_outline_variant">#E6E6F0</color>
     <color name="ll_inverse_surface">#2A2A40</color>
     <color name="ll_inverse_on_surface">#F2F2FA</color>
     <color name="ll_inverse_primary">#A5A4FF</color>
